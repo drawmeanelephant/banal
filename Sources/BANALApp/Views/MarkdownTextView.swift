@@ -1,0 +1,185 @@
+import AppKit
+import BANALCore
+import SwiftUI
+
+enum EditorTypography {
+    /// ~66 characters of New York 16–17pt, including page insets.
+    static let measureWidth: CGFloat = 680
+    static let horizontalInset: CGFloat = 32
+    static let titleSize: CGFloat = 26
+
+    static func nsFont(size: CGFloat, serif: Bool, weight: NSFont.Weight = .regular) -> NSFont {
+        let base = NSFont.systemFont(ofSize: size, weight: weight)
+        guard serif, let descriptor = base.fontDescriptor.withDesign(.serif) else {
+            return base
+        }
+        return NSFont(descriptor: descriptor, size: size) ?? base
+    }
+
+    static func swiftUIFont(size: CGFloat, serif: Bool, weight: Font.Weight) -> Font {
+        .system(size: size, weight: weight, design: serif ? .serif : .default)
+    }
+}
+
+struct EditorStyle: Equatable {
+    var fontSize: CGFloat
+    var useSerif: Bool
+    var lineHeight: CGFloat
+    var spellCheck: Bool
+    var smartQuotes: Bool
+
+    init(from preferences: AppPreferences) {
+        fontSize = preferences.fontSize
+        useSerif = preferences.useSerif
+        lineHeight = preferences.lineHeight.multiplier
+        spellCheck = preferences.spellCheck
+        smartQuotes = preferences.smartQuotes
+    }
+
+    var font: NSFont {
+        EditorTypography.nsFont(size: fontSize, serif: useSerif)
+    }
+}
+
+/// AppKit `NSTextView` wrapper. The primary editing loop is TextKit, not a webview.
+struct MarkdownTextView: NSViewRepresentable {
+    @Binding var text: String
+    var documentID: String
+    var findToken: Int
+    var focusToken: FocusToken
+    var style: EditorStyle
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(text: $text)
+    }
+
+    func makeNSView(context: Context) -> NSScrollView {
+        let scroll = NSScrollView()
+        scroll.hasVerticalScroller = true
+        scroll.hasHorizontalScroller = false
+        scroll.autohidesScrollers = true
+        scroll.borderType = .noBorder
+        scroll.drawsBackground = false
+
+        let textView = NSTextView()
+        textView.delegate = context.coordinator
+        textView.isRichText = false
+        textView.allowsUndo = true
+        textView.usesFindBar = true
+        textView.isIncrementalSearchingEnabled = true
+        textView.textColor = NSColor.textColor
+        textView.insertionPointColor = NSColor.textColor
+        textView.backgroundColor = .clear
+        textView.drawsBackground = false
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = false
+        textView.autoresizingMask = [.width]
+        textView.textContainerInset = NSSize(width: EditorTypography.horizontalInset, height: 12)
+        textView.textContainer?.widthTracksTextView = true
+        textView.textContainer?.lineFragmentPadding = 0
+        textView.string = text
+        textView.minSize = NSSize(width: 0, height: 0)
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        apply(style, to: textView)
+        context.coordinator.lastStyle = style
+        context.coordinator.lastDocumentID = documentID
+
+        scroll.documentView = textView
+        context.coordinator.textView = textView
+        focusToken.handler = { [weak textView] in
+            DispatchQueue.main.async {
+                textView?.window?.makeFirstResponder(textView)
+            }
+        }
+        return scroll
+    }
+
+    func updateNSView(_ scroll: NSScrollView, context: Context) {
+        guard let textView = scroll.documentView as? NSTextView else { return }
+        let documentChanged = context.coordinator.lastDocumentID != documentID
+        if documentChanged || textView.string != text {
+            let previous = textView.selectedRange()
+            let selected = CaretPlacement.preferred(
+                documentChanged: documentChanged,
+                textUTF16Count: text.utf16.count,
+                previousLocation: previous.location,
+                previousLength: previous.length
+            )
+            context.coordinator.applyingProgrammaticText = true
+            textView.string = text
+            context.coordinator.applyingProgrammaticText = false
+            textView.undoManager?.removeAllActions(withTarget: textView.textStorage ?? textView)
+            textView.undoManager?.removeAllActions()
+            textView.setSelectedRange(selected)
+            if documentChanged {
+                textView.scrollRangeToVisible(selected)
+            }
+            context.coordinator.lastDocumentID = documentID
+            apply(style, to: textView)
+            context.coordinator.lastStyle = style
+        }
+        if context.coordinator.lastStyle != style {
+            apply(style, to: textView)
+            context.coordinator.lastStyle = style
+        }
+        if context.coordinator.lastFindToken != findToken {
+            context.coordinator.lastFindToken = findToken
+            textView.window?.makeFirstResponder(textView)
+            let sender = TextFinderSender(action: .showFindInterface)
+            textView.performTextFinderAction(sender)
+        }
+    }
+
+    private func apply(_ style: EditorStyle, to textView: NSTextView) {
+        textView.font = style.font
+        textView.textColor = NSColor.textColor
+        textView.insertionPointColor = NSColor.textColor
+        textView.selectedTextAttributes = [
+            .backgroundColor: NSColor.selectedTextBackgroundColor,
+            .foregroundColor: NSColor.selectedTextColor,
+        ]
+        textView.isAutomaticQuoteSubstitutionEnabled = style.smartQuotes
+        textView.isContinuousSpellCheckingEnabled = style.spellCheck
+        textView.isAutomaticSpellingCorrectionEnabled = style.spellCheck
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.lineHeightMultiple = style.lineHeight
+        textView.defaultParagraphStyle = paragraph
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: style.font,
+            .foregroundColor: NSColor.textColor,
+            .paragraphStyle: paragraph,
+            .ligature: 1,
+        ]
+        textView.typingAttributes = attributes
+        if let storage = textView.textStorage, storage.length > 0 {
+            storage.addAttributes(attributes, range: NSRange(location: 0, length: storage.length))
+        }
+    }
+
+    final class Coordinator: NSObject, NSTextViewDelegate {
+        var text: Binding<String>
+        weak var textView: NSTextView?
+        var lastFindToken = 0
+        var lastStyle: EditorStyle?
+        var lastDocumentID: String?
+        var applyingProgrammaticText = false
+
+        init(text: Binding<String>) {
+            self.text = text
+        }
+
+        func textDidChange(_ notification: Notification) {
+            guard let textView, !applyingProgrammaticText else { return }
+            text.wrappedValue = textView.string
+        }
+    }
+}
+
+/// `NSTextView.performTextFinderAction` reads `tag` as `NSTextFinder.Action`.
+private final class TextFinderSender: NSObject {
+    @objc let tag: Int
+
+    init(action: NSTextFinder.Action) {
+        tag = action.rawValue
+    }
+}
