@@ -22,7 +22,7 @@ swift build
 swift run BANAL
 ```
 
-`swift test` is the source of truth for the storage contract and the publisher. The app target is a native SwiftUI + AppKit executable; it does not use Electron or a webview for editing.
+`swift test` is the source of truth for the storage contract and the publisher. Pull requests and `main` run that same command on GitHub Actions (`macos-15`). The app target is a native SwiftUI + AppKit executable; it does not use Electron or a webview for editing.
 
 ## Vault
 
