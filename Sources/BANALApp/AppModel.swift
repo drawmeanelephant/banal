@@ -100,6 +100,9 @@ public final class AppModel: ObservableObject {
                 if self.viewMode == .read, self.selectedNote?.language == .cooklang {
                     self.askRecipe()
                 }
+                if let client = self.oliverClient {
+                    self.warmRecipeIngredientCache(with: client)
+                }
             }
         }
     }
@@ -648,6 +651,45 @@ public final class AppModel: ObservableObject {
                 self.lastOliverRender = render
             }
         }
+        if selectedNote?.language == .cooklang, let client = oliverClient, let note = selectedNote {
+            let source = editorText
+            let directory = note.fileURL.deletingLastPathComponent()
+            let targetID = note.id
+            recipeQueue.async { [weak self] in
+                let inlined = RecipeInliner.inline(
+                    source: source,
+                    relativeTo: directory,
+                    scaler: { try client.scaleSource($0, percent: $1) }
+                )
+                if let recipe = try? client.recipe(inlined.source, scale: .one) {
+                    let names = recipe.ingredientIndex.map(\.name)
+                    Task { @MainActor [weak self] in
+                        guard let self, let current = self.store.note(id: targetID) else { return }
+                        self.store.setCachedIngredients(names, for: targetID, fingerprint: current.contentFingerprint)
+                    }
+                }
+            }
+        }
+    }
+
+    private func warmRecipeIngredientCache(with client: OliverClient) {
+        let cookNotes = store.notes.filter { $0.language == .cooklang }
+        recipeQueue.async { [weak self] in
+            for note in cookNotes {
+                let directory = note.fileURL.deletingLastPathComponent()
+                let inlined = RecipeInliner.inline(
+                    source: note.body,
+                    relativeTo: directory,
+                    scaler: { try client.scaleSource($0, percent: $1) }
+                )
+                if let recipe = try? client.recipe(inlined.source, scale: .one) {
+                    let names = recipe.ingredientIndex.map(\.name)
+                    Task { @MainActor [weak self] in
+                        self?.store.setCachedIngredients(names, for: note.id, fingerprint: note.contentFingerprint)
+                    }
+                }
+            }
+        }
     }
 
     private func askRecipe() {
@@ -676,6 +718,9 @@ public final class AppModel: ObservableObject {
                     self.oliverRecipe = recipe
                     self.recipeError = nil
                     self.recipeIssues = issues
+                    if let noteID, let note = self.store.note(id: noteID) {
+                        self.store.setCachedIngredients(recipe.ingredientIndex.map(\.name), for: noteID, fingerprint: note.contentFingerprint)
+                    }
                 case .failure:
                     self.oliverRecipe = nil
                     self.recipeError = "This recipe didn’t parse."

@@ -4,6 +4,7 @@
 
 ### Added
 
+- Find the saffron (D-4): ⌘F search in list view matches recipe ingredients in `.cook` notes (bare tokens, braced multi-word ingredients, and inlined sauces) and Oliver's parsed ingredient index in a disposable in-memory cache. Missing Oliver searches file body and tokens accurately without subprocess latency.
 - Recipe references (D-3): a risotto that says `@./sauces/Hollandaise{150%g}` shows the sauce's ingredients and steps in Read, scaled by the reference's percent — the file on disk still says `@./sauces/…`.
 
 ### Fixed

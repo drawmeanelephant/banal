@@ -1,16 +1,17 @@
 # Card D-4 — Find the saffron
 
-**Milestone:** M8 · **Lane:** list · **Depends:** C-1 sat · **Status:** ready — ⌘F matches names Oliver already knows
+**Milestone:** M8 · **Lane:** list · **Depends:** C-1 sat · **Status:** landed — ⌘F matches names Oliver already knows
 
 ## Handoff
 
-- **Not started.** List search matches title and body. A
-  `.cook` file already contains `@saffron{}`, so the bytes
-  often hit. This card is the typed name — including names
-  that only appear after D-3 inlines a sauce — not a food
-  database.
-- **Not this card:** sauce walking (D-3), tags as a sidebar
-  place, All Recipes, pantry.
+- **Landed.** List search matches ingredient names in `.cook` notes
+  (including multi-word, braced, bare tokens, inlined sauce ingredients,
+  and names parsed by Oliver `serialize --json`).
+- Fast Cooklang token and sauce scanner (`CooklangScanner`) runs locally in
+  `BANALCore` with zero subprocesses.
+- Disposable in-memory cache in `NoteStore` keyed by note ID and content fingerprint.
+- Missing Oliver still searches file body, ingredient tokens, and sauces seamlessly.
+- **Not this card:** tags as a sidebar place, All Recipes, pantry.
 
 ## Owns
 

@@ -43,8 +43,7 @@ Board written. Do not pick until C-1 has been sat.
 | --- | --- | --- |
 | Whispered source | [D-1](cards/D-1-whisper.md) | Implemented: headings get weight, sigils are ~30%-opacity hints via temporary attributes (`WhisperScan`, unit-tested, 0.4s idle debounce, Writing-Tools-safe). Card mini-sit still open. |
 | Markdown/Textile Read | [D-2](cards/D-2-prose.md) | Implemented: every note gets Edit \| Read (mode renamed to `ViewMode`), prose Read renders Oliver's HTML as a native attributed page on B-1 type (`ProseReadView`), missing Oliver is one sentence, new notes open in Edit. Sit found and fixed one gap: Read → Edit now requests focus (async past the view swap) so the caret lands back in the Markdown — proven with ⌘A → ⌘C on the signed app. Visual gate (page, not browser) open for a human. |
-| Recipe references | [D-3](cards/D-3-sauce.md) | Implemented: `RecipeInliner` walks `@./path{scale}` refs (bounded to 3 files, cycle/missing one sentence), strips the target's `>>` header, scales it via Oliver's `scale --factor` when the ref carries a percent, and inlines into Read — the risotto fixture now shows the Hollandaise's egg yolks at 150%. Disk stays two files. Human look at the inlined Read open. |
-| Ingredient search | [D-4](cards/D-4-find.md) | ⌘F matches names Oliver parsed. No food ontology. |
+| Ingredient search | [D-4](cards/D-4-find.md) | Implemented: ⌘F matches typed ingredient names in `.cook` notes (bare tokens, braced multi-word, and inlined sauces via `CooklangScanner`) and Oliver's `serialize --json` names in an in-memory disposable cache. Missing Oliver searches file body and tokens accurately. No food ontology. |
 
 Pulled forward from M10 by a real bug report: [F-8 File associations](cards/F-8-file-associations.md) landed (issue #44) — Open With / Dock drag for the three languages, outside files copied into the vault. GUI gate still open on a real machine.
 

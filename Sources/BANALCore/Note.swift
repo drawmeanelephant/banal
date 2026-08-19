@@ -114,10 +114,17 @@ public struct Note: Identifiable, Equatable, Sendable {
         return String(collapsed[..<end]) + "…"
     }
 
-    public func matches(query: String) -> Bool {
+    public func matches(query: String, ingredients: [String] = []) -> Bool {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
         if needle.isEmpty { return true }
-        let haystacks = [displayTitle, body, tags.joined(separator: " "), NoteIdentity.droppingLanguageExtension(id)]
+        var haystacks = [displayTitle, body, tags.joined(separator: " "), NoteIdentity.droppingLanguageExtension(id)]
+        if language == .cooklang {
+            if !ingredients.isEmpty {
+                haystacks.append(contentsOf: ingredients)
+            } else {
+                haystacks.append(contentsOf: CooklangScanner.ingredientNames(in: body))
+            }
+        }
         return haystacks.contains { $0.localizedCaseInsensitiveContains(needle) }
     }
 }
