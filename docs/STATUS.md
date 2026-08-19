@@ -30,7 +30,7 @@
 
 | Gap | Card | Notes |
 | --- | --- | --- |
-| Whole-window sit | [C-1](cards/C-1-sit.md) | Script: [`TESTING-WINDOW.md`](TESTING-WINDOW.md). Code-backed sit landed (nested publish nav, status grammar, caret id on move). **GUI not sat in this environment** — 30s type / ⌘Z, light+dark 720/1100/1400, and VoiceOver stay open until a human runs the window. Outranks every D card. |
+| Whole-window sit | [C-1](cards/C-1-sit.md) | Script: [`TESTING-WINDOW.md`](TESTING-WINDOW.md). Code-backed sit landed (nested publish nav, status grammar, caret id on move). Sit prep is done and CI-green: every brief row was audited against the code, this machine’s Oliver/Boris were probed (Read is the one-sentence path; publish uses builtin), and `make smoke` boots the signed app against a scratch vault on GitHub Actions. **GUI not sat in this environment** — 30s type / ⌘Z, light+dark 720/1100/1400, and VoiceOver stay open until a human runs the window. Outranks every D card. |
 | Oliver / Boris paths, About, first-run copy | [C-2](cards/C-2-honesty.md) | Landed. Settings → Publish Choose… / Reveal. About BANAL. |
 | Signed `.app` / sandbox | [C-3](cards/C-3-hand-it.md) | Landed — ad-hoc signed `dist/BANAL.app` via `make app`, sandbox on, app icon, bookmarks start/stop. No Developer ID on this machine; not notarized. GUI sit of the signed app still wants a human. |
 
