@@ -199,21 +199,14 @@ final class BanalAppDelegate: NSObject, NSApplicationDelegate {
     /// several files) arrives as one Apple event. SwiftUI's `.onOpenURL`
     /// surfaces only the *first* URL; the rest reach this AppKit delegate
     /// hook, so without them a multi-select open was silently dropped.
-    /// Implemented here (`open:` on the macOS 26 SDK, `openURLs:` before),
-    /// routing the rest through the same queue as `.onOpenURL`. `AppModel`
-    /// dedupes, so a single action can never import twice even when both
-    /// routes fire.
-    #if swift(>=6.4)
+    /// Implemented here (`open:` is the Swift name on every supported SDK
+    /// — the ObjC selector `openURLs:` is renamed at import), routing the
+    /// rest through the same queue as `.onOpenURL`. `AppModel` dedupes, so
+    /// a single action can never import twice even when both routes fire.
     func application(_ application: NSApplication, open urls: [URL]) {
         pendingOpenURLs.append(contentsOf: urls)
         flushPendingOpens()
     }
-    #else
-    func application(_ application: NSApplication, openURLs urls: [URL]) {
-        pendingOpenURLs.append(contentsOf: urls)
-        flushPendingOpens()
-    }
-    #endif
 
     func application(_ sender: NSApplication, openFiles filenames: [String]) {
         pendingOpenURLs.append(contentsOf: filenames.map { URL(fileURLWithPath: $0) })
