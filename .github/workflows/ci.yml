@@ -14,7 +14,7 @@ jobs:
     name: test
     runs-on: macos-15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Run swift test
         run: swift test
 
@@ -23,6 +23,6 @@ jobs:
     runs-on: macos-15
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Boot the signed app, open an external note, import it
         run: make smoke
