@@ -42,7 +42,7 @@ Board written. Do not pick until C-1 has been sat.
 | Gap | Card | Notes |
 | --- | --- | --- |
 | Whispered source | [D-1](cards/D-1-whisper.md) | Implemented: headings get weight, sigils are ~30%-opacity hints via temporary attributes (`WhisperScan`, unit-tested, 0.4s idle debounce, Writing-Tools-safe). Card mini-sit still open. |
-| Markdown/Textile Read | [D-2](cards/D-2-prose.md) | Same Edit \| Read kindness as recipes. Source stays the editor. |
+| Markdown/Textile Read | [D-2](cards/D-2-prose.md) | Implemented: every note gets Edit \| Read (mode renamed to `ViewMode`), prose Read renders Oliver's HTML as a native attributed page on B-1 type (`ProseReadView`), missing Oliver is one sentence, new notes open in Edit. Mini-sit (looks like a page, not a browser) open. |
 | Recipe references | [D-3](cards/D-3-sauce.md) | `@./sauces/…` inlines for Read. Disk stays two files. |
 | Ingredient search | [D-4](cards/D-4-find.md) | ⌘F matches names Oliver parsed. No food ontology. |
 

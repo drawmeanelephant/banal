@@ -140,15 +140,15 @@ struct BanalApp: App {
             }
 
             CommandGroup(after: .toolbar) {
-                Button("Edit Recipe") {
-                    model.setRecipeMode(.edit)
+                Button("Edit Note") {
+                    model.setViewMode(.edit)
                 }
-                .disabled(!model.showsRecipeSwitcher)
+                .disabled(model.selectedID == nil)
 
-                Button("Read Recipe") {
-                    model.setRecipeMode(.read)
+                Button("Read Note") {
+                    model.setViewMode(.read)
                 }
-                .disabled(!model.showsRecipeSwitcher)
+                .disabled(model.selectedID == nil)
             }
         }
 

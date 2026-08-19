@@ -26,7 +26,8 @@ public final class AppModel: ObservableObject {
     @Published public var isCreatingFolder = false
     @Published public var isRenamingFolder = false
     @Published public var folderBeingRenamed: String?
-    @Published public var recipeMode: RecipeMode = .edit
+    /// Edit | Read for the open note — every language, not just recipes.
+    @Published public var viewMode: ViewMode = .edit
     @Published public var recipeScale: RecipeScale = .one
     @Published public var oliverRecipe: OliverRecipe?
     @Published public var recipeError: String?
@@ -35,10 +36,10 @@ public final class AppModel: ObservableObject {
     @Published public private(set) var editorSessionID = UUID()
 
     public let editorFocus = FocusToken()
-    /// Last Oliver HTML for the open buffer. Not published — a render
-    /// must not rebuild the editor. Later cards read this; this card
-    /// only asks the question.
-    public private(set) var lastOliverRender: OliverRender?
+    /// Last Oliver HTML for the open buffer. Published so the prose Read
+    /// view (D-2) updates when the idle render lands; the editor itself
+    /// ignores it (a render never changes the text).
+    @Published public private(set) var lastOliverRender: OliverRender?
     private var suppressEditorSync = false
     private var editorDirty = false
     private var loadedFingerprint = ""
@@ -49,7 +50,7 @@ public final class AppModel: ObservableObject {
     private var loadedForID: String?
     private var loadedSessionID = UUID()
     private var cancellables = Set<AnyCancellable>()
-    private var sessionRecipeMode: RecipeMode = .edit
+    private var sessionViewMode: ViewMode = .edit
     private var recipeGeneration = 0
     private var oliverClient: OliverClient?
     private var oliver: OliverDebounce
@@ -93,7 +94,7 @@ public final class AppModel: ObservableObject {
                 self.oliverClient = recipeURL.map { OliverClient(binaryURL: $0) }
                 self.oliver = renderURL.map { OliverDebounce(client: OliverClient(binaryURL: $0)) }
                     ?? OliverDebounce(client: nil)
-                if self.recipeMode == .read, self.selectedNote?.language == .cooklang {
+                if self.viewMode == .read, self.selectedNote?.language == .cooklang {
                     self.askRecipe()
                 }
             }
@@ -218,17 +219,23 @@ public final class AppModel: ObservableObject {
         )
     }
 
-    public var showsRecipeSwitcher: Bool {
-        selectedNote?.language == .cooklang
+    /// Edit | Read applies to every note; recipes are not special.
+    public var showsViewSwitcher: Bool {
+        selectedNote != nil
+    }
+
+    /// Whether a render binary is configured — distinguishes the prose
+    /// Read view's "Reading…" from "This note needs Oliver."
+    public var oliverCanRender: Bool {
+        oliver.isAvailable
     }
 
     public func createNote(language: NoteLanguage = .markdown, in folder: String? = nil) {
         do {
             let dest = folder ?? preferences.folderForNewNote(selected: filter)
             let note = try store.createNote(folder: dest, language: language)
-            if language == .cooklang {
-                sessionRecipeMode = .edit
-            }
+            // New notes open in Edit, whatever the last note's mode.
+            sessionViewMode = .edit
             if let dest {
                 filter = .folder(dest)
             }
@@ -569,16 +576,20 @@ public final class AppModel: ObservableObject {
         }
     }
 
-    public func setRecipeMode(_ mode: RecipeMode) {
-        guard selectedNote?.language == .cooklang else { return }
-        if recipeMode == mode { return }
-        recipeMode = mode
-        sessionRecipeMode = mode
+    public func setViewMode(_ mode: ViewMode) {
+        guard selectedNote != nil else { return }
+        if viewMode == mode { return }
+        viewMode = mode
+        sessionViewMode = mode
         if mode == .read {
             flushEditor()
-            oliverRecipe = nil
-            recipeError = nil
-            askRecipe()
+            if selectedNote?.language == .cooklang {
+                oliverRecipe = nil
+                recipeError = nil
+                askRecipe()
+            } else {
+                scheduleOliverQuestion()
+            }
         } else {
             cancelRecipeAsk()
             clearRecipe()
@@ -588,7 +599,7 @@ public final class AppModel: ObservableObject {
     public func setRecipeScale(_ scale: RecipeScale) {
         guard recipeScale != scale else { return }
         recipeScale = scale
-        if recipeMode == .read, selectedNote?.language == .cooklang {
+        if viewMode == .read, selectedNote?.language == .cooklang {
             askRecipe()
         }
     }
@@ -609,16 +620,10 @@ public final class AppModel: ObservableObject {
         warnedDiskFingerprint = ""
         recipeScale = .one
         suppressEditorSync = false
-        if note?.language == .cooklang {
-            recipeMode = sessionRecipeMode
-            if recipeMode == .read {
-                askRecipe()
-            } else {
-                cancelRecipeAsk()
-                clearRecipe()
-            }
+        viewMode = sessionViewMode
+        if viewMode == .read, note?.language == .cooklang {
+            askRecipe()
         } else {
-            recipeMode = .edit
             cancelRecipeAsk()
             clearRecipe()
         }
@@ -643,7 +648,7 @@ public final class AppModel: ObservableObject {
     }
 
     private func askRecipe() {
-        guard recipeMode == .read, selectedNote?.language == .cooklang else {
+        guard viewMode == .read, selectedNote?.language == .cooklang else {
             clearRecipe()
             return
         }
@@ -660,7 +665,7 @@ public final class AppModel: ObservableObject {
         let apply: @Sendable (Result<OliverRecipe, Error>) -> Void = { [weak self] result in
             Task { @MainActor in
                 guard let self else { return }
-                guard generation == self.recipeGeneration, self.recipeMode == .read, self.selectedID == noteID else { return }
+                guard generation == self.recipeGeneration, self.viewMode == .read, self.selectedID == noteID else { return }
                 switch result {
                 case .success(let recipe):
                     self.oliverRecipe = recipe
@@ -690,7 +695,7 @@ public final class AppModel: ObservableObject {
     }
 }
 
-public enum RecipeMode: String, Equatable, Hashable, Sendable {
+public enum ViewMode: String, Equatable, Hashable, Sendable {
     case edit
     case read
 }

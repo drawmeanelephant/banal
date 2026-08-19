@@ -19,9 +19,20 @@ struct EditorView: View {
                 metadataRow
                     .frame(maxWidth: measure)
                     .frame(maxWidth: .infinity)
-                if model.showsRecipeSwitcher, model.recipeMode == .read {
-                    RecipeReadView(model: model)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                if model.showsViewSwitcher, model.viewMode == .read {
+                    Group {
+                        if model.selectedNote?.language == .cooklang {
+                            RecipeReadView(model: model)
+                        } else {
+                            ProseReadView(
+                                html: model.lastOliverRender?.html,
+                                needsOliver: !model.oliverCanRender,
+                                style: EditorStyle(from: model.preferences)
+                            )
+                        }
+                    }
+                    .frame(maxWidth: measure)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     MarkdownTextView(
                         text: $model.editorText,
@@ -87,19 +98,19 @@ struct EditorView: View {
             .font(.caption)
             .foregroundStyle(.secondary)
             .accessibilityElement(children: .combine)
-            if model.showsRecipeSwitcher {
-                Picker("Recipe view", selection: Binding(
-                    get: { model.recipeMode },
-                    set: { model.setRecipeMode($0) }
+            if model.showsViewSwitcher {
+                Picker("Note view", selection: Binding(
+                    get: { model.viewMode },
+                    set: { model.setViewMode($0) }
                 )) {
-                    Text("Edit").tag(RecipeMode.edit)
-                    Text("Read").tag(RecipeMode.read)
+                    Text("Edit").tag(ViewMode.edit)
+                    Text("Read").tag(ViewMode.read)
                 }
                 .pickerStyle(.segmented)
                 .controlSize(.small)
                 .frame(maxWidth: 140)
                 .labelsHidden()
-                .accessibilityLabel("Recipe view")
+                .accessibilityLabel("Note view")
             }
         }
         .padding(.horizontal, EditorTypography.horizontalInset)
