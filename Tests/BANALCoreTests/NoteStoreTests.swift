@@ -167,6 +167,107 @@ final class NoteStoreTests: XCTestCase {
         XCTAssertEqual(note?.title, "Watched", "FSEvents/NSFilePresenter should surface the new file (or the test timed out)")
     }
 
+    // MARK: - Import (file associations, F-8)
+
+    func testImportFileCopiesExternalNoteIntoVault() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let outside = FileManager.default.temporaryDirectory.appendingPathComponent("banal-import-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: outside) }
+        let source = outside.appendingPathComponent("draft.md")
+        let now = Date()
+        let document = FrontmatterCodec.serialize(
+            frontmatter: Frontmatter(title: "Draft", created: now, updated: now),
+            body: "\nImported from outside.\n"
+        )
+        try Data(document.utf8).write(to: source)
+
+        let imported = try store.importFile(from: source)
+
+        XCTAssertEqual(imported.id, "draft.md")
+        XCTAssertEqual(imported.title, "Draft")
+        XCTAssertTrue(imported.body.contains("Imported from outside."))
+        XCTAssertEqual(store.note(id: "draft.md")?.id, imported.id)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: imported.fileURL.path), "file should be copied into the vault")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: source.path), "the source file must be left untouched")
+    }
+
+    func testImportFileMakesUniqueNameOnCollision() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let outside = FileManager.default.temporaryDirectory.appendingPathComponent("banal-import-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: outside) }
+        let source = outside.appendingPathComponent("draft.md")
+        try Data("\nFirst copy\n".utf8).write(to: source)
+
+        let first = try store.importFile(from: source)
+        let second = try store.importFile(from: source)
+
+        XCTAssertEqual(first.id, "draft.md")
+        XCTAssertEqual(second.id, "draft-2.md")
+        XCTAssertNotEqual(first.fileURL.path, second.fileURL.path)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: second.fileURL.path))
+    }
+
+    func testImportFileRejectsUnsupportedExtension() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let outside = FileManager.default.temporaryDirectory.appendingPathComponent("banal-import-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: outside) }
+        let source = outside.appendingPathComponent("notes.txt")
+        try Data("plain text".utf8).write(to: source)
+
+        XCTAssertThrowsError(try store.importFile(from: source)) { error in
+            XCTAssertEqual(error as? NoteStoreError, .unsupportedFileType("txt"))
+        }
+        XCTAssertNil(store.note(id: "notes.txt"), "nothing should be indexed")
+    }
+
+    func testImportFileRejectsFileInsideVault() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let inside = vault.rootURL.appendingPathComponent("already-here.md")
+        try Data("\nInside the vault\n".utf8).write(to: inside)
+
+        XCTAssertThrowsError(try store.importFile(from: inside)) { error in
+            XCTAssertEqual(error as? NoteStoreError, .noteAlreadyInVault)
+        }
+    }
+
+    func testImportFileIntoFolder() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let outside = FileManager.default.temporaryDirectory.appendingPathComponent("banal-import-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: outside, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: outside) }
+        let source = outside.appendingPathComponent("risotto.cook")
+        try Data(CooklangStub.body.utf8).write(to: source)
+
+        let imported = try store.importFile(from: source, folder: "Recipes")
+
+        XCTAssertEqual(imported.id, "Recipes/risotto.cook")
+        XCTAssertEqual(imported.language, .cooklang)
+        XCTAssertTrue(store.folders.contains("Recipes"))
+    }
+
     private func makeVault() throws -> VaultConfiguration {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("banal-vault-\(UUID().uuidString)", isDirectory: true)
         let configuration = VaultConfiguration(rootURL: root)
