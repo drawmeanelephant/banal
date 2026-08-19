@@ -1,12 +1,19 @@
 # Card D-3 — Walk the sauce
 
-**Milestone:** M8 · **Lane:** detail · **Depends:** C-1 sat · **Status:** ready — `@./sauces/…` cooks; the file stays written as written
+**Milestone:** M8 · **Lane:** detail · **Depends:** C-1 sat · **Status:** cooking — implemented + built + unit-checked; a human look at the inlined Read is the remaining gate
 
 ## Handoff
 
-- **Not started.** Oliver’s `serialize --json` leaves recipe
-  references as text (`@./sauces/Hollandaise{150%g}`). Read
-  shows that string. B-9 forbade a recipe graph.
+- **Implemented.** Oliver’s `serialize` still leaves recipe references
+  as text (`@./sauces/Hollandaise{150%g}`), so `RecipeInliner`
+  (BANALPublisher) walks them — a path, not a grammar: resolve
+  relative to the recipe’s directory, strip the target’s `>>` header
+  lines, scale the target by the ref’s percent via `oliver scale
+  --factor num/den` (Oliver does the math; no invented quantity
+  code), and inline it into *this* Read. Bound to 3 referenced files;
+  a missing sauce, a cycle, or the bound is one sentence under the
+  ingredient list. The file on disk is never rewritten. B-9’s no-graph
+  rule holds: this is a read-time path walk, not a recipe ontology.
 - **Not this card:** prose Read (D-2), save a scaled copy
   (named on B-X until a cook asks), pantry, shopping list.
 

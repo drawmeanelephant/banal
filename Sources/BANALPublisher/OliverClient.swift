@@ -175,6 +175,35 @@ public struct OliverClient: Sendable {
         }
     }
 
+    /// Scales a Cooklang source by a percent (150 → `--factor 3/2`). Used
+    /// to honor a recipe reference's `{150%g}` before inlining (D-3). In
+    /// memory only — never writes the file. 100% is a no-op.
+    public func scaleSource(_ source: String, percent: Int) throws -> String {
+        guard percent > 0, percent != 100 else { return source }
+        return try run(
+            body: source,
+            arguments: ["scale", "--from", "cooklang", "--factor", Self.fraction(forPercent: percent)]
+        )
+    }
+
+    /// 150 → "3/2", 50 → "1/2", 200 → "2" — Oliver's `<num[/den]>` scale factor.
+    static func fraction(forPercent percent: Int) -> String {
+        let divisor = Self.greatestCommonDivisor(percent, 100)
+        let numerator = percent / divisor
+        let denominator = 100 / divisor
+        if denominator == 1 { return "\(numerator)" }
+        return "\(numerator)/\(denominator)"
+    }
+
+    private static func greatestCommonDivisor(_ a: Int, _ b: Int) -> Int {
+        var x = abs(a)
+        var y = abs(b)
+        while y != 0 {
+            (x, y) = (y, x % y)
+        }
+        return max(x, 1)
+    }
+
     /// BANAL owns local metadata. Send only the body for Markdown/Textile.
     /// Cooklang source is sent whole — BANAL does not strip `---` from recipes.
     public static func bodyForOliver(_ source: String, frontend: OliverFrontend = .markdown) -> String {
