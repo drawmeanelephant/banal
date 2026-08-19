@@ -37,6 +37,8 @@ No Accounts pane. No Themes store. No Plugins.
 | Typewriter scrolling | bool | false | Off by default; easy to add, easy to make tacky |
 
 No theme marketplace. No Vim mode. No plugin font renderer.
+No “syntax highlighting” checkbox — [D-1](cards/D-1-whisper.md)
+is always-on whisper or it is too loud.
 
 ## Publish
 

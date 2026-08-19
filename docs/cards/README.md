@@ -15,46 +15,61 @@ tear it up.
 
 ## Session
 
-Branch `feat/c3-app` (C-3). Next session is a human window sit
-(`TESTING-WINDOW.md`), including the signed `.app` picker, or a
-fluency card only after that sit.
+Branch `docs/d0-board` (D-0). Next session is a human window sit
+([`TESTING-WINDOW.md`](../TESTING-WINDOW.md)), including the signed
+`.app` from C-3, or D-1 after that sit. **Do not start D-1 from
+compile.**
+
 Each card’s **Handoff** block is the note for the next person.
 
 | Card | Status |
 |------|--------|
-| C-0 | landed — B-0–B-10 closed; this README is the C board |
+| D-0 | landed — C Close archived; this README is the D board |
+| D-1 | ready — waits for C-1 sat |
+| D-2 | ready — waits for C-1 sat |
+| D-3 | ready — waits for C-1 sat |
+| D-4 | ready — waits for C-1 sat |
 | C-1 | cooking — script + code-backed sit; GUI pass still open |
 | C-2 | landed — Oliver/Boris paths, About, speakable copy |
 | C-3 | landed — ad-hoc signed `.app` + sandbox |
 
-## Board — Close
+## Board — Fluency
 
-B cards added capability. C cards sit, delete, and ship. Do not
-start a fluency card until C-1 has been sat.
+B cards drew the silhouette. C cards sit, delete, and ship. D cards
+deepen the *file* without changing the window. Do not start D-1
+until C-1 has been sat. If the sit hates the caret or publish feels
+like onboarding, that bug outranks every D card.
 
 | Card | Milestone | Lane | Gate |
 |------|-----------|------|------|
 | [B-STAR](B-STAR.md) | always | chrome | Five minutes, no explanation |
 | [B-X Refuse](B-X-refuse.md) | always | policy | The deletion list — read before every PR |
-| [C-0 Board reset](C-0-board-reset.md) | M7 | docs | The board tells the truth |
-| [C-1 Sit](C-1-sit.md) | M7 | chrome | Five minutes, no explanation; risotto + publish |
-| [C-2 Honesty](C-2-honesty.md) | M7 | settings | Every feature is in the menu bar or Settings |
-| [C-3 Hand it](C-3-hand-it.md) | M7 | app | A friend opens the `.app`, not a checkout |
+| [D-0 Board](D-0-board.md) | M8 | docs | The board tells the truth about fluency |
+| [D-1 Whisper](D-1-whisper.md) | M8 | editor | Headings and sigils are hints; not a theme |
+| [D-2 Prose](D-2-prose.md) | M8 | detail | A paragraph can be read; source stays king |
+| [D-3 Sauce](D-3-sauce.md) | M8 | detail | `@./sauces/…` cooks; the file stays as written |
+| [D-4 Find](D-4-find.md) | M8 | list | ⌘F matches names Oliver already parsed |
 
-Pick in order unless the board says you may parallel. **C-2 may
-run beside C-1** if it does not change the three-column window.
-**C-3 waits for C-1** — sandbox will re-break first-run if you
-guess.
+Pick in order unless the board says you may parallel. **D-1 first**
+after the sit — you live in source. **D-2 and D-3 may run beside
+each other** if D-2 does not restyle `RecipeReadView` and D-3 does
+not restyle `MarkdownTextView`. **D-4 may run beside D-1**; it
+gets better after D-3 inlines a sauce, but body search already
+works. **C-3 may run beside any D card** that does not change
+first-run or the notes-folder bookmark.
 
-One card = one branch = one PR. Suggested prefix `docs/c0-board-reset`,
-`feat/c1-sit`, `feat/c2-honesty`, `feat/c3-app`.
+One card = one branch = one PR. Suggested prefix `docs/d0-board`,
+`feat/d1-whisper`, `feat/d2-prose`, `feat/d3-sauce`, `feat/d4-find`,
+`feat/c3-app`.
 
 ## Do not start
 
-Fluency (whispered markup, Markdown/Textile Read, save a scaled
-recipe, resolve `@./sauces/…`, ingredient search) is not a board
-until C-1 has been sat. If the sit hates the caret or publish
-feels like onboarding, that bug outranks every later idea.
+Save a scaled recipe copy is named on [B-X](B-X-refuse.md). It is
+not a D card until a cook asks. Stylesheets, tags-as-a-place, and
+All Recipes are not this board. Looking forward is
+[`../HORIZON.md`](../HORIZON.md), [`../ROADMAP.md`](../ROADMAP.md)
+M9–M12, and [`../HOPE-CHEST.md`](../HOPE-CHEST.md) (M99) — not a
+pick list. If we fall asleep, the hope chest is the navigator.
 
 Never from a card:
 
@@ -64,6 +79,19 @@ Never from a card:
 - AI
 - Electron
 - A fourth Settings pane
+- A source | preview split
+
+## Archive — Close (C)
+
+The silhouette, sat and handed over. C-1 GUI and C-3 `.app` are
+still the Close leftovers — they outrank D if you are shipping.
+
+| Card | Milestone | Lane | Gate |
+|------|-----------|------|------|
+| [C-0 Board reset](C-0-board-reset.md) | M7 | docs | landed — B closed; C was the board |
+| [C-1 Sit](C-1-sit.md) | M7 | chrome | cooking — five minutes, no explanation; GUI still open |
+| [C-2 Honesty](C-2-honesty.md) | M7 | settings | landed — every feature is in the menu bar or Settings |
+| [C-3 Hand it](C-3-hand-it.md) | M7 | app | landed — ad-hoc signed `.app`; GUI sit still open |
 
 ## Archive — Silhouette (B)
 

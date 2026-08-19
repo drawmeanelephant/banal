@@ -15,7 +15,7 @@
 
 ## Do not touch
 
-- Highlighting as a syntax theme (later, whispered, different card)
+- Highlighting as a syntax theme ([D-1](D-1-whisper.md) is the whisper, not a theme)
 - Oliver / preview HTML typography
 - A custom bundled display face
 

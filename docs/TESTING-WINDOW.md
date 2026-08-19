@@ -100,6 +100,20 @@ Chrome uses system materials. Selection is the system accent. Separators are hai
 
 This row is the hand. If you did not sit it in the running app, it is not done.
 
+### 3b. Dictation and Writing Tools (system, if present)
+
+The page is an `NSTextView`. We do not invent a microphone or a proofreading pane. If this Mac has no dictation or no Apple Intelligence, **skip** — do not fail the sit.
+
+**Do.**
+
+1. Click the body. Edit → Start Dictation (or the system shortcut). Speak a sentence. It should land as text.
+2. Select a paragraph. Right-click or the Writing Tools control. Proofread or Rewrite if the system offers it. Accept one change.
+3. ⌘Z once. The Writing Tools / dictation change should undo. Keep typing. The caret should not hitch.
+
+**Expect.** Inline or the system panel — whatever Apple ships for a plain `NSTextView`. Our chrome does not grow a coordinator UI. Style / Oliver idle work does not clobber the rewrite.
+
+**Fail if.** Dictation is dead in the body but works in TextEdit. Writing Tools is missing here but present in TextEdit on the same Mac. Accepting a rewrite jumps the caret, duplicates the paragraph, or gets overwritten by a save. We drew our own “AI” strip.
+
 ### 4. Dirty Vim keeps the buffer; clean Vim reloads
 
 **Do.** Settings → General → **Watch for edits from other apps** is on (default).
