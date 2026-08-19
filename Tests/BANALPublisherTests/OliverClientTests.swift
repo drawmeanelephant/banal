@@ -8,12 +8,69 @@ final class OliverClientTests: XCTestCase {
         XCTAssertEqual(OliverLocator.resolve(configured: sh.path), sh)
     }
 
-    func testLocatorIgnoresMissingConfiguredPathAndKeepsSearching() {
-        let missing = "/tmp/banal-no-oliver-\(UUID().uuidString)"
-        let found = OliverLocator.resolve(configured: missing)
-        if let found {
-            XCTAssertTrue(FileManager.default.isExecutableFile(atPath: found.path))
+    func testLocatorHonorsOliverBinEnvironment() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let stub = root.appendingPathComponent("oliver-stub")
+        try makeStub(at: stub)
+        let found = OliverLocator.resolve(
+            configured: nil,
+            environment: ["BANAL_OLIVER_BIN": stub.path, "PATH": ""],
+            currentDirectory: root
+        )
+        XCTAssertEqual(found?.standardizedFileURL, stub.standardizedFileURL)
+    }
+
+    func testLocatorFindsSiblingCheckout() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let stub = root.appendingPathComponent("oliver/zig-out/bin/oliver")
+        try makeStub(at: stub)
+        let cwd = root.appendingPathComponent("banal/worktrees/app", isDirectory: true)
+        try FileManager.default.createDirectory(at: cwd, withIntermediateDirectories: true)
+        let found = OliverLocator.resolve(
+            environment: ["PATH": ""],
+            currentDirectory: cwd
+        )
+        XCTAssertEqual(found?.standardizedFileURL, stub.standardizedFileURL)
+    }
+
+    func testLocatorReturnsNilWhenIsolated() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let found = OliverLocator.resolve(
+            configured: nil,
+            environment: ["PATH": ""],
+            currentDirectory: root
+        )
+        XCTAssertNil(found)
+    }
+
+    func testDebounceIsSilentWhenUnavailable() {
+        let ask = OliverDebounce(client: nil, delay: 0)
+        let exp = expectation(description: "no fire")
+        exp.isInverted = true
+        ask.schedule(source: "# Hi") { _ in exp.fulfill() }
+        wait(for: [exp], timeout: 0.15)
+    }
+
+    func testDebounceOnlyRendersTheLastBuffer() {
+        let box = SeenBox()
+        let ask = OliverDebounce(delay: 0.05) { source in
+            box.append(source)
+            return OliverRender(html: source)
         }
+        let exp = expectation(description: "last buffer")
+        ask.schedule(source: "first") { _ in
+            XCTFail("first buffer should be cancelled")
+        }
+        ask.schedule(source: "second") { render in
+            box.html = render.html
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1)
+        XCTAssertEqual(box.items, ["second"])
+        XCTAssertEqual(box.html, "second")
     }
 
     func testMissingBinaryThrows() {
@@ -71,5 +128,34 @@ final class OliverClientTests: XCTestCase {
         XCTAssertTrue(html.contains("Hello"), "expected heading text, got: \(html)")
         XCTAssertFalse(html.contains("Local Title"), "Oliver must not render BANAL frontmatter: \(html)")
         XCTAssertFalse(html.lowercased().contains("<hr"), "fences must not become a thematic break: \(html)")
+    }
+}
+
+private func isolatedRoot() -> URL {
+    FileManager.default.temporaryDirectory.appendingPathComponent("banal-oliver-\(UUID().uuidString)", isDirectory: true)
+}
+
+private func makeStub(at url: URL) throws {
+    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+    try Data("#!/bin/sh\n".utf8).write(to: url, options: .atomic)
+    try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
+}
+
+/// Records render calls from the debounce test seam.
+private final class SeenBox: @unchecked Sendable {
+    private let lock = NSLock()
+    private var seen: [String] = []
+    var html: String?
+
+    var items: [String] {
+        lock.lock()
+        defer { lock.unlock() }
+        return seen
+    }
+
+    func append(_ value: String) {
+        lock.lock()
+        seen.append(value)
+        lock.unlock()
     }
 }

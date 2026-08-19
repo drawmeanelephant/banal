@@ -4,7 +4,7 @@
 
 ## Handoff
 
-- **Landed:** `Sources/BANALPublisher/OliverClient.swift`. Locate like Boris (`BANAL_OLIVER_BIN`, PATH, sibling `oliver/zig-out/bin/oliver`). One-shot `oliver render --from markdown` on stdin. Body only — BANAL frontmatter is stripped, `--frontmatter` is never passed. Tests skip if the binary is missing; with Oliver present, `# Hello` renders to `<h1>`. AppModel asks after 400ms idle; never from `textDidChange`. Missing binary is silent. `lastOliverRender` is not `@Published`.
+- **Landed:** `Sources/BANALPublisher/OliverClient.swift`. Locate like Boris (`BANAL_OLIVER_BIN`, PATH, sibling `oliver/zig-out/bin/oliver`). One-shot `oliver render --from markdown` on stdin. Body only — BANAL frontmatter is stripped, `--frontmatter` is never passed. Tests skip if the binary is missing; with Oliver present, `# Hello` renders to `<h1>`. AppModel asks through `OliverDebounce` after 400ms idle; never from `textDidChange`. Last buffer wins. Locator env/cwd are injectable; isolated resolve is nil. Missing binary is silent. `lastOliverRender` is not `@Published`.
 - **Not this card:** preview column, `.cook` / Textile, Settings path picker.
 
 ## Owns

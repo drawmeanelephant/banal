@@ -10,7 +10,7 @@
 
 - Tester brief for the notes folder: [`docs/TESTING-NOTES-FOLDER.md`](docs/TESTING-NOTES-FOLDER.md) (first run, missing at launch, vanish while open, do not recreate).
 - Sit: VoiceOver labels on folders, notes, editor, and Settings; a vanished notes folder shows the picker while the app is open; Watch for edits from other apps actually gates reloads; typing undo is no longer eaten by style updates.
-- Oliver (B-7): `OliverClient` asks `oliver render --from markdown` after idle typing. Locate via `BANAL_OLIVER_BIN`, PATH, or a sibling checkout. Missing binary is silent. No preview column.
+- Oliver (B-7): `OliverClient` asks `oliver render --from markdown` after idle typing. Locate via `BANAL_OLIVER_BIN`, PATH, or a sibling checkout. Missing binary is silent. No preview column. Idle ask only renders the last buffer; locate is injectable so tests do not need a machine `PATH`.
 - Sit fixes: selecting a note no longer rewrites a clean file; Find Notes always focuses search; a vanished folder filter falls back to All Notes; the Publish pane is tall enough to show Deploy.
 - Settings (B-5): Publish pane uses the Preferences copy, validates base URL and project name inline, warns on an odd account ID, and persists site + Cloudflare IDs in `.banal/config.json` without a token.
 - Folders (B-4): New Note Here creates in that directory even when new notes default to Inbox; renaming a folder keeps the open note; Finder rename of a folder rescans ids; reserved directories stay off the sidebar.
