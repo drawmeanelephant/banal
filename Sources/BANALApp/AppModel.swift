@@ -43,6 +43,11 @@ public final class AppModel: ObservableObject {
     private var editorDirty = false
     private var loadedFingerprint = ""
     private var warnedDiskFingerprint = ""
+    /// Which selection and session the open buffer was loaded for. A write
+    /// (F-9) must match both: an `onChange` echo from a previous load must
+    /// never persist into a note it was not loaded for.
+    private var loadedForID: String?
+    private var loadedSessionID = UUID()
     private var cancellables = Set<AnyCancellable>()
     private var sessionRecipeMode: RecipeMode = .edit
     private var recipeGeneration = 0
@@ -203,7 +208,6 @@ public final class AppModel: ObservableObject {
         if id == selectedID { return }
         persistEditor(to: selectedID)
         selectedID = id
-        editorSessionID = UUID()
         loadEditor(from: store.note(id: id ?? ""))
     }
 
@@ -350,7 +354,10 @@ public final class AppModel: ObservableObject {
     }
 
     public func applyEditorChanges() {
-        guard !suppressEditorSync, var note = selectedNote else { return }
+        guard !suppressEditorSync,
+              selectedID == loadedForID,
+              editorSessionID == loadedSessionID,
+              var note = selectedNote else { return }
         let tags = editorTags
             .split(separator: ",")
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -377,7 +384,11 @@ public final class AppModel: ObservableObject {
     }
 
     private func persistEditor(to id: String?) {
-        guard editorDirty, let id, var note = store.note(id: id) else { return }
+        guard editorDirty,
+              selectedID == loadedForID,
+              editorSessionID == loadedSessionID,
+              let id,
+              var note = store.note(id: id) else { return }
         note.title = editorTitle
         note.body = editorText
         note.tags = editorTags
@@ -583,6 +594,11 @@ public final class AppModel: ObservableObject {
     }
 
     private func loadEditor(from note: Note?) {
+        // The buffer belongs to this selection and this session from here
+        // on; only writes matching both are allowed (F-9).
+        editorSessionID = UUID()
+        loadedForID = selectedID
+        loadedSessionID = editorSessionID
         suppressEditorSync = true
         editorTitle = note?.title ?? ""
         editorText = note?.body ?? ""

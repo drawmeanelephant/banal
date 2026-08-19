@@ -1,6 +1,6 @@
 # Card F-9 — Imported notes can get `updated:` bumped (stale-buffer write race)
 
-**Milestone:** bug follow-up (found during the F-8 gate probe) · **Lane:** editor · **Status:** open — one occurrence, content-safe, race not reproduced under probe; do not start until this write-up is read
+**Milestone:** bug follow-up (found during the F-8 gate probe) · **Lane:** editor · **Status:** fixed — session-guarded writes in `AppModel`, `updated` only moves on a real change; gate passed 10/10 (see below)
 
 ## Handoff
 
@@ -62,19 +62,40 @@ copy. Checksums of `risotto.cook` were byte-identical in the same run.
   was content-safe (only `updated` changed); a stale title/body write is
   theoretically possible in the same window.
 
-## Do
+## Fix landed
 
-1. Make `applyEditorChanges` verify the buffer it writes belongs to the note
-   it was loaded for — e.g. capture `selectedID` + `editorSessionID` at load
-   and require both at write; or route the comparison through
-   `loadedFingerprint` instead of live `@Published` reads.
-2. As a belt-and-braces option: in `NoteStore.update`, bump `updated` only
-   when a persisted field actually changed vs the existing note (compare
-   before mutating) — makes the cosmetic harm impossible even if a stale
-   write slips through.
-3. Reproduce first, fix second. Try: fresh container vault, two `open -a`
-   deliveries 1–2s apart with no sleep in between, repeat until the race
-   fires; check `diff` on the imported `.md`.
+- `AppModel`: `loadEditor` now owns the session (`editorSessionID = UUID()`
+  moved out of `select`) and captures `loadedForID` + `loadedSessionID`.
+  `applyEditorChanges` and `persistEditor` require `selectedID ==
+  loadedForID && editorSessionID == loadedSessionID` before writing — an
+  `onChange` / `textDidChange` echo from a previous load can never persist
+  into a note it was not loaded for.
+- `NoteStore.update`: explicit guard — only a real change to `title` /
+  `body` / `tags` / `published` may touch the file or bump `updated`; a
+  re-persist of identical fields is a no-op even when the caller's note
+  carries a different `updated`. The not-in-memory path persists as-is
+  instead of inventing a timestamp.
+- Tests: `testUpdateWithStaleUpdatedButIdenticalFieldsIsNoop` (file
+  byte-identical, `updated` unmoved) and
+  `testUpdateWithRealChangeBumpsUpdatedAndPersists` (positive control).
+
+### Gate result
+
+10/10 back-to-back `open -a` imports into fresh container vaults were
+byte-identical (risotto.cook and Welcome-2.md vs sources, including
+`updated:`) on the fixed build — 0 failures. `swift test` green,
+`make smoke` green.
+
+## Do (done — kept as the record of what was asked)
+
+1. ~~Make `applyEditorChanges` verify the buffer it writes belongs to the note~~
+   ~~it was loaded for — capture `selectedID` + `editorSessionID` at load~~
+   ~~and require both at write.~~ Done via `loadedForID` / `loadedSessionID`.
+2. ~~As a belt-and-braces option: in `NoteStore.update`, bump `updated` only~~
+   ~~when a persisted field actually changed vs the existing note.~~ Done as
+   an explicit guard with a byte-identity test.
+3. Reproduce first, fix second. **Recorded:** 7 probe runs before the fix
+   never reproduced; the gate after the fix is 10/10 byte-identical.
 
 ## Do not
 
@@ -84,6 +105,11 @@ copy. Checksums of `risotto.cook` were byte-identical in the same run.
 
 ## Gate
 
-Back-to-back `open -a` imports are byte-identical across ≥10 runs (including
-`updated:`); the race no longer reproduces; normal typing/undo unaffected;
-`swift test` green; `make smoke` green.
+~~Back-to-back `open -a` imports are byte-identical across ≥10 runs (including~~
+~~`updated:`); the race no longer reproduces; normal typing/undo unaffected;~~
+~~`swift test` green; `make smoke` green.~~
+
+**Passed 2026-08-19:** 10/10 byte-identical runs, 0 failures, on the fixed
+build; `swift test` and `make smoke` green. If a future sit observes a
+bumped `updated` again, reopen this card with the new reproduction — the
+session guard and the store no-op are defense in depth, not a proof.

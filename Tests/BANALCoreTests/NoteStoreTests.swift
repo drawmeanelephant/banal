@@ -65,6 +65,54 @@ final class NoteStoreTests: XCTestCase {
         XCTAssertTrue(source.contains("title: Stable"))
     }
 
+    /// F-9 belt-and-braces: a re-persist whose persisted fields are
+    /// identical must not touch the file, even when the caller's note
+    /// carries a different `updated` (the stale-buffer-echo shape).
+    func testUpdateWithStaleUpdatedButIdenticalFieldsIsNoop() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let created = try store.createNote(title: "Stable")
+        let bytesBefore = try Data(contentsOf: created.fileURL)
+
+        var stale = created
+        stale.updated = Date().addingTimeInterval(3600)
+        store.update(stale, debounce: false)
+
+        let after = try XCTUnwrap(store.note(id: created.id))
+        XCTAssertEqual(after.updated, created.updated, "updated must not move for a no-op write")
+        let bytesAfter = try Data(contentsOf: created.fileURL)
+        XCTAssertEqual(bytesAfter, bytesBefore, "the file must be byte-identical")
+    }
+
+    /// Positive control: a real content change still bumps `updated` and
+    /// persists — the guard must not be so strict it swallows edits.
+    func testUpdateWithRealChangeBumpsUpdatedAndPersists() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let created = try store.createNote(title: "Editing")
+        var edited = created
+        edited.body = "\nNew words.\n"
+        edited.updated = created.updated
+        store.update(edited, debounce: false)
+
+        let after = try XCTUnwrap(store.note(id: created.id))
+        XCTAssertTrue(after.updated > created.updated, "a real edit must move updated forward")
+        XCTAssertEqual(after.body, "\nNew words.\n")
+        let reloaded = try NoteIO.load(url: created.fileURL, vaultURL: vault.rootURL)
+        XCTAssertEqual(reloaded.body, "\nNew words.\n")
+        XCTAssertLessThan(
+            abs(reloaded.updated.timeIntervalSince(after.updated)),
+            1.0,
+            "disk must carry the bumped updated (frontmatter keeps second precision)"
+        )
+    }
+
     func testPublishedFilterAndSearch() throws {
         let vault = try makeVault()
         defer { try? FileManager.default.removeItem(at: vault.rootURL) }
