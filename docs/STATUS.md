@@ -25,7 +25,7 @@
 - Languages: `.md`, `.textile`, and `.cook` are notes. File → New Textile / New Recipe. Recipes keep Cooklang `>>` metadata, not a YAML fence. Opening any of them is source.
 - Recipe Read: `.cook` notes have Edit | Read. Read shows ingredients, cookware, steps, and notes from Oliver’s typed Recipe. ½ 1× 2× 3× scales the view only. Missing or older Oliver (no `serialize --json`) is one sentence; Edit still works.
 - Publish Site (⇧⌘P): only `published` notes leave the vault. Markdown uses Boris when present, else builtin HTML+RSS. Textile and Cooklang join the same `.publish/` folder via Oliver. Recipes stay Cooklang on disk. Deploy to Cloudflare is optional and enabled when a Keychain token and project name exist.
-- File associations (F-8, issue #44, pulled forward from M10): BANAL declares itself Editor for `.md` / `.textile` / `.cook` (Open With, Dock drag, double-click). A file inside the vault opens in place; one outside is copied into the vault root (unique name, source untouched) and selected. One open route only — no double imports. Card: [`F-8-file-associations.md`](cards/F-8-file-associations.md).
+- File associations (F-8, issue #44, pulled forward from M10): BANAL declares itself Editor for `.md` / `.textile` / `.cook` (Open With, Dock drag, double-click). A file inside the vault opens in place; one outside is copied into the vault root (unique name, source untouched) and selected. Opens arrive via SwiftUI `.onOpenURL` (with the delegate hook as fallback), deduped so one action never imports twice. Card: [`F-8-file-associations.md`](cards/F-8-file-associations.md).
 
 ## Still open (Close)
 

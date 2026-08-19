@@ -10,11 +10,14 @@
   textile/cooklang so the extensions map to their UTIs. `LSHandlerRank` is
   `Alternate` — BANAL appears under Open With without hijacking `.md` from the
   user's main editor.
-- `BanalAppDelegate.application(_:openFiles:)` is the one route for Finder
-  double-click, Open With, and Dock drags (no `.onOpenURL`, so one action can
-  never import twice). Events before the window appears are queued in the
-  delegate; files opened before a notes folder exists are queued in `AppModel`
-  and imported once `bootstrap()` opens a vault.
+- Open events arrive through two routes: SwiftUI `.onOpenURL` (where a
+  `WindowGroup` delivers Finder double-clicks, Open With, and Dock drags on
+  current macOS — the delegate's `application(_:openFiles:)` does *not* fire
+  for them) and the `BanalAppDelegate` hook as a fallback for older delivery
+  paths. `AppModel` dedupes within 2s, so one action can never import twice
+  even when both routes fire. Events before the window appears are queued in
+  the delegate; files opened before a notes folder exists are queued in
+  `AppModel` and imported once `bootstrap()` opens a vault.
 - Open behavior: file inside the vault → select it and focus the editor; file
   outside → `NoteStore.importFile` copies it into the vault root (unique `-2`
   name on collision, source left untouched, extension decides language) and

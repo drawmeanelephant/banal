@@ -18,6 +18,8 @@
 
 ### Fixed
 
+- Opening a note file (Finder double-click, Open With → BANAL, Dock drag) now actually opens it: SwiftUI `WindowGroup` delivers file opens to `.onOpenURL`, not the app delegate's `openFiles` hook, so the first F-8 build silently swallowed them. Both routes now feed `AppModel.openExternalNote` with a 2s dedupe guard.
+
 - Recipe Read on a render-only Oliver (no `serialize --json`) now says “This recipe needs Oliver.” instead of the misleading “This recipe didn’t parse.” Idle render still works with older binaries.
 
 ### Added

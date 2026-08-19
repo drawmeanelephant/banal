@@ -52,6 +52,10 @@ public final class AppModel: ObservableObject {
     /// Files opened (Finder double-click, Dock drag) before a vault exists.
     /// Imported once `bootstrap()` opens a notes folder.
     private var pendingImports: [URL] = []
+    /// The last opened file, for dedupe. `.onOpenURL` and the delegate's
+    /// `openFiles` can both fire for one user action; a single action must
+    /// never import twice.
+    private var lastHandledOpenURL: (url: URL, at: Date)?
 
     public init(
         store: NoteStore,
@@ -145,6 +149,13 @@ public final class AppModel: ObservableObject {
     /// on the Dock icon. Inside the vault: select it. Outside: copy it in
     /// and select it. With no vault open yet, queue it until one opens.
     public func openExternalNote(at url: URL) {
+        let standard = url.standardizedFileURL
+        if let last = lastHandledOpenURL,
+           last.url == standard,
+           Date().timeIntervalSince(last.at) < 2 {
+            return
+        }
+        lastHandledOpenURL = (standard, Date())
         guard !needsVault else {
             if !pendingImports.contains(url) {
                 pendingImports.append(url)
