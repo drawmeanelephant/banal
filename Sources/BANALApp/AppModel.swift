@@ -37,6 +37,8 @@ public final class AppModel: ObservableObject {
     /// Identity for the open buffer. Changes when the user switches notes,
     /// not when a folder rename or move rewrites the path.
     @Published public private(set) var editorSessionID = UUID()
+    /// Whether macOS 15+ Apple Intelligence Writing Tools is currently active.
+    @Published public var isWritingToolsActive: Bool = false
 
     public let sidebarFocus = FocusToken()
     public let noteListFocus = FocusToken()
@@ -399,6 +401,7 @@ public final class AppModel: ObservableObject {
     }
 
     private func persistEditor(to id: String?) {
+        guard !isWritingToolsActive else { return }
         guard editorDirty,
               selectedID == loadedForID,
               editorSessionID == loadedSessionID,
@@ -427,7 +430,8 @@ public final class AppModel: ObservableObject {
             dirty: editorDirty,
             loadedFingerprint: loadedFingerprint,
             diskFingerprint: disk?.contentFingerprint ?? "",
-            bufferMatchesDisk: bufferMatches
+            bufferMatchesDisk: bufferMatches,
+            isWritingToolsActive: isWritingToolsActive
         ) {
         case .ignore:
             if bufferMatches {

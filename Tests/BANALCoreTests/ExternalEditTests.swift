@@ -86,4 +86,28 @@ final class ExternalEditTests: XCTestCase {
         XCTAssertEqual(first, .keepBuffer)
         XCTAssertEqual(second, .keepBuffer)
     }
+
+    func testWritingToolsActiveSuppressesReloadOnCleanBuffer() {
+        let action = ExternalEdit.action(
+            selectedStillOnDisk: true,
+            dirty: false,
+            loadedFingerprint: "aaa",
+            diskFingerprint: "bbb",
+            bufferMatchesDisk: false,
+            isWritingToolsActive: true
+        )
+        XCTAssertEqual(action, .keepBuffer, "Writing Tools active must suppress reloading from disk")
+    }
+
+    func testWritingToolsActiveKeepsBufferOnDirtyDiskChange() {
+        let action = ExternalEdit.action(
+            selectedStillOnDisk: true,
+            dirty: true,
+            loadedFingerprint: "aaa",
+            diskFingerprint: "bbb",
+            bufferMatchesDisk: false,
+            isWritingToolsActive: true
+        )
+        XCTAssertEqual(action, .keepBuffer)
+    }
 }

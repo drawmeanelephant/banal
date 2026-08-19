@@ -74,7 +74,7 @@ Stage after M8 is done (or beside D where noted).
 | [E-2 Paste](E-2-paste.md) | M9 | editor | landed — `[text](url)` on paste; clean Markdown from web/PDF |
 | [E-3 List](E-3-list.md) | M9 | editor | landed — Return continues list; empty bullet breaks out |
 | [E-4 Fences](E-4-fences.md) | M9 | editor | landed — Smart quotes/dashes off inside ``` and ` ` |
-| [E-5 Heading & Tools](E-5-heading-tools.md) | M9 | editor | Heading space-after hugs text; Writing Tools safe |
+| [E-5 Heading & Tools](E-5-heading-tools.md) | M9 | editor | landed — Heading space-after hugs text; Writing Tools safe |
 
 ### Board F — System (M10)
 

@@ -157,4 +157,85 @@ final class WhisperScanTests: XCTestCase {
         XCTAssertEqual(marks[0].range, NSRange(location: 3, length: 1))
         XCTAssertEqual(marks[1].range, NSRange(location: 5, length: 5))
     }
+
+    // MARK: - Heading Lines & Paragraph Spacing
+
+    func testMarkdownHeadingLineTopException() {
+        let text = "# Title\nParagraph text."
+        let headings = WhisperScan.headingLines(in: text, language: .markdown)
+        XCTAssertEqual(headings.count, 1)
+        XCTAssertEqual(headings[0].level, 1)
+        XCTAssertTrue(headings[0].isTop)
+        XCTAssertEqual(headings[0].range, NSRange(location: 0, length: 7))
+    }
+
+    func testMarkdownHeadingLineTopWithLeadingWhitespace() {
+        let text = "\n  \n# Title\nParagraph"
+        let headings = WhisperScan.headingLines(in: text, language: .markdown)
+        XCTAssertEqual(headings.count, 1)
+        XCTAssertEqual(headings[0].level, 1)
+        XCTAssertTrue(headings[0].isTop)
+        XCTAssertEqual(headings[0].range, NSRange(location: 4, length: 7))
+    }
+
+    func testMarkdownHeadingLineNotTopAfterProse() {
+        let text = "Intro paragraph.\n\n## Section One\nBody text."
+        let headings = WhisperScan.headingLines(in: text, language: .markdown)
+        XCTAssertEqual(headings.count, 1)
+        XCTAssertEqual(headings[0].level, 2)
+        XCTAssertFalse(headings[0].isTop)
+        XCTAssertEqual(headings[0].range, NSRange(location: 18, length: 14))
+    }
+
+    func testMarkdownHeadingLevelsOneThroughSix() {
+        let text = "# H1\n## H2\n### H3\n#### H4\n##### H5\n###### H6\n####### H7"
+        let headings = WhisperScan.headingLines(in: text, language: .markdown)
+        XCTAssertEqual(headings.count, 6)
+        XCTAssertEqual(headings.map(\.level), [1, 2, 3, 4, 5, 6])
+        XCTAssertTrue(headings[0].isTop)
+        XCTAssertFalse(headings[1].isTop)
+        XCTAssertFalse(headings[2].isTop)
+        XCTAssertFalse(headings[3].isTop)
+        XCTAssertFalse(headings[4].isTop)
+        XCTAssertFalse(headings[5].isTop)
+    }
+
+    func testMarkdownHeadingLinesInsideCodeFenceIgnored() {
+        let text = "```\n# Hidden In Backticks\n```\n# Visible\n~~~\n## Hidden In Tildes\n~~~\n### Also Visible"
+        let headings = WhisperScan.headingLines(in: text, language: .markdown)
+        XCTAssertEqual(headings.count, 2)
+        XCTAssertEqual(headings[0].level, 1)
+        XCTAssertEqual(headings[1].level, 3)
+    }
+
+    func testTextileHeadingLines() {
+        let text = "h1. Main Title\nSome content.\nh3. Sub Heading"
+        let headings = WhisperScan.headingLines(in: text, language: .textile)
+        XCTAssertEqual(headings.count, 2)
+        XCTAssertEqual(headings[0].level, 1)
+        XCTAssertTrue(headings[0].isTop)
+        XCTAssertEqual(headings[0].range, NSRange(location: 0, length: 14))
+        XCTAssertEqual(headings[1].level, 3)
+        XCTAssertFalse(headings[1].isTop)
+    }
+
+    func testCooklangHasNoHeadingLines() {
+        let text = ">> title: Risotto\nAdd @rice{300%g} to #pan{} and cook."
+        let headings = WhisperScan.headingLines(in: text, language: .cooklang)
+        XCTAssertTrue(headings.isEmpty)
+    }
+
+    func testHeadingSpacingMetricsValues() {
+        XCTAssertEqual(HeadingSpacingMetrics.spacingBefore, 10, accuracy: 2.0)
+        XCTAssertEqual(HeadingSpacingMetrics.spacingAfter, 4, accuracy: 1.0)
+    }
+
+    func testHeadingLineUTF16EmojiOffset() {
+        let text = "🍝\n# Delicious Pasta"
+        let headings = WhisperScan.headingLines(in: text, language: .markdown)
+        XCTAssertEqual(headings.count, 1)
+        XCTAssertEqual(headings[0].level, 1)
+        XCTAssertFalse(headings[0].isTop)
+        XCTAssertEqual(headings[0].range, NSRange(location: 3, length: 17))
+    }
 }

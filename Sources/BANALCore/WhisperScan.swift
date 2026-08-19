@@ -1,5 +1,29 @@
 import Foundation
 
+/// Metrics for heading paragraph spacing.
+public enum HeadingSpacingMetrics {
+    /// Extra space before heading (~8–12pt). Default: 10pt.
+    public static let spacingBefore: CGFloat = 10
+    /// Tighter space after heading to hug following paragraph text (~3–4pt). Default: 4pt.
+    public static let spacingAfter: CGFloat = 4
+}
+
+/// A scanned heading line and its structural position for paragraph spacing.
+public struct HeadingLine: Equatable, Sendable {
+    /// Full UTF-16 range of the heading line in the text.
+    public var range: NSRange
+    /// The heading level (1...6).
+    public var level: Int
+    /// Whether this heading is at the top of the file (first line or only preceded by whitespace/newlines).
+    public var isTop: Bool
+
+    public init(range: NSRange, level: Int, isTop: Bool) {
+        self.range = range
+        self.level = level
+        self.isTop = isTop
+    }
+}
+
 /// One display-only mark. The editor applies these as layout-manager
 /// temporary attributes — the storage string, undo, and Find stay
 /// character-based, so a mark can never become part of the file.
@@ -54,19 +78,76 @@ public enum WhisperScan {
         return marks
     }
 
-    // MARK: - Markdown
+    /// Heading lines in `text` for `language`, with structural position and top-of-file detection.
+    public static func headingLines(in text: String, language: NoteLanguage) -> [HeadingLine] {
+        guard !text.isEmpty else { return [] }
+        var headings: [HeadingLine] = []
+        var inFence = false
+        text.enumerateSubstrings(in: text.startIndex..<text.endIndex, options: .byLines) { line, lineRange, _, _ in
+            var line = line ?? ""
+            while line.last == "\n" || line.last == "\r" {
+                line.removeLast()
+            }
+            let isTop = text[..<lineRange.lowerBound].allSatisfy { $0.isWhitespace || $0.isNewline }
+            let nsRange = NSRange(lineRange, in: text)
+            switch language {
+            case .markdown:
+                if isFence(line) {
+                    inFence.toggle()
+                    return
+                }
+                if inFence { return }
+                if let level = markdownHeadingLevel(line) {
+                    headings.append(HeadingLine(range: nsRange, level: level, isTop: isTop))
+                }
+            case .textile:
+                if line.hasPrefix(">>>") { return }
+                if let level = textileHeadingLevel(line) {
+                    headings.append(HeadingLine(range: nsRange, level: level, isTop: isTop))
+                }
+            case .cooklang:
+                break
+            }
+        }
+        return headings
+    }
 
-    private static func scanMarkdown(_ line: String, start: String.Index, text: String, into marks: inout [WhisperMark]) {
+    /// Heading level (1...6) if the line is a Markdown heading (`# ` through `###### `), else nil.
+    public static func markdownHeadingLevel(_ line: String) -> Int? {
         let body = line.drop(while: { $0 == " " || $0 == "\t" })
         let hashes = body.prefix(while: { $0 == "#" })
         if (1...6).contains(hashes.count) {
             let afterHashes = body.index(hashes.endIndex, offsetBy: 0)
             let nextIsSpace = afterHashes == body.endIndex || body[afterHashes] == " " || body[afterHashes] == "\t"
             if nextIsSpace {
-                mark(.sigil, body.startIndex..<afterHashes, in: line, start: start, text: text, into: &marks)
-                markHeadingContent(afterHashes, in: body, line: line, start: start, text: text, into: &marks)
-                return
+                return hashes.count
             }
+        }
+        return nil
+    }
+
+    /// Heading level (1...6) if the line is a Textile heading (`h1.` through `h6.`), else nil.
+    public static func textileHeadingLevel(_ line: String) -> Int? {
+        if line.count >= 3, line.hasPrefix("h"), let digit = line.dropFirst().first, "123456".contains(digit), line.dropFirst(2).first == "." {
+            let afterDot = line.index(line.startIndex, offsetBy: 3)
+            let nextIsSpace = afterDot == line.endIndex || line[afterDot] == " " || line[afterDot] == "\t"
+            if nextIsSpace {
+                return Int(String(digit))
+            }
+        }
+        return nil
+    }
+
+    // MARK: - Markdown
+
+    private static func scanMarkdown(_ line: String, start: String.Index, text: String, into marks: inout [WhisperMark]) {
+        if let _ = markdownHeadingLevel(line) {
+            let body = line.drop(while: { $0 == " " || $0 == "\t" })
+            let hashes = body.prefix(while: { $0 == "#" })
+            let afterHashes = body.index(hashes.endIndex, offsetBy: 0)
+            mark(.sigil, body.startIndex..<afterHashes, in: line, start: start, text: text, into: &marks)
+            markHeadingContent(afterHashes, in: body, line: line, start: start, text: text, into: &marks)
+            return
         }
         var blocked = backtickSpans(in: line)
         pair("**", in: line, blocked: blocked, start: start, text: text, into: &marks, blocking: &blocked)
@@ -111,15 +192,12 @@ public enum WhisperScan {
     // MARK: - Textile
 
     private static func scanTextile(_ line: String, start: String.Index, text: String, into marks: inout [WhisperMark]) {
-        if line.count >= 3, line.hasPrefix("h"), let digit = line.dropFirst().first, "123456".contains(digit), line.dropFirst(2).first == "." {
+        if let _ = textileHeadingLevel(line) {
             let afterDot = line.index(line.startIndex, offsetBy: 3)
-            let nextIsSpace = afterDot == line.endIndex || line[afterDot] == " " || line[afterDot] == "\t"
-            if nextIsSpace {
-                mark(.sigil, line.startIndex..<afterDot, in: line, start: start, text: text, into: &marks)
-                let body = line[afterDot...]
-                markHeadingContent(body.startIndex, in: body, line: line, start: start, text: text, into: &marks)
-                return
-            }
+            mark(.sigil, line.startIndex..<afterDot, in: line, start: start, text: text, into: &marks)
+            let body = line[afterDot...]
+            markHeadingContent(body.startIndex, in: body, line: line, start: start, text: text, into: &marks)
+            return
         }
         var blocked: [Range<String.Index>] = []
         pair("**", in: line, blocked: blocked, start: start, text: text, into: &marks, blocking: &blocked)

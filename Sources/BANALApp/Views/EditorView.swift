@@ -43,7 +43,10 @@ struct EditorView: View {
                         style: EditorStyle(from: model.preferences),
                         onEscape: { [weak model] in model?.focusNoteList() },
                         onTab: { [weak model] in model?.focusSidebar() },
-                        onBacktab: { [weak model] in model?.focusNoteList() }
+                        onBacktab: { [weak model] in model?.focusNoteList() },
+                        onWritingToolsActiveChange: { [weak model] active in
+                            model?.isWritingToolsActive = active
+                        }
                     )
                     .onChange(of: model.editorText) { _, _ in
                         model.applyEditorChanges()

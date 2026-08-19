@@ -17,8 +17,12 @@ public enum ExternalEdit {
         dirty: Bool,
         loadedFingerprint: String,
         diskFingerprint: String,
-        bufferMatchesDisk: Bool
+        bufferMatchesDisk: Bool,
+        isWritingToolsActive: Bool = false
     ) -> ExternalEditAction {
+        if isWritingToolsActive {
+            return .keepBuffer
+        }
         if !selectedStillOnDisk {
             return .noteGone(keepBuffer: dirty)
         }
