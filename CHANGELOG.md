@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- List continuation and breakout (E-3, issue #22): Typing Return on bullet (`- `, `* `, `+ `, `- [ ] `) or numbered (`1. `, `2. `) list lines continues the list with indentation preserved (numbered items increment; checked `- [x]` items continue as unchecked `- [ ]`). Pressing Return on an empty bullet line cleanly breaks out leaving a blank line with caret at column 0. Soft breaks via `Shift+Return` insert plain newlines, code fences suppress list continuation, and `⌘Z` undo works in a single clean step.
 - Smart paste and links (E-2, issue #21): Pasting a URL over selected text wraps it in `[selectedText](url)` with caret right after `)`. Pasting rich text or HTML from web browsers and PDFs converts cleanly to Markdown while stripping spans, styles, divs, and classes. Full `⌘Z` undo support.
 - Column focus & keyboard navigation (E-1, issue #20): ⌘1 (Focus Sidebar), ⌘2 (Focus Note List), ⌘3 (Focus Editor) under View menu. Full keyboard flow with arrow navigation, folder expand/collapse in sidebar, Return to jump to editor caret, Escape in editor to return to note list, and Tab / ⇧Tab column cycling without breaking code fence indentation.
 - Find the saffron (D-4): ⌘F search in list view matches recipe ingredients in `.cook` notes (bare tokens, braced multi-word ingredients, and inlined sauces) and Oliver's parsed ingredient index in a disposable in-memory cache. Missing Oliver searches file body and tokens accurately without subprocess latency.

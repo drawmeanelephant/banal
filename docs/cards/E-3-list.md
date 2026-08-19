@@ -1,10 +1,10 @@
 # Card E-3 — List continuation & breakout
 
-**Milestone:** M9 · **Lane:** editor · **Depends:** M8 done · **Status:** ready — natural list typing
+**Milestone:** M9 · **Lane:** editor · **Depends:** M8 done · **Status:** landed — natural list typing
 
 ## Handoff
 
-- **Not started.** Pressing Return on a bullet or numbered list line simply starts a fresh blank line without a bullet.
+- **Landed.** Return continues bullet (`- `, `* `, `+ `, `- [ ] `) and numbered (`1. ` -> `2. `) lists with indentation preserved. Empty list item Return cleanly breaks out. Soft break via `Shift+Return` inserts a plain newline. Code fences suppress list continuation. Standard `⌘Z` undoes in one step. Pure logic helper `ListContinuation` in `BANALCore`, intercepted via `insertNewline(_:)` in `MarkdownTextView`.
 - **Not this card:** syntax whisper (D-1), checkboxes in source (H-1).
 
 ## Owns
