@@ -37,12 +37,7 @@ public final class AppModel: ObservableObject {
     private var loadedFingerprint = ""
     private var warnedDiskFingerprint = ""
     private var cancellables = Set<AnyCancellable>()
-    private let oliverClient: OliverClient?
-    private var oliverWork: DispatchWorkItem?
-    private let oliverQueue = DispatchQueue(label: "dev.drawmeanelephant.banal.oliver", qos: .utility)
-
-    /// Idle after typing. Never run Oliver from `textDidChange`.
-    private static let oliverDebounce: TimeInterval = 0.4
+    private let oliver: OliverDebounce
 
     public init(
         store: NoteStore,
@@ -55,7 +50,7 @@ public final class AppModel: ObservableObject {
         self.missingNotesFolder = missingNotesFolder
         self.preferences = preferences
         store.watchesExternalEdits = preferences.watchExternalEdits
-        self.oliverClient = OliverLocator.resolve().map(OliverClient.init(binaryURL:))
+        self.oliver = OliverDebounce()
         bindStore()
     }
 
@@ -411,22 +406,17 @@ public final class AppModel: ObservableObject {
     /// Ask Oliver what this buffer is, after idle. Missing binary is
     /// silent. The process runs off the main queue so typing never waits.
     private func scheduleOliverQuestion() {
-        oliverWork?.cancel()
-        guard let oliverClient else {
+        guard oliver.isAvailable else {
             lastOliverRender = nil
             return
         }
-        let source = editorText
         let noteID = selectedID
-        let work = DispatchWorkItem { [weak self, oliverClient] in
-            let rendered = try? oliverClient.render(source)
+        oliver.schedule(source: editorText) { [weak self] render in
             Task { @MainActor [weak self] in
                 guard let self, self.selectedID == noteID else { return }
-                self.lastOliverRender = rendered
+                self.lastOliverRender = render
             }
         }
-        oliverWork = work
-        oliverQueue.asyncAfter(deadline: .now() + Self.oliverDebounce, execute: work)
     }
 }
 
