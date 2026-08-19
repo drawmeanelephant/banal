@@ -238,19 +238,29 @@ final class BanalAppDelegate: NSObject, NSApplicationDelegate {
     /// opened. `bootstrap()` writes `.banal/config.json`; if that never
     /// happens (wrong BANAL_VAULT, sandbox-blocked path), quit at the
     /// deadline and let the script report the failure.
+    /// When `BANAL_SMOKE_OPEN_FILE` is set (the open-event case), also wait
+    /// until that leaf exists in the vault — the script delivers the file
+    /// via LaunchServices after launch, and the import must land before the
+    /// app quits, or the test would false-pass.
     @MainActor
     private func finishSmokeTest() {
         let deadline = Date().addingTimeInterval(10)
+        let openLeaf = ProcessInfo.processInfo.environment["BANAL_SMOKE_OPEN_FILE"]
         func poll() {
             let configURL = model?.store.configuration.configURL
             let opened = configURL.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
-            if opened {
+            var imported = true
+            if let openLeaf, !openLeaf.isEmpty, let rootURL = model?.store.configuration.rootURL {
+                imported = FileManager.default.fileExists(atPath: rootURL.appendingPathComponent(openLeaf).path)
+            }
+            if opened && imported {
                 print("BANAL smoke: ready")
                 NSApp.terminate(nil)
                 return
             }
             if Date() >= deadline {
-                print("BANAL smoke: timed out waiting for the vault to open")
+                let missing = opened ? "the open-file import (\(openLeaf ?? "")) never landed" : "the vault to open"
+                print("BANAL smoke: timed out waiting for \(missing)")
                 NSApp.terminate(nil)
                 return
             }
