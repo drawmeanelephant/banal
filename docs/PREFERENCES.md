@@ -80,11 +80,11 @@ Out of scope for the pane (do not add):
 - Billing, plans, team invites
 - OAuth dance beyond “paste a token”
 
-### Behavior when deploy is not implemented
+### Behavior
 
 - **Save** writes the non-secret fields.
-- **Publish Site…** still builds `.publish/` (Boris or builtin) and writes a dry-run `wrangler.toml`.
-- **Deploy to Cloudflare** is visible and disabled, or enabled only as “copy command.” Implementing the live `wrangler` call is a later milestone, not a Settings redesign.
+- **Publish Site…** builds `.publish/` (Boris for Markdown when present, else builtin HTML+RSS; Textile/Cooklang via Oliver) and writes `wrangler.toml`.
+- **Deploy to Cloudflare** is enabled when a Keychain token and project name exist. Failure is one sentence; the log is copied. Success does not open a sheet.
 
 ## Persistence rules
 

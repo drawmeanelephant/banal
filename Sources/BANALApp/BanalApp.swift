@@ -106,6 +106,11 @@ struct BanalApp: App {
                 }
                 .keyboardShortcut("p", modifiers: [.command, .shift])
                 .disabled(model.needsVault)
+
+                Button("Deploy to Cloudflare") {
+                    model.deployToCloudflare()
+                }
+                .disabled(model.needsVault || !model.canDeploy)
             }
 
             CommandMenu("Find") {

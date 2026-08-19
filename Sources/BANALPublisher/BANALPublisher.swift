@@ -4,16 +4,19 @@ import BANALCore
 /// Isolated publishing service. Local editing never calls this.
 public struct BANALPublisher: Sendable {
     public var compiler: any SiteCompiling
+    public var oliver: OliverClient?
 
-    public init(compiler: any SiteCompiling = BuiltinSiteCompiler()) {
+    public init(compiler: any SiteCompiling = BuiltinSiteCompiler(), oliver: OliverClient? = nil) {
         self.compiler = compiler
+        self.oliver = oliver
     }
 
     public static func make(configuration: PublishConfiguration) -> BANALPublisher {
+        let oliver = OliverLocator.resolve().map { OliverClient(binaryURL: $0) }
         if configuration.preferBoris, let binary = configuration.borisBinaryURL {
-            return BANALPublisher(compiler: BorisCLICompiler(binaryURL: binary))
+            return BANALPublisher(compiler: BorisCLICompiler(binaryURL: binary), oliver: oliver)
         }
-        return BANALPublisher(compiler: BuiltinSiteCompiler())
+        return BANALPublisher(compiler: BuiltinSiteCompiler(), oliver: oliver)
     }
 
     public func publish(
@@ -23,8 +26,34 @@ public struct BANALPublisher: Sendable {
         now: Date = Date(),
         fileManager: FileManager = .default
     ) throws -> PublishResult {
+        let published = BorisAdapter.publishedNotes(from: notes)
+        if published.isEmpty {
+            throw PublishError.noPublishedNotes
+        }
+
+        var compiled: [Note] = []
+        var skipped: [PublishSkip] = []
+        var extras: [(page: BorisPage, html: String)] = []
+
+        for note in published {
+            if note.language == .markdown {
+                compiled.append(note)
+                continue
+            }
+            if let html = renderMarkup(note) {
+                extras.append((BorisAdapter.page(from: note, among: published), html))
+                compiled.append(note)
+            } else {
+                skipped.append(PublishSkip(noteID: note.id, language: note.language))
+            }
+        }
+
+        if compiled.isEmpty {
+            throw PublishError.nothingCompiled
+        }
+
         let staged = try BorisAdapter.stage(
-            notes: notes,
+            notes: compiled,
             configuration: configuration,
             assetsSource: vault.assetsURL,
             fileManager: fileManager
@@ -36,11 +65,20 @@ public struct BANALPublisher: Sendable {
             configuration: configuration
         )
 
-        let published = BorisAdapter.publishedNotes(from: notes)
+        for extra in extras {
+            let html = SiteHTML.document(
+                page: extra.page,
+                pages: staged.pages,
+                configuration: configuration,
+                bodyHTML: extra.html
+            )
+            try SiteHTML.write(html, entityID: extra.page.entityID, artifactDirectory: configuration.artifactDirectory, fileManager: fileManager)
+        }
+
         let rss = RSSFeed.xml(
             siteTitle: configuration.siteTitle,
             siteBaseURL: configuration.siteBaseURL,
-            notes: published,
+            notes: compiled,
             now: now
         )
         let rssURL = configuration.artifactDirectory.appendingPathComponent("feed.xml")
@@ -61,8 +99,17 @@ public struct BANALPublisher: Sendable {
             rssURL: rssURL,
             pageCount: staged.pages.count,
             usedBorisBinary: compile.usedBorisBinary,
-            compiledNoteIDs: published.map(\.id),
+            compiledNoteIDs: compiled.map(\.id),
+            skipped: skipped,
             compilerName: compile.compilerName
         )
+    }
+
+    private func renderMarkup(_ note: Note) -> String? {
+        guard let oliver else { return nil }
+        let frontend = OliverFrontend(language: note.language)
+        guard let html = try? oliver.render(note.body, frontend: frontend).html else { return nil }
+        let trimmed = html.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : html
     }
 }

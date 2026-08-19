@@ -111,7 +111,7 @@ BANALPublisher   BorisAdapter, SiteCompiling (builtin + Boris CLI), RSS, Cloudfl
 BANALApp         SwiftUI NavigationSplitView + AppKit NSTextView
 ```
 
-Publishing never runs during typing. File → Publish Site… (⇧⌘P) is explicit.
+Publishing never runs during typing. File → Publish Site… (⇧⌘P) is explicit. Markdown goes through Boris when present; Textile and Cooklang are Oliver HTML in the same artifact (Boris will not mix extensions in one tree). Deploy is a separate menu item.
 
 ## Deferred
 

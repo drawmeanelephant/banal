@@ -36,8 +36,8 @@ public struct BuiltinSiteCompiler: SiteCompiling {
         }
         try fileManager.createDirectory(at: artifactDirectory, withIntermediateDirectories: true)
 
-        for page in pages {
-            let rendered = renderPage(page, pages: pages, configuration: configuration)
+        for page in pages where page.language == .markdown {
+            let rendered = SiteHTML.document(page: page, pages: pages, configuration: configuration)
             let destination = artifactDirectory.appendingPathComponent("\(page.entityID).html")
             try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
             try Data(rendered.utf8).write(to: destination, options: .atomic)
@@ -51,24 +51,33 @@ public struct BuiltinSiteCompiler: SiteCompiling {
         return SiteCompileResult(usedBorisBinary: false, compilerName: "builtin")
     }
 
-    private func renderPage(_ page: BorisPage, pages: [BorisPage], configuration: PublishConfiguration) -> String {
+}
+
+public enum SiteHTML {
+    public static func document(page: BorisPage, pages: [BorisPage], configuration: PublishConfiguration, bodyHTML: String? = nil) -> String {
         let navItems = pages.map { item in
             let current = item.entityID == page.entityID ? " class=\"is-current\"" : ""
             return "<li\(current)><a href=\"\(item.entityID).html\">\(MarkdownHTML.escape(item.title))</a></li>"
         }.joined(separator: "\n")
         let nav = "<nav><ul>\(navItems)</ul></nav>"
-        let bodyHTML = MarkdownHTML.render(stripLeadingNewlines(pageBody(page.source)))
+        let body = bodyHTML ?? MarkdownHTML.render(stripLeadingNewlines(pageBody(page.source)))
         return BundledTheme.mainLayout
             .replacingOccurrences(of: "{{title}}", with: MarkdownHTML.escape(page.title))
             .replacingOccurrences(of: "{{nav}}", with: nav)
-            .replacingOccurrences(of: "{{content}}", with: bodyHTML)
+            .replacingOccurrences(of: "{{content}}", with: body)
     }
 
-    private func pageBody(_ source: String) -> String {
+    public static func write(_ html: String, entityID: String, artifactDirectory: URL, fileManager: FileManager = .default) throws {
+        let destination = artifactDirectory.appendingPathComponent("\(entityID).html")
+        try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data(html.utf8).write(to: destination, options: .atomic)
+    }
+
+    private static func pageBody(_ source: String) -> String {
         (try? FrontmatterCodec.parse(source))?.body ?? source
     }
 
-    private func stripLeadingNewlines(_ text: String) -> String {
+    private static func stripLeadingNewlines(_ text: String) -> String {
         String(text.drop(while: { $0 == "\n" || $0 == "\r" }))
     }
 }
