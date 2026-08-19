@@ -188,6 +188,34 @@ A third list of “notes app” niceties. Scored so it cannot sneak in as polish
 - **Privacy** is the folder. No cloud of ours. Contacts/Photos entitlements are used only for the picker that just shipped.
 - **Localization** is later, and only after the English empty states are sentences we would say out loud.
 
+## Voice — how the app speaks
+
+BANAL talks to users the way a good waiter talks to a table:
+short, warm, and then gone.
+
+- **Empty states** are one sentence, lowercase energy, no
+  exclamation marks. "No notes in this folder." Not "You
+  haven't created any notes yet! Click + to get started."
+- **Errors** name the problem, not the architecture.
+  "This recipe needs Oliver." Not "OliverClient returned
+  nil from serialize." The human does not know what Oliver
+  is made of.
+- **Menus** use verbs a person would say. "New Note."
+  "Move to Trash." "Deploy to Cloudflare." Not "Create
+  New Document Instance."
+- **Settings labels** are plain. "Notes Folder." "Site
+  Title." Not "Primary Vault Location" or "Publication
+  Display Name."
+- **Confirmations** are rare and honest. If trashing a note
+  is reversible, say so. If deploying overwrites the site,
+  say that too. Never "Are you sure?" without saying what
+  happens.
+
+If the copy sounds like a marketing page, rewrite it. If
+it sounds like an error log, rewrite it. It should sound
+like a person who works here and is not trying to impress
+you.
+
 ## Named leftovers (still not a pane)
 
 Already spoken for, still waiting for a human to ask or for M8 to close:

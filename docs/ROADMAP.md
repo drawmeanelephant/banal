@@ -127,6 +127,9 @@ to a rich-text preview.
   inline backticks
 - Writing Tools / dictation: do not clobber `string` while
   `isWritingToolsActive` (C-1 sit §3b)
+- Column focus: ⌘1 sidebar, ⌘2 list, ⌘3 editor. Tab cycles
+  forward. A person who never touches the trackpad writes and
+  files notes with their hands on the keyboard
 
 Not M9: multi-cursor, a canvas, rendered callouts, math, Mermaid.
 
@@ -150,6 +153,8 @@ editor. `#available`; do not raise the macOS 14 floor.
 - Copy As: Markdown / RTF / HTML (Oliver for HTML)
 - Import a folder or a chat export = copy into the notes folder
 - Insert Contact… / Insert File… (system pickers)
+- Drag a note from the list into Mail, Messages, or Finder —
+  it is a file; let it travel like one
 
 Not M11: image snap-resize, full-bleed, hover zoom, a media library.
 
@@ -195,3 +200,14 @@ from here until Tucson is behind us.
 | **M20** | California | **1.0** — notarized `.app` a stranger can keep. Still three columns. |
 | **M50** | Japan | Vacation luxury (Enrich Markup, one stylesheet, scaled recipe if asked). After M20 only. |
 | **M99** | Home | The folder outlives us. Stop adding towns. |
+
+## The quiet test
+
+When the roadmap is done, one question:
+
+Does a person who opens a folder, writes a paragraph, files it,
+and once in a while cooks a risotto from a `.cook` file that is
+still a file — does that person feel like the app was made for
+exactly this Tuesday?
+
+If yes, stop. If no, delete something.
