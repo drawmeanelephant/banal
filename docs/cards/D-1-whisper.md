@@ -11,6 +11,50 @@
 - **Not this card:** Markdown/Textile Read (D-2), Cooklang
   highlighting as a language pack, stylesheets, a theme toggle.
 
+## Touch-list (scouted against current code — do not start until C-1 sat)
+
+Editor today: `MarkdownTextView.swift` (~183 lines), plain `NSTextView`,
+`isRichText = false`, SF Pro. `apply(style:)` writes font/color/paragraph
+and **flattens the whole storage** on style change
+(`storage.addAttributes` over `0..<length`). No temporary attributes, no
+highlighting, no `isWritingToolsActive` anywhere. `EditorStyle` carries
+only size / line-height / spell / smart-quotes. Oliver idle lives in
+`AppModel.scheduleOliverQuestion` — view-layer only, untouched by this card.
+
+Minimal path:
+
+1. **Layer: layout-manager temporary attributes**
+   (`layoutManager.addTemporaryAttributes`). Display-only, so the storage
+   string, undo, and ⇧⌘F stay character-based, and the storage flatten in
+   `apply(style:)` cannot wipe the marks. Spike first: confirm temporary
+   attributes render with `isRichText = false`; if not, re-apply after
+   idle on storage instead. Never `isRichText = true`.
+2. **Trigger: a debounce like Oliver’s, in the view layer.** ~0.4s after
+   `textDidChange` (coalescing), never inside it. Clear marks on
+   `documentChanged` (note switch). Skip the pass while
+   `isWritingToolsActive` — do not restyle under the system rewrite.
+   No `AppModel` changes.
+3. **Ordering:** run the pass after `apply(style:)`, and again when
+   `EditorStyle` changes, so whisper survives the flatten.
+4. **Scanner: local, no subprocess, no CommonMark/TextMate.** A tiny
+   pure line/pattern scanner (suggest a `WhisperScan` type beside the
+   view — unit-testable). Mark:
+   - Markdown: `^#{1,6} ` headings, `**`/`*`/`_` emphasis, `[label](url)`
+   - Textile: `^h[1-6]. ` headings, `*`/`_` emphasis, `"label":url`
+   - Cooklang: `@…{…}` ingredients, `#…{…}` cookware, `~…{…}` timers,
+     `>> ` metadata lines
+5. **Style: one voice, same metrics.** Weight for headings,
+   `secondaryLabelColor` / ~30%-opacity markers for sigils. Same font
+   metrics. If it shouts, delete colors until only weight remains.
+6. **Tests:** scanner unit tests (ranges per language; no false marks
+   inside code spans or `>>>`); a guard that the pass never mutates the
+   storage string. The D-1 gate is its own mini-sit: a heading + a
+   risotto step, still looks like B-1, ⌘Z after thirty seconds sane,
+   `swift test` green.
+
+D-2 must not restyle `RecipeReadView` and D-3 must not restyle
+`MarkdownTextView` — this card owns the view file and nothing else.
+
 ## Owns
 
 - `Sources/BANALApp/Views/MarkdownTextView.swift`
