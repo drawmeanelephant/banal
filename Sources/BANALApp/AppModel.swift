@@ -38,6 +38,8 @@ public final class AppModel: ObservableObject {
     /// not when a folder rename or move rewrites the path.
     @Published public private(set) var editorSessionID = UUID()
 
+    public let sidebarFocus = FocusToken()
+    public let noteListFocus = FocusToken()
     public let editorFocus = FocusToken()
     /// Last Oliver HTML for the open buffer. Published so the prose Read
     /// view (D-2) updates when the idle render lands; the editor itself
@@ -460,6 +462,25 @@ public final class AppModel: ObservableObject {
             return
         }
         revealVault()
+    }
+
+    public func focusSidebar() {
+        sidebarFocus.request()
+    }
+
+    public func focusNoteList() {
+        if selectedID == nil, let first = visibleNotes.first {
+            select(first.id)
+        }
+        noteListFocus.request()
+    }
+
+    public func focusEditor() {
+        guard selectedID != nil else { return }
+        if viewMode != .edit {
+            setViewMode(.edit)
+        }
+        editorFocus.request()
     }
 
     public func focusSearch() {

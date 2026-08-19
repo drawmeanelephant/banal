@@ -1,3 +1,4 @@
+import AppKit
 import BANALCore
 import SwiftUI
 
@@ -47,6 +48,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        .background(SidebarFocusHelper(model: model))
         .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 240)
         .contextMenu {
             Button("New Folder") { model.beginNewFolder() }
@@ -60,6 +62,133 @@ struct SidebarView: View {
             TextField("Name", text: $model.folderNameDraft)
             Button("Rename") { model.confirmRenameFolder() }
             Button("Cancel", role: .cancel) {}
+        }
+    }
+}
+
+private struct SidebarFocusHelper: NSViewRepresentable {
+    @ObservedObject var model: AppModel
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(model: model)
+    }
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView(frame: .zero)
+        context.coordinator.setup(view: view)
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        context.coordinator.model = model
+        context.coordinator.attachIfNeeded()
+    }
+
+    static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
+        coordinator.teardown()
+    }
+
+    @MainActor
+    final class Coordinator: NSObject {
+        weak var model: AppModel?
+        weak var outlineView: NSOutlineView?
+        private var eventMonitor: Any?
+        private weak var hostView: NSView?
+
+        init(model: AppModel) {
+            self.model = model
+        }
+
+        func setup(view: NSView) {
+            self.hostView = view
+            installFocusHandler()
+            installMonitor()
+            DispatchQueue.main.async { [weak self] in
+                self?.attachIfNeeded()
+            }
+        }
+
+        func installFocusHandler() {
+            model?.sidebarFocus.handler = { [weak self] in
+                self?.focus()
+            }
+        }
+
+        func attachIfNeeded() {
+            installFocusHandler()
+            if outlineView == nil, let hostView {
+                outlineView = findOutlineView(from: hostView)
+            }
+        }
+
+        func focus() {
+            attachIfNeeded()
+            guard let outlineView, let window = outlineView.window else { return }
+            window.makeFirstResponder(outlineView)
+        }
+
+        private func installMonitor() {
+            guard eventMonitor == nil else { return }
+            eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                guard let self,
+                      let outlineView = self.outlineView,
+                      let window = outlineView.window,
+                      window.firstResponder === outlineView else {
+                    return event
+                }
+                if event.keyCode == 48 { // Tab
+                    if event.modifierFlags.contains(.shift) {
+                        self.model?.focusEditor()
+                    } else {
+                        self.model?.focusNoteList()
+                    }
+                    return nil
+                }
+                if event.keyCode == 36 || event.keyCode == 76 { // Return / Enter
+                    self.model?.focusNoteList()
+                    return nil
+                }
+                return event
+            }
+        }
+
+        func teardown() {
+            if let eventMonitor {
+                NSEvent.removeMonitor(eventMonitor)
+                self.eventMonitor = nil
+            }
+            model?.sidebarFocus.handler = nil
+        }
+
+        private func findOutlineView(from view: NSView) -> NSOutlineView? {
+            var current: NSView? = view
+            while let v = current {
+                if let outline = v as? NSOutlineView { return outline }
+                if let scroll = v as? NSScrollView, let outline = scroll.documentView as? NSOutlineView {
+                    return outline
+                }
+                current = v.superview
+            }
+            if let parent = view.superview, let found = findOutlineViewInSubviews(of: parent) {
+                return found
+            }
+            if let root = view.window?.contentView {
+                return findOutlineViewInSubviews(of: root)
+            }
+            return nil
+        }
+
+        private func findOutlineViewInSubviews(of root: NSView) -> NSOutlineView? {
+            if let outline = root as? NSOutlineView { return outline }
+            if let scroll = root as? NSScrollView, let outline = scroll.documentView as? NSOutlineView {
+                return outline
+            }
+            for subview in root.subviews {
+                if let found = findOutlineViewInSubviews(of: subview) {
+                    return found
+                }
+            }
+            return nil
         }
     }
 }

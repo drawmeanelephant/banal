@@ -70,7 +70,7 @@ Stage after M8 is done (or beside D where noted).
 
 | Card | Milestone | Lane | Gate |
 |------|-----------|------|------|
-| [E-1 Focus](E-1-focus.md) | M9 | chrome | ⌘1/⌘2/⌘3 column focus, Tab cycle, arrow keys |
+| [E-1 Focus](E-1-focus.md) | M9 | chrome | landed — ⌘1/⌘2/⌘3 column focus, Tab cycle, arrow keys |
 | [E-2 Paste](E-2-paste.md) | M9 | editor | `[text](url)` on paste; clean Markdown from web/PDF |
 | [E-3 List](E-3-list.md) | M9 | editor | Return continues list; empty bullet breaks out |
 | [E-4 Fences](E-4-fences.md) | M9 | editor | Smart quotes/dashes off inside ``` and ` ` |
