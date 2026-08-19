@@ -61,4 +61,5 @@ Mark notes **Published**, then File → Publish Site….
 | [`docs/PREFERENCES.md`](docs/PREFERENCES.md) | Settings + Cloudflare-ready Publish pane |
 | [`docs/ROADMAP.md`](docs/ROADMAP.md) | Folders → Settings → Finish → Deploy |
 | [`docs/STATUS.md`](docs/STATUS.md) | What works now |
+| [`docs/TESTING-NOTES-FOLDER.md`](docs/TESTING-NOTES-FOLDER.md) | How to sit the notes-folder picker (first run, missing, vanish while open) |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Boris / Solipsist boundary |

@@ -11,7 +11,7 @@
 - Type: system serif body and title, 16pt, line height from Settings, 680pt centered measure when limited
 - Caret: flush only when dirty; switch notes resets undo; clean external reload keeps a valid offset; ⇧⌘F shows the find bar
 - Empty list / empty folder / no selection / nothing published are one sentence each
-- Missing or deleted notes folder shows “This notes folder is missing.” and Choose… — at launch and if the folder vanishes while open; the folder is not silently recreated
+- Missing or deleted notes folder shows “This notes folder is missing.” and Choose… — at launch and if the folder vanishes while open; the folder is not silently recreated. Tester script: [`TESTING-NOTES-FOLDER.md`](TESTING-NOTES-FOLDER.md)
 - Folders are real directories: create, rename, trash, nested tree, empty folders stay; Finder mkdir/rename rescans
 - New note lands in the selected folder (or Inbox / root, per Settings); New Note Here always uses that folder
 - Drag a note onto a folder (or All Notes) to move the file

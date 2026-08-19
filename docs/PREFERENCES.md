@@ -18,7 +18,7 @@ No Accounts pane. No Themes store. No Plugins.
 
 | Key | Type | Default | Notes |
 | --- | --- | --- | --- |
-| Vault folder | security-scoped bookmark | unset → first-run picker; fallback `~/Documents/BANAL Notes` | Reveal in Finder button |
+| Notes folder | security-scoped bookmark | unset → first-run picker; fallback `~/Documents/BANAL Notes` | Reveal in Finder. If the remembered path is gone, show “This notes folder is missing.” — do not recreate it. See [`TESTING-NOTES-FOLDER.md`](TESTING-NOTES-FOLDER.md). |
 | Open most recent vault on launch | bool | true | |
 | Sort notes | enum: `updated`, `created`, `title` | `updated` | |
 | Default new-note location | enum: `selected_folder`, `vault_root`, `inbox` | `selected_folder` | If `inbox`, create `Inbox/` as needed |
