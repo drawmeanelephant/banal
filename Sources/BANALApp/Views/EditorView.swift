@@ -26,6 +26,7 @@ struct EditorView: View {
                     MarkdownTextView(
                         text: $model.editorText,
                         documentID: model.editorSessionID.uuidString,
+                        language: model.selectedNote?.language ?? .markdown,
                         findToken: model.findInNoteToken,
                         focusToken: model.editorFocus,
                         style: EditorStyle(from: model.preferences)

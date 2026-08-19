@@ -1,13 +1,19 @@
 # Card D-1 — Whisper the source
 
-**Milestone:** M8 · **Lane:** editor · **Depends:** C-1 sat · **Status:** ready — hints, not a theme
+**Milestone:** M8 · **Lane:** editor · **Depends:** C-1 sat · **Status:** cooking — implemented + unit-tested; the card's mini-sit is the remaining human gate
 
 ## Handoff
 
-- **Not started.** `MarkdownTextView` is plain `NSTextView`,
-  `isRichText = false`, SF Pro, no attributes beyond the B-1
-  paragraph style. Oliver already parses after idle; the editor
-  does not show what it knows.
+- **Implemented.** `MarkdownTextView` now marks headings and
+  sigils as layout-manager temporary attributes (~0.4s after
+  idle, skipped while Writing Tools is active) via
+  `WhisperScan` in `BANALCore` (unit-tested, UTF-16-safe).
+  The storage string, undo, and Find stay character-based;
+  `isRichText` is still `false`.
+- **Remaining:** the card's own mini-sit — type a heading and a
+  risotto step, the page still looks like B-1, ⌘Z after thirty
+  seconds is sane. If it shouts, delete colors until only
+  weight remains.
 - **Not this card:** Markdown/Textile Read (D-2), Cooklang
   highlighting as a language pack, stylesheets, a theme toggle.
 

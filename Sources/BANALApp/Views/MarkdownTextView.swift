@@ -39,6 +39,7 @@ struct EditorStyle: Equatable {
 struct MarkdownTextView: NSViewRepresentable {
     @Binding var text: String
     var documentID: String
+    var language: NoteLanguage
     var findToken: Int
     var focusToken: FocusToken
     var style: EditorStyle
@@ -78,6 +79,8 @@ struct MarkdownTextView: NSViewRepresentable {
         apply(style, to: textView)
         context.coordinator.lastStyle = style
         context.coordinator.lastDocumentID = documentID
+        context.coordinator.language = language
+        context.coordinator.applyWhisper()
 
         scroll.documentView = textView
         context.coordinator.textView = textView
@@ -112,13 +115,16 @@ struct MarkdownTextView: NSViewRepresentable {
             if documentChanged {
                 textView.scrollRangeToVisible(selected)
             }
+            context.coordinator.language = language
             context.coordinator.lastDocumentID = documentID
+            context.coordinator.applyWhisper()
         }
         if context.coordinator.lastStyle != style {
             textView.undoManager?.disableUndoRegistration()
             apply(style, to: textView)
             textView.undoManager?.enableUndoRegistration()
             context.coordinator.lastStyle = style
+            context.coordinator.applyWhisper()
         }
         if context.coordinator.lastFindToken != findToken {
             context.coordinator.lastFindToken = findToken
@@ -161,14 +167,60 @@ struct MarkdownTextView: NSViewRepresentable {
         var lastStyle: EditorStyle?
         var lastDocumentID: String?
         var applyingProgrammaticText = false
+        var language: NoteLanguage = .markdown
+        private var whisperWork: DispatchWorkItem?
 
         init(text: Binding<String>) {
             self.text = text
         }
 
+        deinit {
+            whisperWork?.cancel()
+        }
+
         func textDidChange(_ notification: Notification) {
             guard let textView, !applyingProgrammaticText else { return }
             text.wrappedValue = textView.string
+            scheduleWhisper()
+        }
+
+        /// Coalesce whisper marks ~0.4s after the last keystroke, in the
+        /// spirit of Oliver's idle pass — never inside `textDidChange`.
+        private func scheduleWhisper() {
+            whisperWork?.cancel()
+            let work = DispatchWorkItem { [weak self] in
+                self?.applyWhisper()
+            }
+            whisperWork = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: work)
+        }
+
+        /// Rebuild the display-only marks as layout-manager temporary
+        /// attributes. The storage string, undo, and Find stay
+        /// character-based; the flatten in `apply(style:)` cannot wipe
+        /// marks that live on the layout manager, not the storage.
+        func applyWhisper() {
+            whisperWork?.cancel()
+            guard let textView, let layoutManager = textView.layoutManager else { return }
+            if #available(macOS 15.0, *), textView.isWritingToolsActive {
+                return
+            }
+            let full = NSRange(location: 0, length: (textView.string as NSString).length)
+            layoutManager.removeTemporaryAttribute(.font, forCharacterRange: full)
+            layoutManager.removeTemporaryAttribute(.foregroundColor, forCharacterRange: full)
+            guard full.length > 0 else { return }
+            let marks = WhisperScan.marks(in: textView.string, language: language)
+            for mark in marks {
+                let attributes: [NSAttributedString.Key: Any]
+                switch mark.kind {
+                case .heading:
+                    let size = lastStyle?.fontSize ?? 16
+                    attributes = [.font: EditorTypography.nsFont(size: size, weight: .semibold)]
+                case .sigil:
+                    attributes = [.foregroundColor: NSColor.secondaryLabelColor.withAlphaComponent(0.3)]
+                }
+                layoutManager.addTemporaryAttributes(attributes, forCharacterRange: mark.range)
+            }
         }
     }
 }
