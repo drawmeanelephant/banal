@@ -24,7 +24,8 @@ Each card’s **Handoff** block is the note for the next person.
 | B-2 | cooking — dirty-Vim keeps the buffer; style updates no longer steal ⌘Z; 30s in the hand still a human pass |
 | B-3 | cooking — empty folder + empty search sat; missing-folder picker shows when the directory is gone |
 | B-6 | cooking — menus sat; Find Notes focus fixed |
-| B-4 / B-5 | cooking — sat; Finder rename + Publish persist; Deploy visible; do not start B-7 until someone sits and does not hate the window |
+| B-4 / B-5 | cooking — sat; Finder rename + Publish persist; Deploy visible |
+| B-7 | cooking — OliverClient + skip-if-missing tests; no preview |
 
 ## Board
 
@@ -38,7 +39,7 @@ Each card’s **Handoff** block is the note for the next person.
 | [B-4 Folders](B-4-folders.md) | M1 | core+sidebar | Finder and BANAL never disagree |
 | [B-5 Settings](B-5-settings.md) | M2 | settings | Three panes; Publish looks finished with Deploy disabled |
 | [B-6 Menus](B-6-menus.md) | M3 | app | If it isn’t in the menu bar, it isn’t a feature |
-| [B-7 Oliver](B-7-oliver.md) | M4 | publisher/engine | Parse this buffer; no Swift CommonMark |
+| [B-7 Oliver](B-7-oliver.md) | M4 | publisher/engine | cooking — parse this buffer; no preview |
 | [B-8 Languages](B-8-languages.md) | M5 | core+app | `.md` / `.textile` / `.cook` as files |
 | [B-9 Recipe read](B-9-recipe-read.md) | M5 | detail | Cook from a reading view; source stays the file |
 | [B-10 Publish](B-10-publish.md) | M6 | publisher | Export, not onboarding; graph stays in Boris |

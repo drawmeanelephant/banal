@@ -28,11 +28,21 @@ public final class AppModel: ObservableObject {
     @Published public var folderBeingRenamed: String?
 
     public let editorFocus = FocusToken()
+    /// Last Oliver HTML for the open buffer. Not published — a render
+    /// must not rebuild the editor. Later cards read this; this card
+    /// only asks the question.
+    public private(set) var lastOliverRender: OliverRender?
     private var suppressEditorSync = false
     private var editorDirty = false
     private var loadedFingerprint = ""
     private var warnedDiskFingerprint = ""
     private var cancellables = Set<AnyCancellable>()
+    private let oliverClient: OliverClient?
+    private var oliverWork: DispatchWorkItem?
+    private let oliverQueue = DispatchQueue(label: "dev.drawmeanelephant.banal.oliver", qos: .utility)
+
+    /// Idle after typing. Never run Oliver from `textDidChange`.
+    private static let oliverDebounce: TimeInterval = 0.4
 
     public init(
         store: NoteStore,
@@ -45,6 +55,7 @@ public final class AppModel: ObservableObject {
         self.missingNotesFolder = missingNotesFolder
         self.preferences = preferences
         store.watchesExternalEdits = preferences.watchExternalEdits
+        self.oliverClient = OliverLocator.resolve().map(OliverClient.init(binaryURL:))
         bindStore()
     }
 
@@ -240,11 +251,15 @@ public final class AppModel: ObservableObject {
             return
         }
         editorDirty = true
+        let bodyChanged = note.body != editorText
         note.title = editorTitle
         note.body = editorText
         note.tags = tags
         note.published = editorPublished
         store.update(note, debounce: true)
+        if bodyChanged {
+            scheduleOliverQuestion()
+        }
     }
 
     public func flushEditor() {
@@ -390,6 +405,28 @@ public final class AppModel: ObservableObject {
         editorDirty = false
         warnedDiskFingerprint = ""
         suppressEditorSync = false
+        scheduleOliverQuestion()
+    }
+
+    /// Ask Oliver what this buffer is, after idle. Missing binary is
+    /// silent. The process runs off the main queue so typing never waits.
+    private func scheduleOliverQuestion() {
+        oliverWork?.cancel()
+        guard let oliverClient else {
+            lastOliverRender = nil
+            return
+        }
+        let source = editorText
+        let noteID = selectedID
+        let work = DispatchWorkItem { [weak self, oliverClient] in
+            let rendered = try? oliverClient.render(source)
+            Task { @MainActor [weak self] in
+                guard let self, self.selectedID == noteID else { return }
+                self.lastOliverRender = rendered
+            }
+        }
+        oliverWork = work
+        oliverQueue.asyncAfter(deadline: .now() + Self.oliverDebounce, execute: work)
     }
 }
 

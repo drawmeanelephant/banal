@@ -58,6 +58,7 @@ Local notes do not read these keys. They matter only when the user chooses File 
 | --- | --- | --- | --- |
 | Prefer Boris when available | bool | true | Else builtin HTML + RSS |
 | Boris binary | optional path | `BANAL_BORIS_BIN`, then `PATH`, then sibling checkout | Reveal / choose file |
+| Oliver binary | optional path | `BANAL_OLIVER_BIN`, then `PATH`, then sibling checkout | Locate only this card; Settings path later |
 
 ### Cloudflare (aspirational fields — store now, deploy later)
 

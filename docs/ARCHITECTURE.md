@@ -16,6 +16,7 @@ Product intent, quality bar, and Settings live elsewhere — this file is only t
 | Product | Role | This repo |
 | --- | --- | --- |
 | **Boris** | Zig documentation compiler. Markdown → validated HTML site. Closed frontmatter grammar, Apex Markdown, layouts, watch mode. | Not vendored. Invoked as a binary when present. |
+| **Oliver** | Zig markup library. Markdown / Textile → document; Cooklang → Recipe; deterministic HTML. | Not vendored. `OliverClient` runs `oliver render --from markdown` when present. |
 | **Solipsist** | Native Mac wrapper around Boris for documentation authoring. Owns Compose, the content graph inspector, companions, and engine embedding. | Not imported. No Swift sources copied. |
 | **BANAL** | Notes app. Owns the vault, the editor, and an isolated publisher adapter. | This repository. |
 

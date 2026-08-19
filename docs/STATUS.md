@@ -20,6 +20,7 @@
 - Publish fields validate inline (http/s base URL, Cloudflare-safe project name; account ID warns)
 - Editor: system serif, measure cap, line height, spell check / smart quotes
 - Menus: ⌘N note, ⇧⌘N folder, ⌘⌫ trash, ⇧⌘P publish, ⌘F find notes, ⇧⌘F find in note
+- Oliver: one-shot Markdown render (`oliver render --from markdown`) after idle typing. Missing binary is silent. No preview.
 
 ## Still open
 
@@ -27,6 +28,7 @@
 | --- | --- |
 | Longer type / ⌘Z sit | Switch + clean Vim reload + dirty keep-buffer verified; 30s undo-in-the-hand still a human pass |
 | Live Cloudflare deploy | Intentionally later — pane exists, Deploy disabled |
+| Oliver preview / `.cook` | M5 (B-8, B-9). This card only asks the question. |
 | Signed `.app` / sandbox | `swift run` only |
 
 ## Known gaps in the scaffold
