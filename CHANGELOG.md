@@ -28,6 +28,8 @@
 
 ### Added
 
+- Read a paragraph (D-2): every note — Markdown and Textile too, not just recipes — has an Edit | Read control (View → Edit Note / Read Note). Read is a native, read-only page rendering Oliver's HTML on B-1 type: headings as weight, emphasis and links kept, the user's body size. Missing Oliver is one sentence; new notes open in Edit; the file stays source.
+
 - Whisper (D-1): headings get semibold weight and syntax markers (`#`, `**`, `@`, `{`, `>>`, …) are dimmed hints at ~30% opacity, applied ~0.4s after idle as layout-manager temporary attributes — the storage string, undo, and Find stay character-based, and the pass skips while Writing Tools is rewriting. Scanner is `WhisperScan` in `BANALCore` with per-language unit tests (Markdown/Textile/Cooklang; no false marks inside code spans or `>>>`; UTF-16-safe).
 
 - File associations (F-8, issue #44): BANAL registers as an Editor for `.md`, `.textile`, and `.cook` — double-click, Open With → BANAL, and Dock drags now open a note (or import it from outside the vault with a unique name, source left untouched). One open route, so a single action never imports twice. `NoteStore.importFile` is unit-tested.

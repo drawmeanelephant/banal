@@ -1,12 +1,22 @@
 # Card D-2 — Read a paragraph
 
-**Milestone:** M8 · **Lane:** detail · **Depends:** C-1 sat · **Status:** ready — source stays king
+**Milestone:** M8 · **Lane:** detail · **Depends:** C-1 sat · **Status:** cooking — implemented + built + unit-checked; the card's mini-sit (does it look like a page, not a browser?) is the human gate
 
 ## Handoff
 
-- **Not started.** `.cook` already has Edit | Read. `.md` and
-  `.textile` are source only. `OliverClient` already renders
-  HTML after idle; nothing shows it.
+- **Implemented.** Edit | Read now belongs to every note. The recipe-only
+  `RecipeMode` became `ViewMode` (`viewMode` / `sessionViewMode` /
+  `showsViewSwitcher` / `setViewMode`); `.md` and `.textile` get the same
+  segmented Edit | Read control, View → Edit Note / Read Note menu items,
+  per-session memory, and new notes open in Edit.
+- `ProseReadView.swift` (new): a native, read-only `NSTextView` page that
+  imports Oliver's HTML with the system importer and remaps every run onto
+  B-1 type — the user's body size, weight/italic traits preserved, links
+  tinted (headings read as weight, one voice, like D-1's whisper). No
+  webview, no Swift CommonMark. Missing Oliver: “This note needs Oliver.”
+  Pending render with Oliver configured: “Reading…”.
+- `lastOliverRender` is now `@Published` so the read view updates when the
+  idle render lands; the editor ignores it (a render never changes text).
 - **Not this card:** whispered source (D-1), sauce walks (D-3),
   a preview column, WKWebView as the editor.
 
@@ -68,3 +78,12 @@ default, tear it up.
 Open an essay. Hit Read. It looks like a page, not a browser.
 Hit Edit: the caret is in the Markdown. The default window is
 still folders · list · page. `swift test` stays green.
+
+**Status note (2026-08-19):** implemented and verified headlessly —
+`swift test` green (94), `make smoke` green, and the running app with
+Oliver configured survives open → Read with no crash (the HTML import
+pipeline was also exercised directly on Oliver's real output). The
+*visual* half of the gate — headings read as weight, links tinted, the
+page not a browser — needs a human at the window, with a real Markdown
+essay (this machine's Oliver renders oddly; that is Oliver's contract,
+not this card's).
