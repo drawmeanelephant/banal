@@ -23,13 +23,14 @@
 - Oliver: one-shot render after idle typing (`--from` from the file extension). Missing binary is silent. No preview.
 - Languages: `.md`, `.textile`, and `.cook` are notes. File → New Textile / New Recipe. Recipes keep Cooklang `>>` metadata, not a YAML fence. Opening any of them is source.
 - Recipe Read: `.cook` notes have Edit | Read. Read shows ingredients, cookware, steps, and notes from Oliver’s typed Recipe. ½ 1× 2× 3× scales the view only. Missing or older Oliver (no `serialize --json`) is one sentence; Edit still works.
+- Publish Site (⇧⌘P): only `published` notes leave the vault. Markdown uses Boris when present, else builtin HTML+RSS. Textile and Cooklang join the same `.publish/` folder via Oliver. Recipes stay Cooklang on disk. Deploy to Cloudflare is optional and enabled when a Keychain token and project name exist.
 
 ## Still open
 
 | Gap | Notes |
 | --- | --- |
 | Longer type / ⌘Z sit | Switch + clean Vim reload + dirty keep-buffer verified; 30s undo-in-the-hand still a human pass |
-| Live Cloudflare deploy | Intentionally later — pane exists, Deploy disabled |
+| Live Cloudflare deploy | Optional. Enabled when token + project exist; wrangler required. |
 | Recipe reading view | B-9 landed. Human sit of risotto in the running app still open. |
 | Signed `.app` / sandbox | `swift run` only |
 

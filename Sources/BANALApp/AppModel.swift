@@ -384,22 +384,83 @@ public final class AppModel: ObservableObject {
         bootstrap()
     }
 
+    public var canDeploy: Bool {
+        CloudflareDeployer.canDeploy(
+            projectName: store.configuration.cloudflareProjectName,
+            token: PublishKeychain.token(vaultURL: store.configuration.rootURL)
+        )
+    }
+
     public func publishSite() {
         flushEditor()
-        let vault = store.configuration
-        let configuration = PublishConfiguration.default(for: vault)
-        let publisher = BANALPublisher.make(configuration: configuration)
         do {
-            let result = try publisher.publish(notes: store.notes, vault: vault, configuration: configuration)
+            let result = try publishNow()
             lastPublishResult = result
-            let engine = result.usedBorisBinary ? "Boris" : "builtin"
-            statusMessage = "Published \(result.compiledNoteIDs.count) notes with \(engine) → \(result.artifactDirectory.path)"
+            statusMessage = Self.publishCopy(result)
             NSWorkspace.shared.activateFileViewerSelecting([result.artifactDirectory])
         } catch PublishError.noPublishedNotes {
             statusMessage = "Nothing published."
+        } catch PublishError.nothingCompiled {
+            statusMessage = "Nothing published. Recipes need Oliver."
         } catch {
             statusMessage = error.localizedDescription
         }
+    }
+
+    public func deployToCloudflare() {
+        flushEditor()
+        let vault = store.configuration
+        guard let token = PublishKeychain.token(vaultURL: vault.rootURL),
+              CloudflareDeployer.canDeploy(projectName: vault.cloudflareProjectName, token: token)
+        else {
+            statusMessage = "Not connected — publishing stays on this Mac."
+            return
+        }
+        do {
+            let index = vault.publishURL.appendingPathComponent("index.html")
+            if !FileManager.default.fileExists(atPath: index.path) {
+                _ = try publishNow()
+            }
+            let plan = CloudflareDeployer.plan(
+                artifactDirectory: vault.publishURL,
+                projectName: vault.cloudflareProjectName,
+                accountID: vault.cloudflareAccountID,
+                dryRun: false
+            )
+            _ = try CloudflareDeployer.deploy(plan: plan, token: token)
+            statusMessage = "Deployed to Cloudflare Pages."
+        } catch CloudflareDeployError.wranglerMissing {
+            statusMessage = "wrangler isn’t available."
+        } catch CloudflareDeployError.failed(_, let log) {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(log, forType: .string)
+            statusMessage = "Deploy failed. The log is on the clipboard."
+        } catch PublishError.noPublishedNotes {
+            statusMessage = "Nothing published."
+        } catch PublishError.nothingCompiled {
+            statusMessage = "Nothing published. Recipes need Oliver."
+        } catch {
+            statusMessage = error.localizedDescription
+        }
+    }
+
+    private func publishNow() throws -> PublishResult {
+        let vault = store.configuration
+        let configuration = PublishConfiguration.default(for: vault)
+        return try BANALPublisher.make(configuration: configuration).publish(
+            notes: store.notes,
+            vault: vault,
+            configuration: configuration
+        )
+    }
+
+    static func publishCopy(_ result: PublishResult) -> String {
+        let engine = result.usedBorisBinary ? "Boris" : "builtin"
+        if result.skipped.isEmpty {
+            return "Published \(result.compiledNoteIDs.count) notes with \(engine)."
+        }
+        let noun = result.skipped.count == 1 ? result.skipped[0].label : "notes"
+        return "Published \(result.compiledNoteIDs.count) notes. Skipped \(result.skipped.count) \(noun)."
     }
 
     public func revealVault() {

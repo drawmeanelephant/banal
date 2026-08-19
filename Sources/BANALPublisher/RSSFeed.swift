@@ -9,8 +9,9 @@ public enum RSSFeed {
         now: Date = Date()
     ) -> String {
         let base = siteBaseURL.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let published = BorisAdapter.publishedNotes(from: notes)
         func link(for note: Note) -> String {
-            let slug = BorisAdapter.entityID(for: note)
+            let slug = BorisAdapter.entityID(for: note, among: published)
             if base.isEmpty { return "\(slug).html" }
             return "\(base)/\(slug).html"
         }

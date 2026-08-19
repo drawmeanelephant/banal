@@ -50,7 +50,7 @@ Parse this buffer. Diagnostics. Optional Markdown preview. Still one silhouette.
 
 Only after M2’s pane exists.
 
-- Mixed vault (md / textile / cook) through Boris
+- Mixed vault (md / textile / cook): Markdown through Boris when present; Textile/Cooklang via Oliver in the same `.publish/` folder
 - Deploy uses Keychain token + saved project/account
 - Graph stays in the compiler
 - Still no Worker host, no R2 browser, no billing

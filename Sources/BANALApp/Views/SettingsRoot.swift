@@ -181,14 +181,18 @@ private struct PublishSettingsPane: View {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(wranglerPreview, forType: .string)
                     }
-                    Button("Deploy to Cloudflare") {}
-                        .disabled(true)
-                        .help("Local publish works today. Live deploy lands after the Settings pane exists.")
+                    Button("Deploy to Cloudflare") {
+                        model.deployToCloudflare()
+                    }
+                    .disabled(!model.canDeploy)
+                    .help(model.canDeploy
+                          ? "Deploy the last site to Cloudflare Pages."
+                          : "Save an API token (Keychain) to enable deploy.")
                 }
             } header: {
                 Text("Deploy")
             } footer: {
-                Text("Local publish works today.")
+                Text("Publish Site writes the folder. Deploy is optional.")
             }
         }
         .formStyle(.grouped)

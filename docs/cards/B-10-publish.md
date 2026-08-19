@@ -1,6 +1,11 @@
 # Card B-10 — Publish is Export
 
-**Milestone:** M6 · **Lane:** publisher · **Depends:** B-5 · **Status:** ready
+**Milestone:** M6 · **Lane:** publisher · **Depends:** B-5 · **Status:** cooking — mixed vault export; deploy optional
+
+## Handoff
+
+- **Landed:** ⇧⌘P stages only `published` notes. Markdown goes through Boris when present, else the builtin HTML+RSS. Textile and Cooklang are Oliver HTML in the same artifact — Boris cannot mix extensions in one tree. Cook stages as `>>` Cooklang, never a YAML fence. Disk notes are not rewritten. Skipped recipes (no Oliver) are one sentence. File → Deploy to Cloudflare runs wrangler when a Keychain token and project name exist; failure copies the log. No new column.
+- **Not this card:** graph UI, Worker host, auto-publish, Standard.site / Nostr.
 
 ## Owns
 

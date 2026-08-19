@@ -13,25 +13,45 @@ public enum BorisAdapter {
         notes.filter(\.published).sorted { $0.updated > $1.updated }
     }
 
-    public static func entityID(for note: Note) -> String {
-        let trimmed = note.id.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        return trimmed.isEmpty ? "untitled" : trimmed
+    public static func entityID(for note: Note, among published: [Note] = []) -> String {
+        let stem = NoteIdentity.droppingLanguageExtension(note.id)
+        let trimmed = stem.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let base = trimmed.isEmpty ? "untitled" : trimmed
+        let clash = published.contains {
+            $0.id != note.id && NoteIdentity.droppingLanguageExtension($0.id) == stem
+        }
+        return clash ? note.id : base
     }
 
-    public static func page(from note: Note) -> BorisPage {
-        let entity = entityID(for: note)
+    public static func sourceRelativePath(for note: Note, entityID: String) -> String {
+        if NoteLanguage(pathExtension: (note.id as NSString).pathExtension) != nil {
+            return note.id
+        }
+        return "\(entityID).\(note.language.pathExtension)"
+    }
+
+    public static func page(from note: Note, among published: [Note] = []) -> BorisPage {
+        let entity = entityID(for: note, among: published)
         let source = serializeBorisSource(note: note, entityID: entity)
         return BorisPage(
             entityID: entity,
-            relativePath: "\(entity).md",
+            relativePath: sourceRelativePath(for: note, entityID: entity),
             source: source,
             title: note.displayTitle,
             tags: note.tags,
-            updated: note.updated
+            updated: note.updated,
+            language: note.language
         )
     }
 
     public static func serializeBorisSource(note: Note, entityID: String) -> String {
+        if note.language == .cooklang {
+            var fm = Frontmatter()
+            fm.title = note.displayTitle
+            fm.tags = note.tags
+            fm.published = true
+            return CookMetadata.serialize(frontmatter: fm, body: note.body)
+        }
         var lines = ["---"]
         lines.append("id: \(entityID)")
         lines.append("title: \(escape(note.displayTitle))")
@@ -102,11 +122,14 @@ public enum BorisAdapter {
             options: .atomic
         )
 
-        var pages = published.map(page(from:))
+        var pages = published.map { page(from: $0, among: published) }
         let index = indexPage(siteTitle: configuration.siteTitle, pages: pages)
         pages.insert(index, at: 0)
 
-        for page in pages {
+        // Boris (and the builtin compiler) only eat Markdown. Textile and
+        // Cooklang stay on the page list for Oliver; they must not land in
+        // `content/` or a markdown-only Boris tree will reject the folder.
+        for page in pages where page.language == .markdown {
             let destination = content.appendingPathComponent(page.relativePath)
             try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
             try Data(page.source.utf8).write(to: destination, options: .atomic)

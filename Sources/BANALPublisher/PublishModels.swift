@@ -46,6 +46,7 @@ public struct PublishResult: Equatable, Sendable {
     public var pageCount: Int
     public var usedBorisBinary: Bool
     public var compiledNoteIDs: [String]
+    public var skipped: [PublishSkip]
     public var compilerName: String
 
     public init(
@@ -55,6 +56,7 @@ public struct PublishResult: Equatable, Sendable {
         pageCount: Int,
         usedBorisBinary: Bool,
         compiledNoteIDs: [String],
+        skipped: [PublishSkip] = [],
         compilerName: String
     ) {
         self.artifactDirectory = artifactDirectory
@@ -63,7 +65,26 @@ public struct PublishResult: Equatable, Sendable {
         self.pageCount = pageCount
         self.usedBorisBinary = usedBorisBinary
         self.compiledNoteIDs = compiledNoteIDs
+        self.skipped = skipped
         self.compilerName = compilerName
+    }
+}
+
+public struct PublishSkip: Equatable, Sendable {
+    public var noteID: String
+    public var language: NoteLanguage
+
+    public init(noteID: String, language: NoteLanguage) {
+        self.noteID = noteID
+        self.language = language
+    }
+
+    public var label: String {
+        switch language {
+        case .markdown: return "Markdown"
+        case .textile: return "Textile"
+        case .cooklang: return "recipe"
+        }
     }
 }
 
@@ -74,19 +95,30 @@ public struct BorisPage: Equatable, Sendable {
     public var title: String
     public var tags: [String]
     public var updated: Date
+    public var language: NoteLanguage
 
-    public init(entityID: String, relativePath: String, source: String, title: String, tags: [String], updated: Date) {
+    public init(
+        entityID: String,
+        relativePath: String,
+        source: String,
+        title: String,
+        tags: [String],
+        updated: Date,
+        language: NoteLanguage = .markdown
+    ) {
         self.entityID = entityID
         self.relativePath = relativePath
         self.source = source
         self.title = title
         self.tags = tags
         self.updated = updated
+        self.language = language
     }
 }
 
 public enum PublishError: Error, Equatable, Sendable {
     case noPublishedNotes
+    case nothingCompiled
     case borisFailed(status: Int32, stderr: String)
     case missingBorisBinary
     case io(String)
