@@ -149,6 +149,41 @@ We already wrote it. The test is time, not a launch.
 When that is true, stop adding towns. Polish what is there.
 Delete what shouts. Go to sleep.
 
+## The small moments
+
+Features are loud. Charm is quiet. The app earns trust in the
+gaps between features — the half-second after launch, the empty
+search, the window at 720 wide on a Tuesday afternoon.
+
+**First open.** A folder picker and one sentence. No tour, no
+sample vault, no five-step onboarding wizard. They chose to
+open a notes app. Respect that by letting them start.
+
+**Empty.** One line of text, never an illustration. Not "Get
+started by creating your first note!" The folder is empty
+because it is new, and new things are allowed to be empty.
+
+**Nothing found.** The list goes blank. That is the answer.
+Do not suggest they try different keywords.
+
+**Small window.** The sidebar collapses. The page is still a
+page. Nothing breaks, nothing hides behind a tooltip, nothing
+whispers "try full screen." A 13″ Air on a train is a real
+desk.
+
+**Left open for a week.** No badge. No "welcome back." The
+caret is where they left it and the file is what Finder says
+it is.
+
+**Sound.** None. The keyboard already makes sounds.
+
+**Animation.** Selection and collapse may move. Nothing
+bounces, celebrates, or waits for applause. Reduce Motion
+means nothing moves at all.
+
+The app should feel like a well-made kitchen knife: it does
+not introduce itself. You just start cutting.
+
 ## Navigator — so we do not wake up in Louisiana
 
 Wrong exits look busy, helpful, and “what a notes app should
