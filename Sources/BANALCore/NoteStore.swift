@@ -39,6 +39,9 @@ public final class NoteStore: ObservableObject {
     private var writeTasks: [String: Task<Void, Never>] = [:]
     private var recentlyWritten: [String: (fingerprint: String, until: Date)] = [:]
     private var isReloading = false
+    /// Disposable in-memory cache of ingredient names for .cook notes.
+    /// Keyed by note ID, validated against contentFingerprint.
+    private var ingredientCache: [String: (fingerprint: String, ingredients: [String])] = [:]
 
     public init(
         configuration: VaultConfiguration,
@@ -65,8 +68,37 @@ public final class NoteStore: ObservableObject {
         FolderTree.flatten(folderTree).map(\.id)
     }
 
+    /// Retrieves cached ingredient names for a note if available and up-to-date.
+    public func cachedIngredients(for noteID: String, fingerprint: String) -> [String]? {
+        guard let entry = ingredientCache[noteID], entry.fingerprint == fingerprint else {
+            return nil
+        }
+        return entry.ingredients
+    }
+
+    /// Caches ingredient names for a note (e.g. from Oliver serialize --json).
+    public func setCachedIngredients(_ ingredients: [String], for noteID: String, fingerprint: String) {
+        ingredientCache[noteID] = (fingerprint, ingredients)
+    }
+
+    /// Ingredients for a note: returns cached Oliver ingredients if valid,
+    /// otherwise scans Cooklang tokens and inlined sauces and populates the cache.
+    public func ingredients(for note: Note) -> [String] {
+        guard note.language == .cooklang else { return [] }
+        if let cached = cachedIngredients(for: note.id, fingerprint: note.contentFingerprint) {
+            return cached
+        }
+        let scanned = CooklangScanner.ingredientNames(
+            in: note.body,
+            relativeTo: note.fileURL.deletingLastPathComponent()
+        )
+        ingredientCache[note.id] = (note.contentFingerprint, scanned)
+        return scanned
+    }
+
     public func notes(matching filter: SidebarFilter, query: String = "", sort: NoteSort = .updated) -> [Note] {
-        notes
+        let needle = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        return notes
             .filter { note in
                 switch filter {
                 case .all:
@@ -79,7 +111,11 @@ public final class NoteStore: ObservableObject {
                     return note.folder == folder
                 }
             }
-            .filter { $0.matches(query: query) }
+            .filter { note in
+                if needle.isEmpty { return true }
+                let extra = self.ingredients(for: note)
+                return note.matches(query: needle, ingredients: extra)
+            }
             .sorted { lhs, rhs in
                 switch sort {
                 case .updated:
@@ -223,6 +259,9 @@ public final class NoteStore: ObservableObject {
         notes.removeAll { note in
             note.id == id || note.id.hasPrefix(id + "/") || note.folder == id || (note.folder?.hasPrefix(id + "/") ?? false)
         }
+        ingredientCache = ingredientCache.filter { key, _ in
+            key != id && !key.hasPrefix(id + "/")
+        }
         refreshFolders()
     }
 
@@ -253,6 +292,7 @@ public final class NoteStore: ObservableObject {
         writeTasks[id]?.cancel()
         writeTasks.removeValue(forKey: id)
         pendingWrites.removeValue(forKey: id)
+        ingredientCache.removeValue(forKey: id)
         notes.removeAll { $0.id == id }
         note.id = dest
         note.fileURL = destURL
@@ -283,6 +323,7 @@ public final class NoteStore: ObservableObject {
             || existing.body != note.body
             || existing.tags != note.tags
             || existing.published != note.published else { return }
+        ingredientCache.removeValue(forKey: note.id)
         var next = note
         next.updated = Date()
         upsert(next)
@@ -317,6 +358,7 @@ public final class NoteStore: ObservableObject {
         writeTasks[id]?.cancel()
         writeTasks.removeValue(forKey: id)
         pendingWrites.removeValue(forKey: id)
+        ingredientCache.removeValue(forKey: id)
         var resulting: NSURL?
         try fileManager.trashItem(at: note.fileURL, resultingItemURL: &resulting)
         notes.removeAll { $0.id == id }
@@ -394,6 +436,7 @@ public final class NoteStore: ObservableObject {
     private func handleNoteURLChange(_ url: URL) {
         if !fileManager.fileExists(atPath: url.path) {
             let id = NoteIdentity.id(for: url, vaultURL: configuration.rootURL)
+            ingredientCache.removeValue(forKey: id)
             notes.removeAll { $0.id == id || $0.fileURL.standardizedFileURL == url }
             return
         }
@@ -402,6 +445,7 @@ public final class NoteStore: ObservableObject {
             if shouldIgnoreExternalWrite(loaded) {
                 return
             }
+            ingredientCache.removeValue(forKey: loaded.id)
             upsert(loaded)
         } catch {
             lastError = error.localizedDescription
@@ -580,6 +624,15 @@ public final class NoteStore: ObservableObject {
             notes[index].id = nextID
             notes[index].fileURL = configuration.rootURL.appendingPathComponent(nextID)
         }
+        var nextCache: [String: (fingerprint: String, ingredients: [String])] = [:]
+        for (key, value) in ingredientCache {
+            if let nextKey = FolderPath.remap(key, from: prefix, to: replacement) {
+                nextCache[nextKey] = value
+            } else {
+                nextCache[key] = value
+            }
+        }
+        ingredientCache = nextCache
     }
 
     private func collectNoteURLs() throws -> [URL] {

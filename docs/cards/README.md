@@ -27,8 +27,8 @@ Each card’s **Handoff** block is the note for the next person.
 | D-0 | landed — C Close archived; this README is the D board |
 | D-1 | cooking — whisper implemented + unit-tested; card mini-sit open |
 | D-2 | cooking — prose Read implemented + built; card mini-sit open |
-| D-3 | ready — waits for C-1 sat |
-| D-4 | ready — waits for C-1 sat |
+| D-3 | landed — recipe references inlined in Read |
+| D-4 | landed — ⌘F matches ingredient names + inlined sauces |
 | C-1 | cooking — script + code-backed sit; GUI pass still open |
 | C-2 | landed — Oliver/Boris paths, About, speakable copy |
 | C-3 | landed — ad-hoc signed `.app` + sandbox |
@@ -61,6 +61,54 @@ first-run or the notes-folder bookmark.
 One card = one branch = one PR. Suggested prefix `docs/d0-board`,
 `feat/d1-whisper`, `feat/d2-prose`, `feat/d3-sauce`, `feat/d4-find`,
 `feat/c3-app`.
+
+## Boards — Tucson (M9–M12)
+
+Stage after M8 is done (or beside D where noted).
+
+### Board E — Type in the page (M9)
+
+| Card | Milestone | Lane | Gate |
+|------|-----------|------|------|
+| [E-1 Focus](E-1-focus.md) | M9 | chrome | ⌘1/⌘2/⌘3 column focus, Tab cycle, arrow keys |
+| [E-2 Paste](E-2-paste.md) | M9 | editor | `[text](url)` on paste; clean Markdown from web/PDF |
+| [E-3 List](E-3-list.md) | M9 | editor | Return continues list; empty bullet breaks out |
+| [E-4 Fences](E-4-fences.md) | M9 | editor | Smart quotes/dashes off inside ``` and ` ` |
+| [E-5 Heading & Tools](E-5-heading-tools.md) | M9 | editor | Heading space-after hugs text; Writing Tools safe |
+
+### Board F — System (M10)
+
+| Card | Milestone | Lane | Gate |
+|------|-----------|------|------|
+| [F-1 Notarize](F-1-notarize.md) | M10 | app | Developer ID + notarized `dist/BANAL.app` |
+| [F-2 Intents](F-2-intents.md) | M10 | system | Siri & Shortcuts: New Note, New Recipe, Take a Note |
+| [F-3 Spotlight](F-3-spotlight.md) | M10 | system | `CSSearchableItem` / `IndexedEntity` finds notes |
+| [F-4 Quick Look](F-4-quicklook.md) | M10 | system | Spacebar preview in Finder for `.md`/`.cook`/`.textile` |
+| [F-5 Print & Share](F-5-print-share.md) | M10 | system | File → Print, Share sheet, Services menu item |
+| [F-6 Translate](F-6-translate.md) | M10 | system | Edit → Translate… via system `TranslationSession` |
+| [F-7 System sit](F-7-system-sit.md) | M10 | chrome | VoiceOver, Reduce Motion, Increase Contrast audit |
+| [F-8 File associations](F-8-file-associations.md) | M10 | system | Open With / double-click `.md`, `.textile`, `.cook` in Finder |
+
+### Board G — Files (M11)
+
+| Card | Milestone | Lane | Gate |
+|------|-----------|------|------|
+| [G-1 Assets](G-1-assets.md) | M11 | files | Drop photo → copies to `assets/` + relative link |
+| [G-2 Copy As](G-2-copy-as.md) | M11 | editor | Edit → Copy As: Markdown, Rich Text (RTF), HTML |
+| [G-3 Import](G-3-import.md) | M11 | files | File → Import… copies folder/files into vault |
+| [G-4 Pickers](G-4-pickers.md) | M11 | editor | Edit → Insert Contact… / Insert File… |
+| [G-5 Drag out](G-5-drag-out.md) | M11 | list | Drag note from list into Mail / Messages / Finder |
+
+### Board H — Consider (M12)
+
+Named, not scheduled. Cut a card only if a sit asks.
+
+| Card | Milestone | Lane | Gate |
+|------|-----------|------|------|
+| [H-1 Checkbox](H-1-checkbox.md) | M12 | editor | Click `- [ ]` in source to toggle `- [x]` |
+| [H-2 Word count](H-2-word-count.md) | M12 | chrome | Quiet word / character count in existing status strip |
+| [H-3 Tags filter](H-3-tags-filter.md) | M12 | list | Tags section in sidebar as secondary filter |
+| [H-4 New window](H-4-new-window.md) | M12 | chrome | File → New Window on the same notes folder |
 
 ## Do not start
 
