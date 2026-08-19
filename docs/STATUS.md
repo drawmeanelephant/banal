@@ -51,5 +51,6 @@ Pulled forward from M10 by a real bug report: [F-8 File associations](cards/F-8-
 ## Known gaps in the scaffold
 
 - List selection and editor flush have store tests and a caret-session fix; they are not battle-tested in the GUI. C-1, still the 30s row.
+- Rare editor write-back race: a timing-dependent stale buffer can bump an imported note's `updated:` frontmatter (content-safe, one occurrence, not reproduced under probe — `importFile` itself is byte-faithful). Card: [`F-9-updated-bump-race.md`](cards/F-9-updated-bump-race.md).
 - Builtin Markdown HTML is a small subset. Fine until Boris is the usual publish path.
 - Default vault picker vs `~/Documents/BANAL Notes` first-run uses the same “notes folder” words as Settings. Human sit still C-1.
