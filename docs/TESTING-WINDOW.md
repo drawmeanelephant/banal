@@ -38,13 +38,15 @@ swift test
 swift run BANAL
 ```
 
-Sandboxed `.app` (C-3): `make app` then `open dist/BANAL.app`. Notes-folder sit: [`TESTING-NOTES-FOLDER.md`](TESTING-NOTES-FOLDER.md).
+Sandboxed `.app` (C-3): `make app` then `open dist/BANAL.app`. Before the sit, run **`make smoke`** — it launches the signed app with a scratch `BANAL_VAULT` and asserts the app boots, opens the folder, and quits cleanly. Notes-folder sit: [`TESTING-NOTES-FOLDER.md`](TESTING-NOTES-FOLDER.md).
 
 **`BANAL_VAULT`:** if set to an existing directory, launch opens that folder **without writing the bookmark**. Use it for a disposable tree (or the sample vault) while leaving a remembered notes folder alone.
 
 ```bash
 BANAL_VAULT="$HOME/Desktop/BANAL-sit-vault" swift run BANAL
 ```
+
+The **signed** `.app` is sandboxed: `BANAL_VAULT` only works where the app can write — inside its container (`~/Library/Containers/dev.drawmeanelephant.banal/Data/…`) or a powerbox-picked folder. A Desktop path silently stays unopened. For a Desktop vault, use `swift run`; for the signed app, `make smoke` picks a container scratch vault automatically.
 
 Sample risotto lives at `Examples/sample-vault/Recipes/risotto.cook`. Easiest window sit:
 
@@ -55,6 +57,27 @@ BANAL_VAULT="$(pwd)/Examples/sample-vault" swift run BANAL
 Do **not** commit `Examples/sample-vault/.banal/` if publish writes one.
 
 Default first-run destination if they click the left button: `~/Documents/BANAL Notes`.
+
+---
+
+## This machine, probed (so the sit has no surprises)
+
+State of the build machine when this brief was last probed. Re-probe if
+Oliver or Boris ever changes:
+
+- `oliver` is on PATH (`/Users/tbuddy/.local/bin/oliver`).
+  `render --from markdown|textile|cooklang` all work (verified on the
+  sample vault), and `scale --from cooklang --factor 2` really doubles
+  (`1%tsp` → `2%tsp`).
+- `serialize --from cooklang --json` is **absent** (exit 1). Recipe Read
+  therefore shows the one-sentence path: **This recipe needs Oliver.**
+  The ingredient list / 2× flow in row 7 needs a newer Oliver — that is
+  the row’s designed fallback, not a fail. Edit still works.
+- No `boris` on PATH → ⇧⌘P uses the builtin compiler: the status reads
+  **Published 3 notes with builtin.** (or “1 note” when the count is one).
+- Row 8 is proven end-to-end by `testSitVaultPublishLeavesRisottoOnDiskAndLinksBack`
+  with the real Oliver: `Recipes/risotto.html` contains `href="../index.html"`
+  and the `.cook` on disk is byte-identical afterwards.
 
 ---
 

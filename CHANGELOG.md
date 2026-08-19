@@ -16,6 +16,10 @@
 - A recipe (or any note in a folder) published to `.publish/` links back to the index with a relative href. Opening `Recipes/risotto.html` from Finder no longer 404s the home page.
 - Moving or renaming a folder no longer treats the open note as a new document (caret and undo stay).
 
+### Fixed
+
+- Recipe Read on a render-only Oliver (no `serialize --json`) now says “This recipe needs Oliver.” instead of the misleading “This recipe didn’t parse.” Idle render still works with older binaries.
+
 ### Added
 
 - Hand it (C-3): a crafted notes-app icon (tactile cotton pad, machined brass pen, terracotta ribbon), candidate icon reference gallery, sandbox on, and `make app` which writes an ad-hoc signed `dist/BANAL.app` stamped with version. Security-scoped bookmarks start on restore and stop on quit. Stale compiler bookmarks are dropped on path change. Settings binary pickers are individually accessible to VoiceOver.
