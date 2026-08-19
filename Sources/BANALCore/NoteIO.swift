@@ -15,12 +15,23 @@ public enum NoteIO {
         guard let source = String(data: data, encoding: .utf8) else {
             throw NoteIOError.notUTF8(url)
         }
-        let parsed = try FrontmatterCodec.parse(source)
+        let language = NoteLanguage(pathExtension: url.pathExtension) ?? .markdown
+        let parsed: ParsedNoteDocument
+        if language.usesFrontmatter {
+            parsed = try FrontmatterCodec.parse(source)
+        } else {
+            parsed = CookMetadata.parse(source)
+        }
         let values = try url.resourceValues(forKeys: [.contentModificationDateKey, .creationDateKey])
         let modified = values.contentModificationDate ?? Date()
         let created = parsed.frontmatter.created ?? values.creationDate ?? modified
         let updated = parsed.frontmatter.updated ?? modified
-        let title = parsed.frontmatter.title ?? inferredTitle(from: parsed.body) ?? url.deletingPathExtension().lastPathComponent
+        let title: String
+        if language == .cooklang {
+            title = parsed.frontmatter.title ?? url.deletingPathExtension().lastPathComponent
+        } else {
+            title = parsed.frontmatter.title ?? inferredTitle(from: parsed.body) ?? url.deletingPathExtension().lastPathComponent
+        }
         return Note(
             id: NoteIdentity.id(for: url, vaultURL: vaultURL),
             fileURL: url,
@@ -37,17 +48,18 @@ public enum NoteIO {
     }
 
     public static func encode(_ note: Note) -> String {
-        FrontmatterCodec.serialize(
-            frontmatter: Frontmatter(
-                title: note.title,
-                created: note.created,
-                updated: note.updated,
-                tags: note.tags,
-                published: note.published,
-                extras: note.extras
-            ),
-            body: note.body
+        let frontmatter = Frontmatter(
+            title: note.title,
+            created: note.created,
+            updated: note.updated,
+            tags: note.tags,
+            published: note.published,
+            extras: note.extras
         )
+        if note.language.usesFrontmatter {
+            return FrontmatterCodec.serialize(frontmatter: frontmatter, body: note.body)
+        }
+        return CookMetadata.serialize(frontmatter: frontmatter, body: note.body)
     }
 
     /// Atomic replace so readers never see a torn file.

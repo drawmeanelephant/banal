@@ -17,7 +17,7 @@ public enum NoteStoreError: Error, Equatable, Sendable {
     case folderExists(String)
 }
 
-/// Loads, indexes, debounced-writes, and watches a vault of Markdown notes.
+/// Loads, indexes, debounced-writes, and watches a vault of notes.
 @MainActor
 public final class NoteStore: ObservableObject {
     @Published public private(set) var notes: [Note] = []
@@ -135,17 +135,22 @@ public final class NoteStore: ObservableObject {
     }
 
     @discardableResult
-    public func createNote(title: String = "Untitled", folder: String? = nil, now: Date = Date()) throws -> Note {
+    public func createNote(
+        title: String = "Untitled",
+        folder: String? = nil,
+        language: NoteLanguage = .markdown,
+        now: Date = Date()
+    ) throws -> Note {
         if let folder {
             try ensureFolderExists(folder)
         }
-        let slug = uniqueSlug(from: title, now: now, folder: folder)
-        let url = configuration.rootURL.appendingPathComponent("\(slug).md")
+        let relative = uniqueRelativePath(from: title, now: now, folder: folder, language: language)
+        let url = configuration.rootURL.appendingPathComponent(relative)
         var note = Note(
-            id: slug,
+            id: relative,
             fileURL: url,
             title: title,
-            body: "\n",
+            body: language == .cooklang ? CooklangStub.body : "\n",
             created: now,
             updated: now,
             tags: [],
@@ -233,11 +238,14 @@ public final class NoteStore: ObservableObject {
         if destRelative == note.id { return note }
         var dest = destRelative
         var suffix = 2
-        while fileManager.fileExists(atPath: configuration.rootURL.appendingPathComponent("\(dest).md").path) {
-            dest = folder.map { "\($0)/\(leaf)-\(suffix)" } ?? "\(leaf)-\(suffix)"
+        while fileManager.fileExists(atPath: configuration.rootURL.appendingPathComponent(dest).path) {
+            let stem = (leaf as NSString).deletingPathExtension
+            let ext = note.language.pathExtension
+            let numbered = "\(stem)-\(suffix).\(ext)"
+            dest = folder.map { "\($0)/\(numbered)" } ?? numbered
             suffix += 1
         }
-        let destURL = configuration.rootURL.appendingPathComponent("\(dest).md")
+        let destURL = configuration.rootURL.appendingPathComponent(dest)
         try fileManager.createDirectory(at: destURL.deletingLastPathComponent(), withIntermediateDirectories: true)
         try fileManager.moveItem(at: note.fileURL, to: destURL)
         writeTasks[id]?.cancel()
@@ -331,14 +339,11 @@ public final class NoteStore: ObservableObject {
                 return
             }
         }
-        let looksLikeNote = standardized.pathExtension.lowercased() == "md" || standardized.hasDirectoryPath
-        if !looksLikeNote && standardized != configuration.rootURL {
-            if standardized.path.contains("/\(standardized.deletingLastPathComponent().lastPathComponent)/") {
-                // Non-markdown file: ignore unless it is a directory event covering notes.
-            }
-        }
-        if standardized.pathExtension.lowercased() == "md" {
+        if configuration.isNoteFile(standardized) {
             handleNoteURLChange(standardized)
+            return
+        }
+        if !standardized.hasDirectoryPath && standardized != configuration.rootURL {
             return
         }
         // Directory-level events (renames, mass edits): rescan cheaply.
@@ -432,14 +437,15 @@ public final class NoteStore: ObservableObject {
         notes.sort { $0.updated > $1.updated }
     }
 
-    private func uniqueSlug(from title: String, now: Date, folder: String?) -> String {
+    private func uniqueRelativePath(from title: String, now: Date, folder: String?, language: NoteLanguage) -> String {
         let leaf = NoteIdentity.slug(from: title, now: now)
+        let ext = language.pathExtension
         let base = folder.map { "\($0)/\(leaf)" } ?? leaf
-        var candidate = base
+        var candidate = "\(base).\(ext)"
         var suffix = 2
         let existing = Set(notes.map(\.id))
-        while existing.contains(candidate) || fileManager.fileExists(atPath: configuration.rootURL.appendingPathComponent("\(candidate).md").path) {
-            candidate = "\(base)-\(suffix)"
+        while existing.contains(candidate) || fileManager.fileExists(atPath: configuration.rootURL.appendingPathComponent(candidate).path) {
+            candidate = "\(base)-\(suffix).\(ext)"
             suffix += 1
         }
         return candidate
@@ -511,7 +517,7 @@ public final class NoteStore: ObservableObject {
         for index in notes.indices {
             guard let nextID = FolderPath.remap(notes[index].id, from: prefix, to: replacement) else { continue }
             notes[index].id = nextID
-            notes[index].fileURL = configuration.rootURL.appendingPathComponent("\(nextID).md")
+            notes[index].fileURL = configuration.rootURL.appendingPathComponent(nextID)
         }
     }
 

@@ -93,7 +93,7 @@ Out of scope for the pane (do not add):
 | Vault bookmark, window frame, last selection | App UserDefaults |
 | Site title, base URL, project name, account ID, Boris path | Vault `.banal/config.json` (travels with the folder) |
 | API token | Keychain, service `dev.drawmeanelephant.banal`, account = vault identifier |
-| Notes | `.md` files |
+| Notes | `.md`, `.textile`, `.cook` files. Language is the extension. Markdown/Textile use the local YAML fence; Cooklang uses `>>` metadata for title/tags/published and never a BANAL `---` fence. |
 
 A cloned vault should carry site identity and not carry secrets.
 

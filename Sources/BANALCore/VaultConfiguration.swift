@@ -5,6 +5,8 @@ import Foundation
 /// ```
 /// <vault>/
 ///   Welcome.md
+///   a-page.textile
+///   Recipes/risotto.cook
 ///   assets/          # flat local media
 ///   .banal/          # app metadata (not notes)
 ///     config.json
@@ -64,7 +66,7 @@ public struct VaultConfiguration: Equatable, Sendable {
     }
 
     public func isNoteFile(_ url: URL) -> Bool {
-        url.pathExtension.lowercased() == "md" && !isReservedDirectory(url.deletingLastPathComponent())
+        NoteLanguage(pathExtension: url.pathExtension) != nil && !isReservedDirectory(url.deletingLastPathComponent())
     }
 }
 
@@ -123,9 +125,10 @@ public enum VaultBootstrap {
     public static let welcomeBody = """
     # Welcome to BANAL
 
-    BANAL is a local-first Mac notes app. Everything you write is an ordinary Markdown file in this folder.
+    BANAL is a local-first Mac notes app. Everything you write is an ordinary file in this folder — Markdown, Textile, or Cooklang.
 
     - Press ⌘N to create a note in the selected folder.
+    - File → New Textile and File → New Recipe write `.textile` and `.cook` files.
     - Press ⇧⌘N to create a folder.
     - Press ⌘⌫ to move a note or folder to Trash.
     - Drop images into `assets/` and reference them as `![alt](assets/photo.png)`.
@@ -147,7 +150,7 @@ public enum VaultBootstrap {
         }
 
         let notes = try fileManager.contentsOfDirectory(at: configuration.rootURL, includingPropertiesForKeys: nil)
-        let hasNote = notes.contains { $0.pathExtension.lowercased() == "md" }
+        let hasNote = notes.contains { NoteLanguage(pathExtension: $0.pathExtension) != nil }
         if !hasNote {
             let welcomeURL = configuration.rootURL.appendingPathComponent("Welcome.md")
             let now = Date()

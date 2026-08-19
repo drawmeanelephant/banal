@@ -45,7 +45,7 @@ final class NoteStoreTests: XCTestCase {
         try Data(document.utf8).write(to: url)
         store.applyExternalChange(at: url)
 
-        let note = try XCTUnwrap(store.note(id: "external"))
+        let note = try XCTUnwrap(store.note(id: "external.md"))
         XCTAssertEqual(note.title, "From Vim")
         XCTAssertTrue(note.body.contains("Edited outside the app."))
     }
@@ -115,7 +115,7 @@ final class NoteStoreTests: XCTestCase {
         try Data(document.utf8).write(to: url)
         store.applyExternalChange(at: url)
 
-        XCTAssertNil(store.note(id: "ignored"))
+        XCTAssertNil(store.note(id: "ignored.md"))
         XCTAssertFalse(store.rootMissing)
     }
 
@@ -147,10 +147,10 @@ final class NoteStoreTests: XCTestCase {
         try Data(document.utf8).write(to: url)
 
         let deadline = Date().addingTimeInterval(3)
-        while store.note(id: "watched") == nil, Date() < deadline {
+        while store.note(id: "watched.md") == nil, Date() < deadline {
             try await Task.sleep(nanoseconds: 50_000_000)
         }
-        let note = store.note(id: "watched")
+        let note = store.note(id: "watched.md")
         XCTAssertEqual(note?.title, "Watched", "FSEvents/NSFilePresenter should surface the new file (or the test timed out)")
     }
 

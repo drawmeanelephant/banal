@@ -102,6 +102,17 @@ final class OliverClientTests: XCTestCase {
         XCTAssertEqual(OliverClient.bodyForOliver(source), source)
     }
 
+    func testBodyForOliverDoesNotStripCooklangFences() {
+        let source = """
+        ---
+        servings: 2
+        ---
+
+        Boil @pasta{200%g}.
+        """
+        XCTAssertEqual(OliverClient.bodyForOliver(source, frontend: .cooklang), source)
+    }
+
     func testRendersMarkdownHeadingToHTML() throws {
         let binary = OliverLocator.resolve()
         try XCTSkipUnless(binary != nil, "Oliver binary not on PATH or in a sibling checkout")

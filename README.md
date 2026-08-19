@@ -29,7 +29,7 @@ swift run BANAL
 
 Default folder: `~/Documents/BANAL Notes`.
 
-Each note is a `.md` file with lightweight frontmatter (`title`, `created`, `updated`, `tags`, `published`). Media lives in `./assets/`. Edits made in Finder, Vim, or VS Code are observed via FSEvents and `NSFilePresenter`.
+Each note is a `.md`, `.textile`, or `.cook` file. The extension is the language. Markdown and Textile use lightweight frontmatter (`title`, `created`, `updated`, `tags`, `published`). Cooklang files stay Cooklang (`>> title`). Media lives in `./assets/`. Edits made in Finder, Vim, or VS Code are observed via FSEvents and `NSFilePresenter`.
 
 ## Keys
 

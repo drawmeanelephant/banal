@@ -82,7 +82,7 @@ final class FrontmatterTests: XCTestCase {
         let url = root.appendingPathComponent("hello.md")
         let now = DateFormatting.date(from: "2026-08-18T12:00:00Z")!
         var note = Note(
-            id: "hello",
+            id: "hello.md",
             fileURL: url,
             title: "Hello",
             body: "\nWorld\n",
@@ -99,7 +99,7 @@ final class FrontmatterTests: XCTestCase {
         XCTAssertEqual(loaded.title, "Hello")
         XCTAssertEqual(loaded.tags, ["greetings"])
         XCTAssertTrue(loaded.body.contains("World"))
-        XCTAssertEqual(loaded.id, "hello")
+        XCTAssertEqual(loaded.id, "hello.md")
         XCTAssertFalse(loaded.published)
         XCTAssertEqual(loaded.contentFingerprint, note.contentFingerprint)
     }
