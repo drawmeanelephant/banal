@@ -160,6 +160,10 @@ struct MarkdownTextView: NSViewRepresentable {
         }
     }
 
+    /// MainActor because `NSTextView`'s text properties and the delegate
+    /// methods are MainActor-isolated on macOS 15 SDKs (and the beta SDK
+    /// enforces the same shape) — the pass must not hop isolation.
+    @MainActor
     final class Coordinator: NSObject, NSTextViewDelegate {
         var text: Binding<String>
         weak var textView: NSTextView?
@@ -168,14 +172,10 @@ struct MarkdownTextView: NSViewRepresentable {
         var lastDocumentID: String?
         var applyingProgrammaticText = false
         var language: NoteLanguage = .markdown
-        private var whisperWork: DispatchWorkItem?
+        private var whisperGeneration = 0
 
         init(text: Binding<String>) {
             self.text = text
-        }
-
-        deinit {
-            whisperWork?.cancel()
         }
 
         func textDidChange(_ notification: Notification) {
@@ -187,12 +187,12 @@ struct MarkdownTextView: NSViewRepresentable {
         /// Coalesce whisper marks ~0.4s after the last keystroke, in the
         /// spirit of Oliver's idle pass — never inside `textDidChange`.
         private func scheduleWhisper() {
-            whisperWork?.cancel()
-            let work = DispatchWorkItem { [weak self] in
-                self?.applyWhisper()
+            whisperGeneration += 1
+            let generation = whisperGeneration
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+                guard let self, self.whisperGeneration == generation else { return }
+                self.applyWhisper()
             }
-            whisperWork = work
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4, execute: work)
         }
 
         /// Rebuild the display-only marks as layout-manager temporary
@@ -200,7 +200,6 @@ struct MarkdownTextView: NSViewRepresentable {
         /// character-based; the flatten in `apply(style:)` cannot wipe
         /// marks that live on the layout manager, not the storage.
         func applyWhisper() {
-            whisperWork?.cancel()
             guard let textView, let layoutManager = textView.layoutManager else { return }
             if #available(macOS 15.0, *), textView.isWritingToolsActive {
                 return
