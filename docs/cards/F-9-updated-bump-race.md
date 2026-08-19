@@ -11,8 +11,9 @@
   `2026-08-19T17:12:07Z` (the import moment). `diff` showed a single line
   (`4c4`). Title, body, tags, and published were all correct.
 - **Not this card:** multi-file `open -a` delivery dropping all but the first
-  file (separate delivery question, still human-gated), the F-8 feature
-  itself (landed), or a rewrite of the editor's flush machinery.
+  file (separate delivery question — fixed since via the `openURLs`
+  delegate route), the F-8 feature itself (landed), or a rewrite of the
+  editor's flush machinery.
 - The F-8 import contract — "disk stays truth", byte-faithful copies — is
   violated only by this race, never by `importFile` itself.
 

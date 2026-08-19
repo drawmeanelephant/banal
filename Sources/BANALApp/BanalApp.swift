@@ -195,11 +195,19 @@ final class BanalAppDelegate: NSObject, NSApplicationDelegate {
     /// `flushPendingOpens()`.
     private var pendingOpenURLs: [URL] = []
 
-    /// File opens when BANAL is the handler for `.md` / `.textile` /
-    /// `.cook`. On current macOS a SwiftUI `WindowGroup` routes these to
-    /// `.onOpenURL`; this delegate hook covers Dock drags and older
-    /// delivery paths. `AppModel` dedupes, so one action can never import
-    /// twice even when both routes fire.
+    /// A multi-file open (Finder multi-select → Open With, a Dock drag of
+    /// several files) arrives as one Apple event. SwiftUI's `.onOpenURL`
+    /// surfaces only the *first* URL; the rest reach this AppKit delegate
+    /// hook, so without them a multi-select open was silently dropped.
+    /// Implemented here (`open:` is the Swift name on every supported SDK
+    /// — the ObjC selector `openURLs:` is renamed at import), routing the
+    /// rest through the same queue as `.onOpenURL`. `AppModel` dedupes, so
+    /// a single action can never import twice even when both routes fire.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        pendingOpenURLs.append(contentsOf: urls)
+        flushPendingOpens()
+    }
+
     func application(_ sender: NSApplication, openFiles filenames: [String]) {
         pendingOpenURLs.append(contentsOf: filenames.map { URL(fileURLWithPath: $0) })
         flushPendingOpens()
@@ -238,29 +246,35 @@ final class BanalAppDelegate: NSObject, NSApplicationDelegate {
     /// opened. `bootstrap()` writes `.banal/config.json`; if that never
     /// happens (wrong BANAL_VAULT, sandbox-blocked path), quit at the
     /// deadline and let the script report the failure.
-    /// When `BANAL_SMOKE_OPEN_FILE` is set (the open-event case), also wait
-    /// until that leaf exists in the vault — the script delivers the file
-    /// via LaunchServices after launch, and the import must land before the
-    /// app quits, or the test would false-pass.
+    /// When `BANAL_SMOKE_OPEN_FILE` is set (the open-event case, comma-
+    /// separated for multiple files), also wait until every leaf exists in
+    /// the vault — the script delivers the files via LaunchServices after
+    /// launch, and all imports must land before the app quits, or the test
+    /// would false-pass.
     @MainActor
     private func finishSmokeTest() {
         let deadline = Date().addingTimeInterval(10)
-        let openLeaf = ProcessInfo.processInfo.environment["BANAL_SMOKE_OPEN_FILE"]
+        let openLeaves = ProcessInfo.processInfo.environment["BANAL_SMOKE_OPEN_FILE"]?
+            .split(separator: ",")
+            .map(String.init)
+            .filter { !$0.isEmpty } ?? []
         func poll() {
             let configURL = model?.store.configuration.configURL
             let opened = configURL.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
-            var imported = true
-            if let openLeaf, !openLeaf.isEmpty, let rootURL = model?.store.configuration.rootURL {
-                imported = FileManager.default.fileExists(atPath: rootURL.appendingPathComponent(openLeaf).path)
+            var missing: [String] = []
+            if let rootURL = model?.store.configuration.rootURL {
+                for leaf in openLeaves where !FileManager.default.fileExists(atPath: rootURL.appendingPathComponent(leaf).path) {
+                    missing.append(leaf)
+                }
             }
-            if opened && imported {
+            if opened && missing.isEmpty {
                 print("BANAL smoke: ready")
                 NSApp.terminate(nil)
                 return
             }
             if Date() >= deadline {
-                let missing = opened ? "the open-file import (\(openLeaf ?? "")) never landed" : "the vault to open"
-                print("BANAL smoke: timed out waiting for \(missing)")
+                let what = opened ? "the open-file import(s) never landed: \(missing.joined(separator: ", "))" : "the vault to open"
+                print("BANAL smoke: timed out waiting for \(what)")
                 NSApp.terminate(nil)
                 return
             }
