@@ -38,7 +38,7 @@ swift test
 swift run BANAL
 ```
 
-Sandboxed `.app` (C-3): `make app` then `open dist/BANAL.app`. Before the sit, run **`make smoke`** — it launches the signed app with a scratch `BANAL_VAULT`, hands an external `.cook` to the running app via `open -a` (the Finder/Open With path through `.onOpenURL`), and asserts the app boots, opens the folder, imports the file byte-identical exactly once, and quits cleanly. Notes-folder sit: [`TESTING-NOTES-FOLDER.md`](TESTING-NOTES-FOLDER.md).
+Sandboxed `.app` (C-3): `make app` then `open dist/BANAL.app`. Before the sit, run **`make smoke`** — it launches the signed app with a scratch `BANAL_VAULT`, hands an external `.cook` and a `.textile` to the running app in **one** `open -a` call (the Finder/Open With path — the first URL lands in `.onOpenURL`, the rest in the `openURLs` delegate hook), and asserts the app boots, opens the folder, imports every file byte-identical exactly once, and quits cleanly. Notes-folder sit: [`TESTING-NOTES-FOLDER.md`](TESTING-NOTES-FOLDER.md).
 
 **`BANAL_VAULT`:** if set to an existing directory, launch opens that folder **without writing the bookmark**. Use it for a disposable tree (or the sample vault) while leaving a remembered notes folder alone.
 

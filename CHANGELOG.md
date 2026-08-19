@@ -18,6 +18,8 @@
 
 ### Fixed
 
+- Multi-select → Open With (and a Dock drag of several files) now imports **every** file: a SwiftUI `WindowGroup` routes only the first URL of a multi-file open to `.onOpenURL` — the rest now arrive via the `application(_:open:)` / `openURLs:` delegate hook, which was missing.
+
 - Imported notes no longer risk a bumped `updated:` frontmatter from a rare stale editor write-back race: editor writes are session-guarded, and a save that changes nothing on disk is a no-op (F-9).
 
 - Opening a note file (Finder double-click, Open With → BANAL, Dock drag) now actually opens it: SwiftUI `WindowGroup` delivers file opens to `.onOpenURL`, not the app delegate's `openFiles` hook, so the first F-8 build silently swallowed them. Both routes now feed `AppModel.openExternalNote` with a 2s dedupe guard.

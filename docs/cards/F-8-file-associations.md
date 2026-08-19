@@ -10,14 +10,19 @@
   textile/cooklang so the extensions map to their UTIs. `LSHandlerRank` is
   `Alternate` — BANAL appears under Open With without hijacking `.md` from the
   user's main editor.
-- Open events arrive through two routes: SwiftUI `.onOpenURL` (where a
-  `WindowGroup` delivers Finder double-clicks, Open With, and Dock drags on
-  current macOS — the delegate's `application(_:openFiles:)` does *not* fire
-  for them) and the `BanalAppDelegate` hook as a fallback for older delivery
-  paths. `AppModel` dedupes within 2s, so one action can never import twice
-  even when both routes fire. Events before the window appears are queued in
-  the delegate; files opened before a notes folder exists are queued in
-  `AppModel` and imported once `bootstrap()` opens a vault.
+- Open events arrive through two routes. A SwiftUI `WindowGroup` routes
+  Finder double-clicks, Open With, and Dock drags to `.onOpenURL` — but a
+  **multi-file open is split**: the first URL goes to `.onOpenURL`, and the
+  remaining URLs reach the `BanalAppDelegate`'s
+  `application(_:open:)` / `application(_:openURLs:)` hook (the modern AppKit
+  route for document types with no `NSDocument` class; the old
+  `application(_:openFiles:)` does not fire). Without that hook the rest of a
+  multi-select open was silently dropped — now it is implemented, and all
+  files of one action are imported. `AppModel` dedupes within 2s, so one
+  action can never import twice even when both routes fire. Events before the
+  window appears are queued in the delegate; files opened before a notes
+  folder exists are queued in `AppModel` and imported once `bootstrap()`
+  opens a vault.
 - Open behavior: file inside the vault → select it and focus the editor; file
   outside → `NoteStore.importFile` copies it into the vault root (unique `-2`
   name on collision, source left untouched, extension decides language) and
@@ -68,5 +73,8 @@ opens the recipe in the editor. Drag `draft.md` onto the BANAL Dock icon: the
 note opens in BANAL. `swift test` stays green.
 
 **Mini-sit (human):** on a real machine, Open With → BANAL on a `.cook` and a
-`.md`, and a Dock drag of a file outside the vault — expect the note selected
-with the caret in source, and a copy in the vault root.
+`.md`, a Dock drag of a file outside the vault, and a **multi-select → Open
+With** (two or three files in one gesture) — expect every note selected or
+imported (unique names on collision), caret in source, and a copy in the
+vault root. Multi-file delivery is CI-proven via `make smoke`; the literal
+Finder gesture remains human.
