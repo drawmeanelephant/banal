@@ -1,10 +1,10 @@
 # Card F-1 — Notarized release pipeline
 
-**Milestone:** M10 · **Lane:** app · **Depends:** M7 C-3 landed · **Status:** ready — Gatekeeper happy
+**Milestone:** M10 · **Lane:** app · **Depends:** M7 C-3 landed · **Status:** landed — Developer ID hardened runtime, notarytool script, and signed DMG packaging
 
 ## Handoff
 
-- **Not started.** `make app` creates an ad-hoc signed, sandboxed `.app` bundle in `dist/BANAL.app`. Release distribution requires Developer ID signing, hardening, and notarization.
+- **Landed.** Developer ID signing with hardened runtime (`--options runtime --timestamp`), `Scripts/notarize.sh` for `xcrun notarytool` submission and stapling across credential sources (Keychain profile, App Store Connect API key, Apple ID) with graceful fallback for local ad-hoc builds, `Scripts/package-dmg.sh` for DMG disk image creation with `/Applications` shortcut, and `Makefile` targets (`make sign-developer-id`, `make notarize`, `make dmg`, `make release-dmg`, `make release`).
 - **Not this card:** In-app updater (Sparkle is a future menu item only if needed), web download portals.
 
 ## Owns

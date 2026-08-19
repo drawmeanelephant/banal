@@ -12,7 +12,8 @@
 - Caret: flush only when dirty; switch notes resets undo; clean external reload keeps a valid offset; ⇧⌘F shows the find bar
 - Empty list / empty folder / no selection / nothing published are one sentence each
 - Missing or deleted notes folder shows “This notes folder is missing.” and Choose… — at launch and if the folder vanishes while open; the folder is not silently recreated. Tester script: [`TESTING-NOTES-FOLDER.md`](TESTING-NOTES-FOLDER.md)
-- Signed `.app` via `make app`: sandbox, icon, ad-hoc codesign. Notes-folder bookmarks start on restore and stop on quit. No Developer ID / notarization on this machine.
+- Signed `.app` via `make app`: sandbox, icon, ad-hoc or Developer ID codesign with hardened runtime (`--options runtime --timestamp`). Notes-folder bookmarks start on restore and stop on quit.
+- Notarized release pipeline & DMG packaging (F-1, issue #25): Developer ID Application signing with hardened runtime (`--options runtime --timestamp`) and automatic Keychain detection (`make sign-developer-id`); `xcrun notarytool` automated submission and stapling for `.app` bundles and DMGs (supporting Keychain profiles, App Store Connect API keys, and Apple ID credentials with graceful fallback for local builds in `Scripts/notarize.sh`); and signed DMG packaging with `/Applications` shortcut (`make dmg`, `make release-dmg`, `make release`). Card: [`F-1-notarize.md`](cards/F-1-notarize.md).
 - Folders are real directories: create, rename, trash, nested tree, empty folders stay; Finder mkdir/rename rescans
 - New note lands in the selected folder (or Inbox / root, per Settings); New Note Here always uses that folder
 - Drag a note onto a folder (or All Notes) to move the file
