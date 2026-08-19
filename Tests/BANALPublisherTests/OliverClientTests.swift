@@ -44,6 +44,11 @@ final class OliverClientTests: XCTestCase {
             currentDirectory: root
         )
         XCTAssertNil(found)
+        XCTAssertNil(OliverLocator.resolveRecipeJSON(
+            configured: nil,
+            environment: ["PATH": ""],
+            currentDirectory: root
+        ))
     }
 
     func testDebounceIsSilentWhenUnavailable() {

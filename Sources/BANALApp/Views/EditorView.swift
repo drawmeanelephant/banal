@@ -19,18 +19,23 @@ struct EditorView: View {
                 metadataRow
                     .frame(maxWidth: measure)
                     .frame(maxWidth: .infinity)
-                MarkdownTextView(
-                    text: $model.editorText,
-                    documentID: model.selectedID ?? "",
-                    findToken: model.findInNoteToken,
-                    focusToken: model.editorFocus,
-                    style: EditorStyle(from: model.preferences)
-                )
-                .onChange(of: model.editorText) { _, _ in
-                    model.applyEditorChanges()
+                if model.showsRecipeSwitcher, model.recipeMode == .read {
+                    RecipeReadView(model: model)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    MarkdownTextView(
+                        text: $model.editorText,
+                        documentID: model.selectedID ?? "",
+                        findToken: model.findInNoteToken,
+                        focusToken: model.editorFocus,
+                        style: EditorStyle(from: model.preferences)
+                    )
+                    .onChange(of: model.editorText) { _, _ in
+                        model.applyEditorChanges()
+                    }
+                    .frame(maxWidth: measure)
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: measure)
-                .frame(maxWidth: .infinity)
             }
             .background(Color(nsColor: .textBackgroundColor))
         }
@@ -58,30 +63,46 @@ struct EditorView: View {
     }
 
     private var metadataRow: some View {
-        HStack(spacing: 6) {
-            if let note = model.selectedNote {
-                Text(note.updated, format: .relative(presentation: .named))
+        HStack(spacing: 8) {
+            HStack(spacing: 6) {
+                if let note = model.selectedNote {
+                    Text(note.updated, format: .relative(presentation: .named))
+                }
+                if model.editorPublished {
+                    Text("·")
+                        .accessibilityHidden(true)
+                    Image(systemName: "globe")
+                        .accessibilityHidden(true)
+                    Text("Published")
+                }
+                if !visibleTags.isEmpty {
+                    Text("·")
+                        .accessibilityHidden(true)
+                    Text(visibleTags)
+                        .lineLimit(1)
+                }
+                Spacer(minLength: 0)
             }
-            if model.editorPublished {
-                Text("·")
-                    .accessibilityHidden(true)
-                Image(systemName: "globe")
-                    .accessibilityHidden(true)
-                Text("Published")
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .accessibilityElement(children: .combine)
+            if model.showsRecipeSwitcher {
+                Picker("Recipe view", selection: Binding(
+                    get: { model.recipeMode },
+                    set: { model.setRecipeMode($0) }
+                )) {
+                    Text("Edit").tag(RecipeMode.edit)
+                    Text("Read").tag(RecipeMode.read)
+                }
+                .pickerStyle(.segmented)
+                .controlSize(.small)
+                .frame(maxWidth: 140)
+                .labelsHidden()
+                .accessibilityLabel("Recipe view")
             }
-            if !visibleTags.isEmpty {
-                Text("·")
-                    .accessibilityHidden(true)
-                Text(visibleTags)
-                    .lineLimit(1)
-            }
-            Spacer(minLength: 0)
         }
-        .font(.caption)
-        .foregroundStyle(.secondary)
         .padding(.horizontal, EditorTypography.horizontalInset)
         .padding(.bottom, 8)
-        .accessibilityElement(children: .combine)
     }
 
     private var visibleTags: String {

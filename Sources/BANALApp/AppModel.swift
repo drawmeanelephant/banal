@@ -26,6 +26,10 @@ public final class AppModel: ObservableObject {
     @Published public var isCreatingFolder = false
     @Published public var isRenamingFolder = false
     @Published public var folderBeingRenamed: String?
+    @Published public var recipeMode: RecipeMode = .edit
+    @Published public var recipeScale: RecipeScale = .one
+    @Published public var oliverRecipe: OliverRecipe?
+    @Published public var recipeError: String?
 
     public let editorFocus = FocusToken()
     /// Last Oliver HTML for the open buffer. Not published — a render
@@ -37,7 +41,11 @@ public final class AppModel: ObservableObject {
     private var loadedFingerprint = ""
     private var warnedDiskFingerprint = ""
     private var cancellables = Set<AnyCancellable>()
+    private var sessionRecipeMode: RecipeMode = .edit
+    private var recipeGeneration = 0
+    private let oliverClient: OliverClient?
     private let oliver: OliverDebounce
+    private let recipeQueue = DispatchQueue(label: "dev.drawmeanelephant.banal.recipe", qos: .userInitiated)
 
     public init(
         store: NoteStore,
@@ -50,7 +58,14 @@ public final class AppModel: ObservableObject {
         self.missingNotesFolder = missingNotesFolder
         self.preferences = preferences
         store.watchesExternalEdits = preferences.watchExternalEdits
-        self.oliver = OliverDebounce()
+        if let url = OliverLocator.resolveRecipeJSON() ?? OliverLocator.resolve() {
+            let client = OliverClient(binaryURL: url)
+            self.oliverClient = client
+            self.oliver = OliverDebounce(client: client)
+        } else {
+            self.oliverClient = nil
+            self.oliver = OliverDebounce(client: nil)
+        }
         bindStore()
     }
 
@@ -116,10 +131,17 @@ public final class AppModel: ObservableObject {
         )
     }
 
+    public var showsRecipeSwitcher: Bool {
+        selectedNote?.language == .cooklang
+    }
+
     public func createNote(language: NoteLanguage = .markdown, in folder: String? = nil) {
         do {
             let dest = folder ?? preferences.folderForNewNote(selected: filter)
             let note = try store.createNote(folder: dest, language: language)
+            if language == .cooklang {
+                sessionRecipeMode = .edit
+            }
             if let dest {
                 filter = .folder(dest)
             }
@@ -390,6 +412,30 @@ public final class AppModel: ObservableObject {
         }
     }
 
+    public func setRecipeMode(_ mode: RecipeMode) {
+        guard selectedNote?.language == .cooklang else { return }
+        if recipeMode == mode { return }
+        recipeMode = mode
+        sessionRecipeMode = mode
+        if mode == .read {
+            flushEditor()
+            oliverRecipe = nil
+            recipeError = nil
+            askRecipe()
+        } else {
+            cancelRecipeAsk()
+            clearRecipe()
+        }
+    }
+
+    public func setRecipeScale(_ scale: RecipeScale) {
+        guard recipeScale != scale else { return }
+        recipeScale = scale
+        if recipeMode == .read, selectedNote?.language == .cooklang {
+            askRecipe()
+        }
+    }
+
     private func loadEditor(from note: Note?) {
         suppressEditorSync = true
         editorTitle = note?.title ?? ""
@@ -399,7 +445,21 @@ public final class AppModel: ObservableObject {
         loadedFingerprint = note?.contentFingerprint ?? ""
         editorDirty = false
         warnedDiskFingerprint = ""
+        recipeScale = .one
         suppressEditorSync = false
+        if note?.language == .cooklang {
+            recipeMode = sessionRecipeMode
+            if recipeMode == .read {
+                askRecipe()
+            } else {
+                cancelRecipeAsk()
+                clearRecipe()
+            }
+        } else {
+            recipeMode = .edit
+            cancelRecipeAsk()
+            clearRecipe()
+        }
         scheduleOliverQuestion()
     }
 
@@ -419,6 +479,58 @@ public final class AppModel: ObservableObject {
             }
         }
     }
+
+    private func askRecipe() {
+        guard recipeMode == .read, selectedNote?.language == .cooklang else {
+            clearRecipe()
+            return
+        }
+        guard let client = oliverClient else {
+            oliverRecipe = nil
+            recipeError = "This recipe didn’t parse."
+            return
+        }
+        recipeGeneration += 1
+        let generation = recipeGeneration
+        let source = editorText
+        let scale = recipeScale
+        let noteID = selectedID
+        let apply: @Sendable (Result<OliverRecipe, Error>) -> Void = { [weak self] result in
+            Task { @MainActor in
+                guard let self else { return }
+                guard generation == self.recipeGeneration, self.recipeMode == .read, self.selectedID == noteID else { return }
+                switch result {
+                case .success(let recipe):
+                    self.oliverRecipe = recipe
+                    self.recipeError = nil
+                case .failure:
+                    self.oliverRecipe = nil
+                    self.recipeError = "This recipe didn’t parse."
+                }
+            }
+        }
+        recipeQueue.async { [client] in
+            do {
+                apply(.success(try client.recipe(source, scale: scale)))
+            } catch {
+                apply(.failure(error))
+            }
+        }
+    }
+
+    private func cancelRecipeAsk() {
+        recipeGeneration += 1
+    }
+
+    private func clearRecipe() {
+        oliverRecipe = nil
+        recipeError = nil
+    }
+}
+
+public enum RecipeMode: String, Equatable, Hashable, Sendable {
+    case edit
+    case read
 }
 
 public final class FocusToken {
