@@ -89,13 +89,14 @@ kill -0 "$APP_PID" 2>/dev/null || fail "app died right after opening the vault"
 
 # 3. Deliver the open-file event, the way Finder / Open With does. A SwiftUI
 # WindowGroup routes this to .onOpenURL, which imports the file into the
-# vault; the app hook (BANAL_SMOKE_OPEN_FILE) quits only after the import
+# vault; the app hook (BANAL_SMOKE_OPEN_FILE) quits as soon as the import
 # lands on disk, so a dropped event fails loudly instead of false-passing.
+# The app is *expected* to exit quickly once the import lands, so we do not
+# require it to survive the delivery; step 4 judges the exit — a crash
+# exits nonzero, a dropped event quits without the ready marker.
 APP_ABS="$(cd "$(dirname "$APP")" && pwd)/$(basename "$APP")"
 log "delivering $OPEN_LEAF to the running app via open -a"
 open -a "$APP_ABS" "$SOURCE" || fail "open -a failed to deliver $SOURCE"
-sleep 1
-kill -0 "$APP_PID" 2>/dev/null || fail "app died while processing the open event"
 
 # 4. Quits cleanly: BANAL_SMOKE_TEST terminates through NSApp with status 0.
 CODE=0
