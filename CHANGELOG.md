@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- D-2 sit found it: switching Read back to Edit restored the source but left focus elsewhere. Now the caret lands back in the Markdown (focus is requested after the editor view is swapped in).
+
 ### Changed
 
 - Fluency (D-0): Close is archive. Next *feature* work is whispered source, prose Read, sauce walks, and ingredient search — after the C-1 sit, and without a new column. See [`docs/cards/README.md`](docs/cards/README.md).

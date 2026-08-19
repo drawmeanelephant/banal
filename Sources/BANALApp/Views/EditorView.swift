@@ -50,6 +50,16 @@ struct EditorView: View {
                 }
             }
             .background(Color(nsColor: .textBackgroundColor))
+            .onChange(of: model.viewMode) { _, newMode in
+                // The gate: hit Edit and the caret is back in the Markdown.
+                // Defer past the SwiftUI commit so the fresh editor exists
+                // and its focus handler is installed before we ask.
+                if newMode == .edit {
+                    DispatchQueue.main.async {
+                        model.editorFocus.request()
+                    }
+                }
+            }
         }
     }
 
