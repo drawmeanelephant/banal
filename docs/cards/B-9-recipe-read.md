@@ -1,6 +1,6 @@
 # Card B-9 — Cook from the reading view
 
-**Milestone:** M5 · **Lane:** detail · **Depends:** B-7, B-8 · **Status:** cooking — Edit | Read, view-only scale
+**Milestone:** M5 · **Lane:** detail · **Depends:** B-7, B-8 · **Status:** landed — Edit | Read, view-only scale; risotto sit is C-1
 
 ## Handoff
 

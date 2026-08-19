@@ -1,6 +1,6 @@
 # Card B-6 — If it isn’t in the menu bar, it isn’t a feature
 
-**Milestone:** M3 · **Lane:** app · **Status:** cooking — File complete, one Find menu
+**Milestone:** M3 · **Lane:** app · **Status:** landed — File complete, one Find menu; About is C-2
 
 ## Handoff
 

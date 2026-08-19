@@ -84,6 +84,19 @@ final class NoteStoreTests: XCTestCase {
         XCTAssertTrue(store.notes(matching: .all, query: "scratch").contains(where: { $0.title == "Private scratch" }))
     }
 
+    func testOpenMissingDirectoryDoesNotCreateIt() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "banal-gone-\(UUID().uuidString)",
+            isDirectory: true
+        )
+        let store = NoteStore(configuration: VaultConfiguration(rootURL: url), monitor: nil)
+        XCTAssertThrowsError(try store.open()) { error in
+            XCTAssertEqual(error as? NoteStoreError, .vaultNotDirectory(url.standardizedFileURL))
+        }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+        XCTAssertFalse(store.rootMissing)
+    }
+
     func testApplyExternalChangeSetsRootMissingWhenVaultVanishes() throws {
         let vault = try makeVault()
         let store = NoteStore(configuration: vault, monitor: nil)

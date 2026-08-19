@@ -1,6 +1,6 @@
 # Card B-8 — Three languages, one list
 
-**Milestone:** M5 · **Lane:** core + app · **Depends:** B-7 · **Status:** cooking — three extensions in one list
+**Milestone:** M5 · **Lane:** core + app · **Depends:** B-7 · **Status:** landed — three extensions in one list
 
 ## Handoff
 

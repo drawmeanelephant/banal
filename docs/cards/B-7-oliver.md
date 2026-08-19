@@ -1,6 +1,6 @@
 # Card B-7 — Oliver in the basement
 
-**Milestone:** M4 · **Lane:** engine · **Status:** cooking — client landed; no preview
+**Milestone:** M4 · **Lane:** engine · **Status:** landed — client landed; no preview; Settings path is C-2
 
 ## Handoff
 

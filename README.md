@@ -25,6 +25,24 @@ swift run BANAL
 
 `swift test` is the source of truth for the storage contract and the publisher. The app target is a native SwiftUI + AppKit executable; it does not use Electron or a webview for editing.
 
+### Signed `.app`
+
+```bash
+make app
+```
+
+That writes `dist/BANAL.app` (version 0.1.0), sandbox on, and signs it. This machine has no Developer ID certificate, so the signature is **ad-hoc** (`codesign -s -`). Drag it to `/Applications`. Gatekeeper will warn; right-click → Open the first time, or `xattr -cr dist/BANAL.app`.
+
+It is not notarized. To sign with a Developer ID you have locally:
+
+```bash
+make app SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)"
+```
+
+Still not notarized unless you run `notarytool` yourself.
+
+`swift run BANAL` is **not** sandboxed. Use `make app` when you want the real bookmark / picker sit. Boris and Oliver stay on PATH or Settings → Publish (Choose…). They are not inside the bundle.
+
 ## Vault
 
 Default folder: `~/Documents/BANAL Notes`.
@@ -59,8 +77,8 @@ Mark notes **Published**, then File → Publish Site….
 | [`docs/cards/README.md`](docs/cards/README.md) | What to build next (one card per PR) |
 | [`docs/MISSION.md`](docs/MISSION.md) | One-page version |
 | [`docs/QUALITY.md`](docs/QUALITY.md) | AAA finish bar |
-| [`docs/PREFERENCES.md`](docs/PREFERENCES.md) | Settings + Cloudflare-ready Publish pane |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Folders → Settings → Finish → Deploy |
+| [`docs/PREFERENCES.md`](docs/PREFERENCES.md) | Settings + Publish pane (Deploy is live) |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Folders → Settings → Finish → Languages → Publish → Close |
 | [`docs/STATUS.md`](docs/STATUS.md) | What works now |
 | [`docs/TESTING-NOTES-FOLDER.md`](docs/TESTING-NOTES-FOLDER.md) | How to sit the notes-folder picker (first run, missing, vanish while open) |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Boris / Solipsist boundary |

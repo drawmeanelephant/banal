@@ -26,10 +26,14 @@ window stays sexy.
 
 ## Maybe later, still not a pane
 
+Not a board until C-1 has been sat. If the sit invents a different
+need, that bug wins.
+
 - Whispered markup highlighting (not a theme)
 - Prose preview for Markdown/Textile
 - Save a scaled recipe copy
-- Signed `.app` / sandbox
+
+Signed `.app` / sandbox is [C-3](C-3-hand-it.md), not later.
 
 ## The test
 

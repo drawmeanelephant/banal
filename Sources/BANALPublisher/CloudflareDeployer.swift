@@ -110,9 +110,15 @@ public enum CloudflareDeployer {
 
     public static func wranglerExecutable(environment: [String: String] = ProcessInfo.processInfo.environment) -> URL? {
         let path = environment["PATH"] ?? ""
+        var searchDirs = path.split(separator: ":").map(String.init)
+        for fallback in ["/opt/homebrew/bin", "/usr/local/bin", "/usr/bin", "/bin"] {
+            if !searchDirs.contains(fallback) {
+                searchDirs.append(fallback)
+            }
+        }
         for name in ["wrangler", "npx"] {
-            for directory in path.split(separator: ":") {
-                let candidate = URL(fileURLWithPath: String(directory)).appendingPathComponent(name)
+            for directory in searchDirs {
+                let candidate = URL(fileURLWithPath: directory).appendingPathComponent(name)
                 if FileManager.default.isExecutableFile(atPath: candidate.path) {
                     return candidate
                 }

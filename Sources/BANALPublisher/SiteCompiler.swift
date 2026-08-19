@@ -57,7 +57,8 @@ public enum SiteHTML {
     public static func document(page: BorisPage, pages: [BorisPage], configuration: PublishConfiguration, bodyHTML: String? = nil) -> String {
         let navItems = pages.map { item in
             let current = item.entityID == page.entityID ? " class=\"is-current\"" : ""
-            return "<li\(current)><a href=\"\(item.entityID).html\">\(MarkdownHTML.escape(item.title))</a></li>"
+            let href = href(from: page.entityID, to: item.entityID)
+            return "<li\(current)><a href=\"\(href)\">\(MarkdownHTML.escape(item.title))</a></li>"
         }.joined(separator: "\n")
         let nav = "<nav><ul>\(navItems)</ul></nav>"
         let body = bodyHTML ?? MarkdownHTML.render(stripLeadingNewlines(pageBody(page.source)))
@@ -65,6 +66,20 @@ public enum SiteHTML {
             .replacingOccurrences(of: "{{title}}", with: MarkdownHTML.escape(page.title))
             .replacingOccurrences(of: "{{nav}}", with: nav)
             .replacingOccurrences(of: "{{content}}", with: body)
+    }
+
+    /// Relative `href` so a page in `Recipes/` can open `index.html` from Finder.
+    public static func href(from sourceEntityID: String, to destinationEntityID: String) -> String {
+        let sourceDir = (sourceEntityID as NSString).deletingLastPathComponent
+        let sourceParts = sourceDir.split(separator: "/").map(String.init).filter { !$0.isEmpty && $0 != "." }
+        let destParts = (destinationEntityID + ".html").split(separator: "/").map(String.init).filter { !$0.isEmpty }
+        var common = 0
+        while common < sourceParts.count, common + 1 < destParts.count, sourceParts[common] == destParts[common] {
+            common += 1
+        }
+        var bits = Array(repeating: "..", count: sourceParts.count - common)
+        bits.append(contentsOf: destParts.dropFirst(common))
+        return bits.joined(separator: "/")
     }
 
     public static func write(_ html: String, entityID: String, artifactDirectory: URL, fileManager: FileManager = .default) throws {

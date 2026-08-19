@@ -4,9 +4,18 @@
 
 ### Changed
 
+- Close (C-0): B-0–B-10 marked landed. Next work is sit, Settings honesty, and a signed `.app` — not a new language or pane. See [`docs/cards/README.md`](docs/cards/README.md).
+- Honesty (C-2): Publish, skip, and deploy status is a spoken sentence. Missing Oliver on a recipe Read says so.
 - Editor type is SF Pro. Serif toggle is gone. Stylesheets later.
+- Publish status strip says “1 note” when the count is one.
+- A recipe (or any note in a folder) published to `.publish/` links back to the index with a relative href. Opening `Recipes/risotto.html` from Finder no longer 404s the home page.
+- Moving or renaming a folder no longer treats the open note as a new document (caret and undo stay).
 
 ### Added
+
+- Hand it (C-3): a crafted notes-app icon (tactile cotton pad, machined brass pen, terracotta ribbon), candidate icon reference gallery, sandbox on, and `make app` which writes an ad-hoc signed `dist/BANAL.app` stamped with version. Security-scoped bookmarks start on restore and stop on quit. Stale compiler bookmarks are dropped on path change. Settings binary pickers are individually accessible to VoiceOver.
+- Tester brief for the whole window: [`docs/TESTING-WINDOW.md`](docs/TESTING-WINDOW.md) (first-run, light+dark 720/1100/1400, 30s type/⌘Z, dirty Vim, empties, three languages, risotto Read, ⇧⌘P, VoiceOver).
+- Honesty (C-2): Settings → Publish chooses Boris and Oliver (empty is fine). BANAL → About names the app, version 0.1.0, and the mission. Oliver’s path lives in `.banal/config.json` like Boris. Probing Oliver runs asynchronously off the main actor.
 
 - Publish (B-10): File → Publish Site writes `.publish/` for marked Markdown, Textile, and Cooklang notes. Recipes stay Cooklang on disk. File → Deploy to Cloudflare is optional and uses the Keychain token.
 - Recipe Read (B-9): `.cook` notes have Edit | Read. Read is a native ingredient list and steps. ½ 1× 2× 3× scales the view; the file on disk does not change.

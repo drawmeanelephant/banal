@@ -100,6 +100,17 @@ final class OliverRecipeTests: XCTestCase {
         XCTAssertEqual(half.ingredientIndex.first { $0.name == "arborio rice" }?.quantity, "150")
         XCTAssertEqual(half.ingredientIndex.first { $0.name == "stock" }?.quantity, "1/2")
     }
+
+    func testSampleRisottoScaleDoesNotRewriteTheFile() throws {
+        let client = try recipeJSONClient()
+        let url = sampleRisottoURL()
+        let before = try Data(contentsOf: url)
+        let source = try String(contentsOf: url, encoding: .utf8)
+        let doubled = try client.recipe(source, scale: .two)
+        XCTAssertEqual(doubled.ingredientIndex.first { $0.name == "arborio rice" }?.quantity, "600")
+        XCTAssertEqual(try Data(contentsOf: url), before)
+        XCTAssertTrue(source.contains("@arborio rice{300%g}"))
+    }
 }
 
 private func recipeJSONClient() throws -> OliverClient {
@@ -107,6 +118,14 @@ private func recipeJSONClient() throws -> OliverClient {
         throw XCTSkip("Oliver serialize --json is not available")
     }
     return OliverClient(binaryURL: url)
+}
+
+func sampleRisottoURL() -> URL {
+    URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .deletingLastPathComponent()
+        .appendingPathComponent("Examples/sample-vault/Recipes/risotto.cook")
 }
 
 private let risottoSource = """

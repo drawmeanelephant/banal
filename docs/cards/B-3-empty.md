@@ -1,6 +1,6 @@
 # Card B-3 — Empty states that do not insult anyone
 
-**Milestone:** M3 · **Lane:** chrome · **Status:** cooking — one-sentence empties, missing-folder picker
+**Milestone:** M3 · **Lane:** chrome · **Status:** landed — one-sentence empties, missing-folder picker
 
 ## Handoff
 

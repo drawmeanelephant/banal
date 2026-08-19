@@ -1,6 +1,6 @@
 # Card B-0 — Silhouette
 
-**Milestone:** M3 · **Lane:** chrome · **Status:** cooking — three-column window, two-line rows, metadata row
+**Milestone:** M3 · **Lane:** chrome · **Status:** landed — three-column window, two-line rows, metadata row
 
 ## Handoff
 

@@ -1,4 +1,5 @@
 import AppKit
+import BANALCore
 import SwiftUI
 
 struct ContentView: View {
@@ -79,17 +80,15 @@ struct VaultPicker: View {
             HStack(spacing: 10) {
                 Button("Documents/BANAL Notes") {
                     let url = VaultBookmark.defaultVaultURL()
-                    try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-                    model.openVault(url)
+                    if let allowed = VaultBookmark.createFolderIfAllowed(url) {
+                        model.openVault(allowed)
+                    } else if let picked = NotesFolderPicker.run(startingAt: url.deletingLastPathComponent()) {
+                        model.openVault(picked)
+                    }
                 }
                 .accessibilityLabel("Documents/BANAL Notes")
                 Button("Choose…") {
-                    let panel = NSOpenPanel()
-                    panel.canChooseFiles = false
-                    panel.canChooseDirectories = true
-                    panel.canCreateDirectories = true
-                    panel.prompt = "Use Folder"
-                    if panel.runModal() == .OK, let url = panel.url {
+                    if let url = NotesFolderPicker.run() {
                         model.openVault(url)
                     }
                 }

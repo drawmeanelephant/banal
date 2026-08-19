@@ -14,4 +14,16 @@ public enum NotesFolderAccess: Equatable, Sendable {
         }
         return .missing(remembered)
     }
+
+    /// Launch pipeline: restore the bookmark, then classify. Never creates a folder.
+    public static func resolveRemembered(
+        defaults: UserDefaults = .standard,
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        fileManager: FileManager = .default
+    ) -> NotesFolderAccess {
+        resolve(
+            remembered: VaultBookmark.restore(defaults: defaults, environment: environment),
+            fileManager: fileManager
+        )
+    }
 }

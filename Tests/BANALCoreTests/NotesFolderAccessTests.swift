@@ -24,4 +24,10 @@ final class NotesFolderAccessTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: url) }
         XCTAssertEqual(NotesFolderAccess.resolve(remembered: url), .missing(url))
     }
+
+    func testMissingResolveDoesNotCreateTheFolder() {
+        let url = URL(fileURLWithPath: "/tmp/banal-does-not-exist-\(UUID().uuidString)", isDirectory: true)
+        _ = NotesFolderAccess.resolve(remembered: url)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+    }
 }

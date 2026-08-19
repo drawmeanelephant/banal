@@ -46,7 +46,7 @@ Do not violate these unless the user explicitly requests a deviation.
 | Sidebar | Vault folders (nested), All Notes, Published, maybe tags as a *filter* not a place |
 | List | Notes in the current folder or filter, sorted, instant search |
 | Editor | Title + body. Fast. Undo. Standard Mac text behavior |
-| Settings | Vault, editor, and a Publish pane that is ready for Cloudflare later |
+| Settings | Vault, editor, and a Publish pane. Deploy is a menu item, optional |
 | Menus + shortcuts | If it is not in the menu bar, it is not a feature |
 
 That is the app. Features that do not fit this table need a written exception in `docs/STATUS.md` before code.
@@ -86,7 +86,7 @@ That is the app. Features that do not fit this table need a written exception in
 | Nested folders that are real directories | **Yes** |
 | Drag a note into a folder | **Yes** |
 | Settings pane for site title, project name, account id | **Yes** |
-| Keychain slot for a Cloudflare API token | **Yes** (do not implement deploy until asked) |
+| Keychain slot for a Cloudflare API token | **Yes**. Deploy is File → Deploy to Cloudflare when token + project exist |
 | Tags as the primary organizer | **No** — folders first; tags are optional filters |
 | `.cook` / `.textile` as ordinary files + recipe reading view | **Yes** (after the Markdown silhouette works) |
 | Wikilinks, backlinks graph, daily notes ritual | **No** |

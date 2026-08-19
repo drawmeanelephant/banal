@@ -1,6 +1,6 @@
 # Card B-10 — Publish is Export
 
-**Milestone:** M6 · **Lane:** publisher · **Depends:** B-5 · **Status:** cooking — mixed vault export; deploy optional
+**Milestone:** M6 · **Lane:** publisher · **Depends:** B-5 · **Status:** landed — mixed vault export; deploy optional
 
 ## Handoff
 
