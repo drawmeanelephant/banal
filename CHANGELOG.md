@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Recipe references (D-3): a risotto that says `@./sauces/Hollandaise{150%g}` shows the sauce's ingredients and steps in Read, scaled by the reference's percent — the file on disk still says `@./sauces/…`.
+
 ### Fixed
 
 - D-2 sit found it: switching Read back to Edit restored the source but left focus elsewhere. Now the caret lands back in the Markdown (focus is requested after the editor view is swapped in).

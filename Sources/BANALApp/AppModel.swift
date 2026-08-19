@@ -31,6 +31,9 @@ public final class AppModel: ObservableObject {
     @Published public var recipeScale: RecipeScale = .one
     @Published public var oliverRecipe: OliverRecipe?
     @Published public var recipeError: String?
+    /// One-sentence sauce problems from inlining (D-3): missing sauce,
+    /// a cycle, too many levels. Non-fatal — the recipe still reads.
+    @Published public var recipeIssues: [String] = []
     /// Identity for the open buffer. Changes when the user switches notes,
     /// not when a folder rename or move rewrites the path.
     @Published public private(set) var editorSessionID = UUID()
@@ -655,14 +658,16 @@ public final class AppModel: ObservableObject {
         guard let client = oliverClient else {
             oliverRecipe = nil
             recipeError = "This recipe needs Oliver."
+            recipeIssues = []
             return
         }
         recipeGeneration += 1
         let generation = recipeGeneration
         let source = editorText
+        let directory = selectedNote?.fileURL.deletingLastPathComponent()
         let scale = recipeScale
         let noteID = selectedID
-        let apply: @Sendable (Result<OliverRecipe, Error>) -> Void = { [weak self] result in
+        let apply: @Sendable (Result<OliverRecipe, Error>, [String]) -> Void = { [weak self] result, issues in
             Task { @MainActor in
                 guard let self else { return }
                 guard generation == self.recipeGeneration, self.viewMode == .read, self.selectedID == noteID else { return }
@@ -670,17 +675,29 @@ public final class AppModel: ObservableObject {
                 case .success(let recipe):
                     self.oliverRecipe = recipe
                     self.recipeError = nil
+                    self.recipeIssues = issues
                 case .failure:
                     self.oliverRecipe = nil
                     self.recipeError = "This recipe didn’t parse."
+                    self.recipeIssues = issues
                 }
             }
         }
-        recipeQueue.async { [client] in
+        recipeQueue.async { [client, directory] in
             do {
-                apply(.success(try client.recipe(source, scale: scale)))
+                // D-3: walk `@./path{scale}` refs before Oliver sees the
+                // source — a path walk, never a rewrite of the file.
+                let inlined = directory.map {
+                    RecipeInliner.inline(
+                        source: source,
+                        relativeTo: $0,
+                        scaler: { try client.scaleSource($0, percent: $1) }
+                    )
+                }
+                let recipe = try client.recipe(inlined?.source ?? source, scale: scale)
+                apply(.success(recipe), inlined?.issues ?? [])
             } catch {
-                apply(.failure(error))
+                apply(.failure(error), [])
             }
         }
     }
@@ -692,6 +709,7 @@ public final class AppModel: ObservableObject {
     private func clearRecipe() {
         oliverRecipe = nil
         recipeError = nil
+        recipeIssues = []
     }
 }
 

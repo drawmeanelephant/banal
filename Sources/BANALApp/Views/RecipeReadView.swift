@@ -13,6 +13,7 @@ struct RecipeReadView: View {
                         .font(bodyFont)
                         .foregroundStyle(.secondary)
                 } else if let recipe = model.oliverRecipe {
+                    sauceIssues
                     ingredientList(recipe)
                     cookwareList(recipe)
                     method(recipe)
@@ -35,6 +36,21 @@ struct RecipeReadView: View {
 
     private var bodyFont: Font {
         EditorTypography.swiftUIFont(size: model.preferences.fontSize, weight: .regular)
+    }
+
+    @ViewBuilder
+    private var sauceIssues: some View {
+        if !model.recipeIssues.isEmpty {
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(model.recipeIssues, id: \.self) { issue in
+                    Text(issue)
+                        .font(bodyFont)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Sauce notes")
+        }
     }
 
     private var scalePicker: some View {
