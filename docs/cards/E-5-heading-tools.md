@@ -1,10 +1,10 @@
 # Card E-5 — Heading space-after & Writing Tools guard
 
-**Milestone:** M9 · **Lane:** editor · **Depends:** M8 done · **Status:** ready — layout polish & system rewrite safety
+**Milestone:** M9 · **Lane:** editor · **Depends:** M8 done · **Status:** landed — heading paragraph spacing & writing tools guard (issue #24)
 
 ## Handoff
 
-- **Not started.** Headings have the same uniform line spacing as paragraphs. While system Writing Tools (macOS 15+) or dictation is active, background idle debouncers or store flushes could clobber the active text session.
+- **Landed.** Headings receive distinct paragraph spacing metrics (`paragraphSpacingBefore` 10pt with top-of-file exception, `paragraphSpacing` 4pt to hug following prose cleanly). Writing Tools (macOS 15+) active sessions suppress idle whisper passes, external reloads, text wipes, and midway flushes until accepted/cancelled.
 - **Not this card:** syntax whisper (D-1), custom writing tools coordinator.
 
 ## Owns
