@@ -1,7 +1,7 @@
 # Status
 
 **Phase:** 0.4 Silhouette  
-**Bar:** Sat in the running app (light + dark, 1100 / 1400 / 720). The window is folders · list · page. VoiceOver and a longer type/⌘Z sit are still open.
+**Bar:** Sat in the running app (light + dark, 1100 / 1400 / 720). The window is folders · list · page. VoiceOver labels are on the three columns. A longer type/⌘Z sit in the hand is still open.
 
 ## What works today
 
@@ -11,7 +11,7 @@
 - Type: system serif body and title, 16pt, line height from Settings, 680pt centered measure when limited
 - Caret: flush only when dirty; switch notes resets undo; clean external reload keeps a valid offset; ⇧⌘F shows the find bar
 - Empty list / empty folder / no selection / nothing published are one sentence each
-- Missing or deleted notes folder shows “This notes folder is missing.” and Choose… — the folder is not silently recreated
+- Missing or deleted notes folder shows “This notes folder is missing.” and Choose… — at launch and if the folder vanishes while open; the folder is not silently recreated
 - Folders are real directories: create, rename, trash, nested tree, empty folders stay; Finder mkdir/rename rescans
 - New note lands in the selected folder (or Inbox / root, per Settings); New Note Here always uses that folder
 - Drag a note onto a folder (or All Notes) to move the file
@@ -25,8 +25,7 @@
 
 | Gap | Notes |
 | --- | --- |
-| Longer type / ⌘Z sit | Switch + clean Vim reload verified; 30s undo-in-the-hand still a human pass |
-| VoiceOver | Not exercised |
+| Longer type / ⌘Z sit | Switch + clean Vim reload + dirty keep-buffer verified; 30s undo-in-the-hand still a human pass |
 | Live Cloudflare deploy | Intentionally later — pane exists, Deploy disabled |
 | Signed `.app` / sandbox | `swift run` only |
 

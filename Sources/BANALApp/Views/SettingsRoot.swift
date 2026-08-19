@@ -10,12 +10,16 @@ struct SettingsRoot: View {
         TabView {
             GeneralSettingsPane(model: model)
                 .tabItem { Label("General", systemImage: "gearshape") }
+                .accessibilityLabel("General")
             EditorSettingsPane(model: model)
                 .tabItem { Label("Editor", systemImage: "textformat") }
+                .accessibilityLabel("Editor")
             PublishSettingsPane(model: model)
                 .tabItem { Label("Publish", systemImage: "globe") }
+                .accessibilityLabel("Publish")
         }
         .frame(width: 520, height: 640)
+        .accessibilityLabel("Settings")
     }
 }
 

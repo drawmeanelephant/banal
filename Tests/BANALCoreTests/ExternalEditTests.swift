@@ -67,4 +67,23 @@ final class ExternalEditTests: XCTestCase {
         )
         XCTAssertEqual(action, .noteGone(keepBuffer: false))
     }
+
+    func testKeepBufferWinsOverASecondDiskFingerprint() {
+        let first = ExternalEdit.action(
+            selectedStillOnDisk: true,
+            dirty: true,
+            loadedFingerprint: "aaa",
+            diskFingerprint: "bbb",
+            bufferMatchesDisk: false
+        )
+        let second = ExternalEdit.action(
+            selectedStillOnDisk: true,
+            dirty: true,
+            loadedFingerprint: "aaa",
+            diskFingerprint: "ccc",
+            bufferMatchesDisk: false
+        )
+        XCTAssertEqual(first, .keepBuffer)
+        XCTAssertEqual(second, .keepBuffer)
+    }
 }

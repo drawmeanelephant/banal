@@ -80,6 +80,7 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.string = text
         textView.minSize = NSSize(width: 0, height: 0)
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        textView.setAccessibilityLabel("Note")
         apply(style, to: textView)
         context.coordinator.lastStyle = style
         context.coordinator.lastDocumentID = documentID
@@ -106,20 +107,23 @@ struct MarkdownTextView: NSViewRepresentable {
                 previousLength: previous.length
             )
             context.coordinator.applyingProgrammaticText = true
+            textView.undoManager?.disableUndoRegistration()
             textView.string = text
+            apply(style, to: textView)
+            context.coordinator.lastStyle = style
+            textView.undoManager?.enableUndoRegistration()
             context.coordinator.applyingProgrammaticText = false
-            textView.undoManager?.removeAllActions(withTarget: textView.textStorage ?? textView)
             textView.undoManager?.removeAllActions()
             textView.setSelectedRange(selected)
             if documentChanged {
                 textView.scrollRangeToVisible(selected)
             }
             context.coordinator.lastDocumentID = documentID
-            apply(style, to: textView)
-            context.coordinator.lastStyle = style
         }
         if context.coordinator.lastStyle != style {
+            textView.undoManager?.disableUndoRegistration()
             apply(style, to: textView)
+            textView.undoManager?.enableUndoRegistration()
             context.coordinator.lastStyle = style
         }
         if context.coordinator.lastFindToken != findToken {

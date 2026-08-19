@@ -84,6 +84,53 @@ final class NoteStoreTests: XCTestCase {
         XCTAssertTrue(store.notes(matching: .all, query: "scratch").contains(where: { $0.title == "Private scratch" }))
     }
 
+    func testApplyExternalChangeSetsRootMissingWhenVaultVanishes() throws {
+        let vault = try makeVault()
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+        XCTAssertFalse(store.rootMissing)
+        XCTAssertFalse(store.notes.isEmpty)
+
+        try FileManager.default.removeItem(at: vault.rootURL)
+        store.applyExternalChange(at: vault.rootURL)
+
+        XCTAssertTrue(store.rootMissing)
+        XCTAssertTrue(store.notes.isEmpty)
+        XCTAssertTrue(store.folderTree.isEmpty)
+    }
+
+    func testWatchesExternalEditsFalseIgnoresNoteWrites() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        store.watchesExternalEdits = false
+        try store.open()
+
+        let url = vault.rootURL.appendingPathComponent("ignored.md")
+        let now = Date()
+        let document = FrontmatterCodec.serialize(
+            frontmatter: Frontmatter(title: "Ignored", created: now, updated: now),
+            body: "\nShould stay off the list.\n"
+        )
+        try Data(document.utf8).write(to: url)
+        store.applyExternalChange(at: url)
+
+        XCTAssertNil(store.note(id: "ignored"))
+        XCTAssertFalse(store.rootMissing)
+    }
+
+    func testWatchesExternalEditsFalseStillSeesVanishedFolder() throws {
+        let vault = try makeVault()
+        let store = NoteStore(configuration: vault, monitor: nil)
+        store.watchesExternalEdits = false
+        try store.open()
+
+        try FileManager.default.removeItem(at: vault.rootURL)
+        store.applyExternalChange(at: vault.rootURL)
+
+        XCTAssertTrue(store.rootMissing)
+    }
+
     func testFilesystemMonitorObservesExternalCreate() async throws {
         let vault = try makeVault()
         defer { try? FileManager.default.removeItem(at: vault.rootURL) }

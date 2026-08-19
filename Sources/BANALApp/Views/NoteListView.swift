@@ -69,6 +69,7 @@ struct NoteListView: View {
             TextField("Search", text: $model.searchQuery)
                 .textFieldStyle(.plain)
                 .focused($searchFieldFocused)
+                .accessibilityLabel("Search notes")
                 .onSubmit { searchFieldFocused = false }
         }
         .padding(.horizontal, 12)
@@ -133,5 +134,13 @@ private struct NoteRow: View {
         }
         .padding(.vertical, 1)
         .accessibilityElement(children: .combine)
+        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private var accessibilityLabel: String {
+        var parts = [note.displayTitle]
+        if note.published { parts.append("Published") }
+        parts.append(note.updated.formatted(.relative(presentation: .named)))
+        return parts.joined(separator: ", ")
     }
 }

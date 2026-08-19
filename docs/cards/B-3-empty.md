@@ -5,7 +5,7 @@
 ## Handoff
 
 - **Landed:** First run “Choose a notes folder.” Missing folder “This notes folder is missing.” plus the path — folder is not silently recreated. Empty search / folder / selection / published are one sentence. Publish-with-none is “Nothing published.” `NotesFolderAccess` + tests.
-- **Sit (this session):** Empty nested folder is “No notes in this folder.” Nonsense search is “No notes match.” with the query kept. Find Notes was failing to focus on a second press; now a token. Missing-folder picker not shown this sit (defaults still found the sit vault).
+- **Sit (this session):** Empty nested folder is “No notes in this folder.” Nonsense search is “No notes match.” with the query kept. Missing folder: launch on a vanished path, or delete the notes folder while open, shows “This notes folder is missing.” plus the path and Choose… — the folder is not recreated. `BANAL_VAULT` points at a folder without touching the saved bookmark.
 
 ## Owns
 

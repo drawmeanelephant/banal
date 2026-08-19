@@ -5,7 +5,7 @@
 ## Handoff
 
 - **Landed:** `NavigationSplitView` ~200 / ~280 / rest. Two-line snippets, globe if published, title + quiet metadata row. No toolbar icons. Transient status strip (no capsule). 1100×720 default; 720×520 still shows list + editor. Light + dark + 900×560 exercised.
-- **Sit (this session):** Default 1100×720, 1400×800, 720×520 in light and dark. Three columns, no toolbar icons, two-line rows, globe on published, title + quiet metadata. Sidebar stayed up at 720 (allowed). VoiceOver still not done. List selection via Accessibility is flaky (not a product bug).
+- **Sit (this session):** VoiceOver labels: Folders, Notes, Note (title + body), Settings tabs. List rows speak title, Published, relative date, snippet. Status strip is a live region. List selection via Accessibility is still flaky (not a product bug).
 
 ## Owns
 

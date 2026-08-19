@@ -14,17 +14,17 @@ tear it up.
 
 ## Session
 
-Uncommitted. Branch `feat/b6-menus` (B-0…B-6 stacked; sit happened; VoiceOver + 30s undo still open).
+Branch `feat/m3-sit` off `main` (PR #1 landed). Finish-batch sit: VoiceOver, missing folder, dirty-Vim, ⌘Z.
 Each card’s **Handoff** block is the note for the next person.
 
 | Card | Status |
 |------|--------|
-| B-0 | cooking — sat light+dark 1100/1400/720; VoiceOver still open |
+| B-0 | cooking — sat light+dark 1100/1400/720; VoiceOver labels on the three columns |
 | B-1 | cooking — sat 1400px light+dark; column reads as a page |
-| B-2 | cooking — sit found clean-select rewrite; fixed; Vim clean reloaded; 30s ⌘Z still a human pass |
-| B-3 | cooking — empty folder + empty search sat; missing-folder picker not shown this sit |
+| B-2 | cooking — dirty-Vim keeps the buffer; style updates no longer steal ⌘Z; 30s in the hand still a human pass |
+| B-3 | cooking — empty folder + empty search sat; missing-folder picker shows when the directory is gone |
 | B-6 | cooking — menus sat; Find Notes focus fixed |
-| B-4 / B-5 | cooking — sat; Finder rename + Publish persist; Deploy visible; do not start B-7 until VoiceOver / type sit if you want the full gate |
+| B-4 / B-5 | cooking — sat; Finder rename + Publish persist; Deploy visible; do not start B-7 until someone sits and does not hate the window |
 
 ## Board
 

@@ -10,6 +10,7 @@ struct EditorView: View {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(nsColor: .textBackgroundColor))
+                .accessibilityLabel("Create a note with ⌘N.")
         } else {
             VStack(spacing: 0) {
                 titleField
@@ -51,6 +52,7 @@ struct EditorView: View {
             .padding(.horizontal, EditorTypography.horizontalInset)
             .padding(.top, 36)
             .padding(.bottom, 6)
+            .accessibilityLabel("Title")
             .onChange(of: model.editorTitle) { _, _ in
                 model.applyEditorChanges()
             }

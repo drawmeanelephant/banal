@@ -6,7 +6,7 @@
 
 - **Landed (earlier):** `ExternalEdit` policy + tests. Debounced write 400ms, atomic `NoteIO.write`, ignore our own FSEvents via fingerprint window. Select path calls `persistEditor` then load.
 - **This session:** stop rewriting a clean note on every select (that was bumping `updated` and feeding FSEvents). Clear dirty when the buffer matches disk. Text view keyed by note id so switch resets undo/caret; clean external reload keeps the offset if it still fits. Find bar actually opens.
-- **Sit (this session):** Selecting notes was rewriting clean files (`updated` bump). Fixed: identical `update` is a no-op; `applyEditorChanges` returns when the buffer matches; text view ignores programmatic `string` sets. After the fix, four selects left mtimes unchanged. Clean Vim edit of Scratch reloaded. Still open: 30s type / ⌘Z in the hand, dirty-Vim keep-buffer, huge-vault `open()` on the main thread.
+- **Sit (this session):** Clean Vim reload replaces the editor. Dirty buffer never took the disk text (typed `DIRTY`/`VIMSWAP`, wrote the file, editor kept the type). Status sentence is in the strip when FSEvents lands in the dirty window; a 400ms save often wins a scripted race. Style applies no longer register undo — typed `UNDOMARKER`, ⌘Z removed it. Watch-for-edits toggle gates reloads. Still open: 30s type / ⌘Z in the hand, huge-vault `open()` on the main thread.
 
 ## Owns
 
