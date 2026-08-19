@@ -142,6 +142,30 @@ final class VaultBookmarkTests: XCTestCase {
         XCTAssertNil(defaults.data(forKey: CompilerBookmark.defaultsKey("oliver")))
     }
 
+    func testCompilerBookmarkMismatchedPathIsForgotten() throws {
+        let folder1 = try makeFolder()
+        let url1 = folder1.appendingPathComponent("oliver")
+        try Data("#!/bin/sh\n".utf8).write(to: url1)
+
+        let folder2 = try makeFolder()
+        let url2 = folder2.appendingPathComponent("oliver")
+        try Data("#!/bin/sh\n".utf8).write(to: url2)
+
+        defer {
+            try? FileManager.default.removeItem(at: folder1)
+            try? FileManager.default.removeItem(at: folder2)
+        }
+
+        CompilerBookmark.save(url1, name: "oliver", defaults: defaults)
+        XCTAssertNotNil(defaults.data(forKey: CompilerBookmark.defaultsKey("oliver")))
+
+        // Accessing url2 when url1 bookmark is stored should recognize path mismatch,
+        // forget the stale bookmark, and access url2.
+        let accessed = CompilerBookmark.access(path: url2.path, name: "oliver", defaults: defaults)
+        XCTAssertEqual(accessed?.standardizedFileURL.path, url2.standardizedFileURL.path)
+        XCTAssertNil(defaults.data(forKey: CompilerBookmark.defaultsKey("oliver")))
+    }
+
     private func makeFolder() throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(
             "banal-bookmark-\(UUID().uuidString)",

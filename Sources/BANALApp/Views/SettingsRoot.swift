@@ -244,13 +244,19 @@ private struct PublishSettingsPane: View {
         clear: @escaping () -> Void
     ) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-            Text(compilerPathLabel(path))
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .help(path ?? "")
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                Text(compilerPathLabel(path))
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .help(path ?? "")
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel(title)
+            .accessibilityValue(compilerPathLabel(path))
+
             HStack {
                 Button("Choose…") { choose() }
                 Button("Reveal") { reveal() }
@@ -260,9 +266,6 @@ private struct PublishSettingsPane: View {
                 }
             }
         }
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(title)
-        .accessibilityValue(compilerPathLabel(path))
     }
 
     private func compilerPathLabel(_ path: String?) -> String {

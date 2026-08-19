@@ -2,8 +2,9 @@ import Foundation
 
 /// Process-wide start/stop for security-scoped URLs.
 ///
-/// Sandbox access is reference-counted per URL. We remember what we
-/// started so quit and folder-switch can stop without leaking.
+/// Holds one active security-scoped URL per string key.
+/// Starting access under an existing key replaces the previous URL and
+/// stops accessing it. StopAccessing must use the URL instance that was started.
 public enum SecurityScope: Sendable {
     private final class State: @unchecked Sendable {
         let lock = NSLock()
@@ -185,6 +186,7 @@ public enum CompilerBookmark {
         defaults: UserDefaults = .standard
     ) -> URL? {
         guard let path, !path.isEmpty else { return nil }
+        let expectedURL = URL(fileURLWithPath: path).standardizedFileURL
         if let data = defaults.data(forKey: defaultsKey(name)) {
             var stale = false
             if let url = try? URL(
@@ -193,14 +195,18 @@ public enum CompilerBookmark {
                 relativeTo: nil,
                 bookmarkDataIsStale: &stale
             ) {
-                _ = SecurityScope.start(url, key: name)
-                if stale {
-                    save(url, name: name, defaults: defaults)
+                if url.standardizedFileURL.path == expectedURL.path {
+                    _ = SecurityScope.start(url, key: name)
+                    if stale {
+                        save(url, name: name, defaults: defaults)
+                    }
+                    return url
+                } else {
+                    forget(name: name, defaults: defaults)
                 }
-                return url
             }
         }
-        let url = URL(fileURLWithPath: path)
+        let url = expectedURL
         _ = SecurityScope.start(url, key: name)
         return url
     }

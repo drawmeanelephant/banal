@@ -64,21 +64,29 @@ public final class AppModel: ObservableObject {
         self.oliverClient = nil
         self.oliver = OliverDebounce(client: nil)
         bindStore()
-        refreshOliver()
     }
 
     /// Honor the notes folder’s Oliver path without a relaunch.
     public func refreshOliver() {
         let configured = store.configuration.oliverBinaryPath
         _ = CompilerBookmark.access(path: configured, name: "oliver")
-        if let url = OliverLocator.resolveRecipeJSON(configured: configured)
-            ?? OliverLocator.resolve(configured: configured) {
-            let client = OliverClient(binaryURL: url)
-            oliverClient = client
-            oliver = OliverDebounce(client: client)
-        } else {
-            oliverClient = nil
-            oliver = OliverDebounce(client: nil)
+        recipeQueue.async { [weak self] in
+            let url = OliverLocator.resolveRecipeJSON(configured: configured)
+                ?? OliverLocator.resolve(configured: configured)
+            Task { @MainActor [weak self] in
+                guard let self else { return }
+                if let url {
+                    let client = OliverClient(binaryURL: url)
+                    self.oliverClient = client
+                    self.oliver = OliverDebounce(client: client)
+                } else {
+                    self.oliverClient = nil
+                    self.oliver = OliverDebounce(client: nil)
+                }
+                if self.recipeMode == .read, self.selectedNote?.language == .cooklang {
+                    self.askRecipe()
+                }
+            }
         }
     }
 

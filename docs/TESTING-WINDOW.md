@@ -142,7 +142,7 @@ This row is the hand. If you did not sit it in the running app, it is not done.
 5. In Terminal: `shasum` / `diff` the `.cook` file against what it was before Read. **Unchanged.**
 6. Flip **Edit**. You are in the `.cook` text.
 
-If Oliver is missing or too old (`serialize --json` absent), Read is one sentence (`This recipe didn’t parse.`). Edit still works. That is honest — not a crash. File a note, do not invent a second parser.
+If Oliver is missing or too old (`serialize --json` absent), Read is one sentence (`This recipe needs Oliver.`). If the Cooklang file has a syntax or parse failure, Read says `This recipe didn’t parse.`. Edit still works. That is honest — not a crash. File a note, do not invent a second parser.
 
 **Fail if.** 2× rewrites `risotto.cook`. Read is a webview you can type in. The ingredient list is raw `@arborio rice{300%g}` fences. A skeptical cook asks where the recipe app is.
 
@@ -173,7 +173,6 @@ Deploy to Cloudflare is optional and stays disabled without a Keychain token + p
 
 - Not iCloud Drive sync. Prefer a local Desktop folder, or `BANAL_VAULT`.
 - Not sandbox-on for `swift run`. Permissions are looser than a signed `.app` (C-3).
-- Not Oliver / Boris path pickers or an About panel (C-2).
 - Not a Markdown/Textile preview column. Read is for `.cook` only.
 - Not pantry, meal plan, or a grocery list.
 - Not “BANAL Notes” as a special database. Trash in Finder is Trash.

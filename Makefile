@@ -5,6 +5,12 @@ APP = $(DIST)/BANAL.app
 SIGN_IDENTITY ?= -
 ENTITLEMENTS = Supporting/BANAL.entitlements
 
+ifeq ($(SIGN_IDENTITY),-)
+CODESIGN_FLAGS = --timestamp=none
+else
+CODESIGN_FLAGS = --options runtime --timestamp
+endif
+
 .PHONY: test build run app clean
 
 test:
@@ -26,8 +32,10 @@ app:
 	chmod +x "$(APP)/Contents/MacOS/BANAL"
 	cp Resources/AppIcon.icns "$(APP)/Contents/Resources/AppIcon.icns"
 	cp Supporting/Info.plist "$(APP)/Contents/Info.plist"
+	/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $(VERSION)" "$(APP)/Contents/Info.plist"
+	/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $(VERSION)" "$(APP)/Contents/Info.plist"
 	printf 'APPL????' > "$(APP)/Contents/PkgInfo"
-	codesign --force --sign "$(SIGN_IDENTITY)" --entitlements "$(ENTITLEMENTS)" --timestamp=none "$(APP)"
+	codesign --force --sign "$(SIGN_IDENTITY)" --entitlements "$(ENTITLEMENTS)" $(CODESIGN_FLAGS) "$(APP)"
 	@echo "Built $(APP) (version $(VERSION))."
 	@echo "Signed with identity '$(SIGN_IDENTITY)'."
 	@echo "Ad-hoc unless SIGN_IDENTITY is a Developer ID. Not notarized."
