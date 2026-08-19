@@ -186,7 +186,7 @@ final class FolderStoreTests: XCTestCase {
 
     func testDefaultTypePreferencesAndLineHeight() {
         let defaults = AppPreferences.default
-        XCTAssertTrue(defaults.useSerif)
+        XCTAssertFalse(defaults.useSerif)
         XCTAssertEqual(defaults.fontSize, 16)
         XCTAssertEqual(defaults.lineHeight, .normal)
         XCTAssertTrue(defaults.limitLineLength)

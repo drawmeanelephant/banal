@@ -29,7 +29,7 @@ No Accounts pane. No Themes store. No Plugins.
 
 | Key | Type | Default | Notes |
 | --- | --- | --- | --- |
-| Font | serif toggle + size 13–22 | system serif / New York 16 if available, else SF Pro 16 | No font picker; one pairing |
+| Font | size 13–22 | SF Pro 16 | Sans. Stylesheets later. No serif toggle. |
 | Line height | enum: `tight`, `normal`, `loose` | `normal` | Maps to 1.35 / 1.5 / 1.7 |
 | Limit line length | bool | true | Caps measure in the editor |
 | Spell check | bool | system default | |

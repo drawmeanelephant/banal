@@ -23,9 +23,9 @@ BANAL should feel like a finished Mac app that happens to be small — not a sca
 
 ## Typography
 
-- System text, not a novelty face. Prefer New York or the system serif for the **body** if it stays native and readable; SF Pro for chrome, lists, and settings.
+- System sans (SF Pro) for chrome, lists, title, and body. No serif. Stylesheets later.
 - Body ~15–17 pt, line height ~1.45–1.55, measure capped (about 66 characters) so a huge window does not become a lawn of text.
-- Title is larger and heavier, not a different typeface family unless New York/SF pairing is used consistently.
+- Title is larger and heavier, same family as the body.
 - No rainbow syntax theme in the editor. If Markdown highlighting exists later, it is *whispered* (headings, emphasis) and never a code-editor skin.
 - Dynamic Type is not required on Mac, but respect the user’s sidebar/icon size and increase-contrast settings.
 

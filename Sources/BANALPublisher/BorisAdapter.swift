@@ -146,7 +146,7 @@ public enum BundledTheme {
       <meta name="viewport" content="width=device-width, initial-scale=1">
       <title>{{title}} · BANAL</title>
       <style>
-        :root { color-scheme: light dark; font-family: ui-serif, Palatino, Georgia, serif; }
+        :root { color-scheme: light dark; font-family: ui-sans-serif, system-ui, sans-serif; }
         body { max-width: 42rem; margin: 0 auto; padding: 2rem 1.25rem 4rem; line-height: 1.55; }
         a { color: inherit; }
         nav { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 0.9rem; margin-bottom: 1.5rem; }

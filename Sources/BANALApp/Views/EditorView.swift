@@ -45,7 +45,6 @@ struct EditorView: View {
             .textFieldStyle(.plain)
             .font(EditorTypography.swiftUIFont(
                 size: EditorTypography.titleSize,
-                serif: model.preferences.useSerif,
                 weight: .semibold
             ))
             .foregroundStyle(Color(nsColor: .textColor))
