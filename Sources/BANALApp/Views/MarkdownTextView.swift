@@ -3,41 +3,35 @@ import BANALCore
 import SwiftUI
 
 enum EditorTypography {
-    /// ~66 characters of New York 16–17pt, including page insets.
+    /// ~66 characters of SF 16pt, including page insets.
     static let measureWidth: CGFloat = 680
     static let horizontalInset: CGFloat = 32
     static let titleSize: CGFloat = 26
 
-    static func nsFont(size: CGFloat, serif: Bool, weight: NSFont.Weight = .regular) -> NSFont {
-        let base = NSFont.systemFont(ofSize: size, weight: weight)
-        guard serif, let descriptor = base.fontDescriptor.withDesign(.serif) else {
-            return base
-        }
-        return NSFont(descriptor: descriptor, size: size) ?? base
+    static func nsFont(size: CGFloat, weight: NSFont.Weight = .regular) -> NSFont {
+        NSFont.systemFont(ofSize: size, weight: weight)
     }
 
-    static func swiftUIFont(size: CGFloat, serif: Bool, weight: Font.Weight) -> Font {
-        .system(size: size, weight: weight, design: serif ? .serif : .default)
+    static func swiftUIFont(size: CGFloat, weight: Font.Weight) -> Font {
+        .system(size: size, weight: weight)
     }
 }
 
 struct EditorStyle: Equatable {
     var fontSize: CGFloat
-    var useSerif: Bool
     var lineHeight: CGFloat
     var spellCheck: Bool
     var smartQuotes: Bool
 
     init(from preferences: AppPreferences) {
         fontSize = preferences.fontSize
-        useSerif = preferences.useSerif
         lineHeight = preferences.lineHeight.multiplier
         spellCheck = preferences.spellCheck
         smartQuotes = preferences.smartQuotes
     }
 
     var font: NSFont {
-        EditorTypography.nsFont(size: fontSize, serif: useSerif)
+        EditorTypography.nsFont(size: fontSize)
     }
 }
 

@@ -38,7 +38,7 @@ wizard that appears the week we invent billing.
    folder,” not “vault.” “Cloudflare Pages project,” not “target.”
 3. General: choose folder, reveal, sort, new-note location, watch
    external edits.
-4. Editor: serif, size, line height, measure, spelling, smart quotes.
+4. Editor: size, line height, measure, spelling, smart quotes. No serif.
    Changes apply to the open note immediately.
 5. Publish: site title, base URL (validate http/s), author, project
    name, account ID, custom domain. Token: SecureField → Keychain.

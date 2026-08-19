@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+
+- Editor type is SF Pro. Serif toggle is gone. Stylesheets later.
+
 ### Added
 
 - Tester brief for the notes folder: [`docs/TESTING-NOTES-FOLDER.md`](docs/TESTING-NOTES-FOLDER.md) (first run, missing at launch, vanish while open, do not recreate).

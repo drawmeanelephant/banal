@@ -18,7 +18,7 @@ public struct AppPreferences: Equatable, Sendable {
         newNoteLocation: NewNoteLocation = .selectedFolder,
         watchExternalEdits: Bool = true,
         fontSize: Double = 16,
-        useSerif: Bool = true,
+        useSerif: Bool = false,
         lineHeight: LineHeightSetting = .normal,
         limitLineLength: Bool = true,
         spellCheck: Bool = true,

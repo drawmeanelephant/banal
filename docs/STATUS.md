@@ -8,7 +8,7 @@
 - Three columns: sidebar ~200pt, list ~280pt, editor takes the rest. Sidebar may collapse; 720×520 still shows list + editor
 - List rows: title, two-line snippet, relative date, globe if published
 - Editor: title + one quiet metadata row (date, published, tags). Body is a page
-- Type: system serif body and title, 16pt, line height from Settings, 680pt centered measure when limited
+- Type: SF Pro body and title, 16pt, line height from Settings, 680pt centered measure when limited
 - Caret: flush only when dirty; switch notes resets undo; clean external reload keeps a valid offset; ⇧⌘F shows the find bar
 - Empty list / empty folder / no selection / nothing published are one sentence each
 - Missing or deleted notes folder shows “This notes folder is missing.” and Choose… — at launch and if the folder vanishes while open; the folder is not silently recreated. Tester script: [`TESTING-NOTES-FOLDER.md`](TESTING-NOTES-FOLDER.md)
@@ -18,7 +18,7 @@
 - Settings (`⌘,`): General, Editor, Publish
 - Publish pane stores site + Cloudflare IDs in `.banal/config.json`; API token in Keychain; Deploy is visible and disabled
 - Publish fields validate inline (http/s base URL, Cloudflare-safe project name; account ID warns)
-- Editor: system serif, measure cap, line height, spell check / smart quotes
+- Editor: SF Pro, measure cap, line height, spell check / smart quotes
 - Menus: ⌘N note, ⇧⌘N folder, ⌘⌫ trash, ⇧⌘P publish, ⌘F find notes, ⇧⌘F find in note
 - Oliver: one-shot Markdown render (`oliver render --from markdown`) after idle typing. Missing binary is silent. No preview.
 

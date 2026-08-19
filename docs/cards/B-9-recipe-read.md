@@ -40,7 +40,7 @@ recipe graph UI.
 2. Edit is the existing source editor. Nothing special except
    maybe whispered sigils later (not this card).
 3. Read shows: title, ingredient list with quantities/units,
-   cookware, steps, notes. Type matches B-1 (serif, measure).
+   cookware, steps, notes. Type matches B-1 (SF, measure).
 4. Scale control: ½ 1× 2× 3×. Numbers update in the view only.
 5. Parse error: one sentence, switcher still offers Edit.
 6. Markdown/Textile do **not** gain this switcher in this card.

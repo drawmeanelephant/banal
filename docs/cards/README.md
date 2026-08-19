@@ -33,7 +33,7 @@ Each card’s **Handoff** block is the note for the next person.
 |------|-----------|------|------|
 | [B-STAR](B-STAR.md) | always | chrome | Five minutes, no explanation |
 | [B-0 Silhouette](B-0-silhouette.md) | M3 | chrome | Three columns, no extra chrome, light+dark, narrow+wide |
-| [B-1 Type](B-1-type.md) | M3 | type | New York / SF pairing, measure, no code-editor skin |
+| [B-1 Type](B-1-type.md) | M3 | type | SF Pro, measure, no serif, no code-editor skin |
 | [B-2 Caret](B-2-caret.md) | M3 | editor | Typing never waits; undo/find feel native |
 | [B-3 Empty](B-3-empty.md) | M3 | chrome | Every empty/error state is a sentence, not a marketing page |
 | [B-4 Folders](B-4-folders.md) | M1 | core+sidebar | Finder and BANAL never disagree |

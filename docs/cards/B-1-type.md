@@ -1,11 +1,11 @@
 # Card B-1 — Type
 
-**Milestone:** M3 · **Lane:** type · **Status:** cooking — serif pairing, 680pt measure, live line height
+**Milestone:** M3 · **Lane:** type · **Status:** cooking — SF Pro, 680pt measure, live line height
 
 ## Handoff
 
-- **Landed:** System serif body + title (`EditorTypography`). 16pt default. Line height applied to the open buffer, not just new typing. 680pt centered measure. System-accent selection. Settings size shows the point value.
-- **Sit (this session):** 1400px light + dark. Serif title + body, 16pt, centered measure, system-accent selection. Reads as a page, not an IDE. Spell-check underline is the only chrome in the text.
+- **Landed:** SF Pro body + title. No serif. 16pt default. Line height on the open buffer. 680pt centered measure. Stylesheets later.
+- **Sit:** 1400px light + dark as a page, not an IDE. Serif was pulled — do not put it back.
 
 ## Owns
 
@@ -21,16 +21,13 @@
 
 ## Why
 
-This is the inhale. If the body type is SF at 13pt in a 2000px-wide
-column, nobody cares that Cooklang parses. Notes apps are judged as
-type first, features second. We steal the pairing from Apple’s
-serious text (New York or system serif + SF chrome), not from VS Code.
+This is the inhale. Type first, features second. SF Pro, not New York,
+not a code editor. Stylesheets are a later card.
 
 ## Do
 
-1. Body: system serif via `fontDescriptor.withDesign(.serif)` at
-   16–17pt default. Chrome and lists: SF.
-2. Title: same family as body, heavier, ~26pt, not a third face.
+1. Body and chrome: SF Pro at 16pt default.
+2. Title: same family, heavier, ~26pt.
 3. Line height from preferences (`tight` 1.35 / `normal` 1.5 /
    `loose` 1.7) applied as `NSParagraphStyle.lineHeightMultiple`.
 4. Measure: when “Limit line length” is on, cap the editor column

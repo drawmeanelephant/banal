@@ -81,7 +81,6 @@ private struct EditorSettingsPane: View {
     var body: some View {
         Form {
             Section("Type") {
-                Toggle("Serif body", isOn: $model.preferences.useSerif)
                 LabeledContent("Size") {
                     HStack(spacing: 10) {
                         Slider(value: $model.preferences.fontSize, in: 13...22, step: 1)
