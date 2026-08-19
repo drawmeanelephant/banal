@@ -77,7 +77,7 @@ public enum BorisAdapter {
             body += "No published notes.\n"
         } else {
             for page in pages {
-                body += "- [\(page.title)](\(page.entityID))\n"
+                body += "- [\(page.title)](\(page.entityID).html)\n"
             }
         }
         let source = """
