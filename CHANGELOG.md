@@ -24,6 +24,8 @@
 
 - Whisper (D-1): headings get semibold weight and syntax markers (`#`, `**`, `@`, `{`, `>>`, …) are dimmed hints at ~30% opacity, applied ~0.4s after idle as layout-manager temporary attributes — the storage string, undo, and Find stay character-based, and the pass skips while Writing Tools is rewriting. Scanner is `WhisperScan` in `BANALCore` with per-language unit tests (Markdown/Textile/Cooklang; no false marks inside code spans or `>>>`; UTF-16-safe).
 
+- File associations (F-8, issue #44): BANAL registers as an Editor for `.md`, `.textile`, and `.cook` — double-click, Open With → BANAL, and Dock drags now open a note (or import it from outside the vault with a unique name, source left untouched). One open route, so a single action never imports twice. `NoteStore.importFile` is unit-tested.
+
 - Hand it (C-3): a crafted notes-app icon (tactile cotton pad, machined brass pen, terracotta ribbon), candidate icon reference gallery, sandbox on, and `make app` which writes an ad-hoc signed `dist/BANAL.app` stamped with version. Security-scoped bookmarks start on restore and stop on quit. Stale compiler bookmarks are dropped on path change. Settings binary pickers are individually accessible to VoiceOver.
 - Fluency briefs: [`docs/cards/D-1-whisper.md`](docs/cards/D-1-whisper.md), [`D-2-prose.md`](docs/cards/D-2-prose.md), [`D-3-sauce.md`](docs/cards/D-3-sauce.md), [`D-4-find.md`](docs/cards/D-4-find.md). Save a scaled recipe stays off the board until a cook asks.
 - Tester brief for the whole window: [`docs/TESTING-WINDOW.md`](docs/TESTING-WINDOW.md) (first-run, light+dark 720/1100/1400, 30s type/⌘Z, dirty Vim, empties, three languages, risotto Read, ⇧⌘P, VoiceOver).

@@ -25,6 +25,7 @@
 - Languages: `.md`, `.textile`, and `.cook` are notes. File → New Textile / New Recipe. Recipes keep Cooklang `>>` metadata, not a YAML fence. Opening any of them is source.
 - Recipe Read: `.cook` notes have Edit | Read. Read shows ingredients, cookware, steps, and notes from Oliver’s typed Recipe. ½ 1× 2× 3× scales the view only. Missing or older Oliver (no `serialize --json`) is one sentence; Edit still works.
 - Publish Site (⇧⌘P): only `published` notes leave the vault. Markdown uses Boris when present, else builtin HTML+RSS. Textile and Cooklang join the same `.publish/` folder via Oliver. Recipes stay Cooklang on disk. Deploy to Cloudflare is optional and enabled when a Keychain token and project name exist.
+- File associations (F-8, issue #44, pulled forward from M10): BANAL declares itself Editor for `.md` / `.textile` / `.cook` (Open With, Dock drag, double-click). A file inside the vault opens in place; one outside is copied into the vault root (unique name, source untouched) and selected. One open route only — no double imports. Card: [`F-8-file-associations.md`](cards/F-8-file-associations.md).
 
 ## Still open (Close)
 
@@ -44,6 +45,8 @@ Board written. Do not pick until C-1 has been sat.
 | Markdown/Textile Read | [D-2](cards/D-2-prose.md) | Same Edit \| Read kindness as recipes. Source stays the editor. |
 | Recipe references | [D-3](cards/D-3-sauce.md) | `@./sauces/…` inlines for Read. Disk stays two files. |
 | Ingredient search | [D-4](cards/D-4-find.md) | ⌘F matches names Oliver parsed. No food ontology. |
+
+Pulled forward from M10 by a real bug report: [F-8 File associations](cards/F-8-file-associations.md) landed (issue #44) — Open With / Dock drag for the three languages, outside files copied into the vault. GUI gate still open on a real machine.
 
 ## Known gaps in the scaffold
 
