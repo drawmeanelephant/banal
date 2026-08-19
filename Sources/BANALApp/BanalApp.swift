@@ -43,6 +43,9 @@ struct BanalApp: App {
                     appDelegate.model = model
                     appDelegate.flushPendingOpens()
                 }
+                .onOpenURL { url in
+                    model.openExternalNote(at: url)
+                }
         }
         .defaultSize(width: 1100, height: 720)
         .windowResizability(.contentMinSize)
@@ -193,8 +196,10 @@ final class BanalAppDelegate: NSObject, NSApplicationDelegate {
     private var pendingOpenURLs: [URL] = []
 
     /// File opens when BANAL is the handler for `.md` / `.textile` /
-    /// `.cook` (double-click, Open With, Dock drag). One route only — the
-    /// app has no `.onOpenURL`, so a single action can never import twice.
+    /// `.cook`. On current macOS a SwiftUI `WindowGroup` routes these to
+    /// `.onOpenURL`; this delegate hook covers Dock drags and older
+    /// delivery paths. `AppModel` dedupes, so one action can never import
+    /// twice even when both routes fire.
     func application(_ sender: NSApplication, openFiles filenames: [String]) {
         pendingOpenURLs.append(contentsOf: filenames.map { URL(fileURLWithPath: $0) })
         flushPendingOpens()
