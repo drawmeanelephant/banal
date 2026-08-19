@@ -1,8 +1,11 @@
 # Card B-9 — Cook from the reading view
 
-**Milestone:** M5 · **Lane:** detail · **Depends:** B-7, B-8 · **Status:** ready
+**Milestone:** M5 · **Lane:** detail · **Depends:** B-7, B-8 · **Status:** cooking — Edit | Read, view-only scale
 
-This is the risotto card. If this is ugly, the thesis is a blog post.
+## Handoff
+
+- **Landed:** `.cook` gets Edit | Read in the metadata row (View → Edit Recipe / Read Recipe). Read is a native list: ingredients, cookware, steps, notes. Scale is ½ 1× 2× 3× via `oliver scale` then `serialize --json`; the file is never rewritten. Session remembers Edit/Read; new recipes open in Edit; scale resets per note. Parse failure is one sentence. Markdown/Textile have no switcher. Sample `Recipes/risotto.cook` is cookable.
+- **Not this card:** Markdown/Textile preview, save a scaled copy, resolving `@./sauces/…`, Oliver path in Settings.
 
 ## Owns
 

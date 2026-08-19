@@ -13,7 +13,7 @@ BANAL is not Solipsist, not a knowledge graph, and not a hosting dashboard.
 - macOS 14+
 - Xcode 16+ / Swift 6 (`swift --version`)
 - Optional: a `boris` binary on `PATH` (or `BANAL_BORIS_BIN`) for the real SSG
-- Optional: an `oliver` binary on `PATH` (or `BANAL_OLIVER_BIN`) for Markdown parse/render. The app still edits without it.
+- Optional: an `oliver` binary on `PATH` (or `BANAL_OLIVER_BIN`) for Markdown parse/render and recipe Read (`serialize --json`). The app still edits without it.
 
 ## Build and test
 

@@ -8,6 +8,7 @@
 
 ### Added
 
+- Recipe Read (B-9): `.cook` notes have Edit | Read. Read is a native ingredient list and steps. ½ 1× 2× 3× scales the view; the file on disk does not change.
 - Languages (B-8): `.md`, `.textile`, and `.cook` are notes in the same list. File → New Textile and File → New Recipe. Recipes write Cooklang (`>> title`, one ingredient, one step), not YAML. Opening each is source.
 - Tester brief for the notes folder: [`docs/TESTING-NOTES-FOLDER.md`](docs/TESTING-NOTES-FOLDER.md) (first run, missing at launch, vanish while open, do not recreate).
 - Sit: VoiceOver labels on folders, notes, editor, and Settings; a vanished notes folder shows the picker while the app is open; Watch for edits from other apps actually gates reloads; typing undo is no longer eaten by style updates.

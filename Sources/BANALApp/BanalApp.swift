@@ -121,6 +121,18 @@ struct BanalApp: App {
                 .keyboardShortcut("f", modifiers: [.command, .shift])
                 .disabled(model.needsVault || model.selectedID == nil)
             }
+
+            CommandGroup(after: .toolbar) {
+                Button("Edit Recipe") {
+                    model.setRecipeMode(.edit)
+                }
+                .disabled(!model.showsRecipeSwitcher)
+
+                Button("Read Recipe") {
+                    model.setRecipeMode(.read)
+                }
+                .disabled(!model.showsRecipeSwitcher)
+            }
         }
 
         Settings {

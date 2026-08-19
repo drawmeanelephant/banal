@@ -27,6 +27,7 @@ Each card’s **Handoff** block is the note for the next person.
 | B-4 / B-5 | cooking — sat; Finder rename + Publish persist; Deploy visible |
 | B-7 | cooking — OliverClient + skip-if-missing tests; no preview |
 | B-8 | cooking — `.md` / `.textile` / `.cook` in one list; New Textile / New Recipe |
+| B-9 | cooking — Edit / Read on `.cook`; ½ 1× 2× 3× is view-only |
 
 ## Board
 
@@ -42,7 +43,7 @@ Each card’s **Handoff** block is the note for the next person.
 | [B-6 Menus](B-6-menus.md) | M3 | app | If it isn’t in the menu bar, it isn’t a feature |
 | [B-7 Oliver](B-7-oliver.md) | M4 | publisher/engine | cooking — parse this buffer; no preview |
 | [B-8 Languages](B-8-languages.md) | M5 | core+app | cooking — `.md` / `.textile` / `.cook` as files |
-| [B-9 Recipe read](B-9-recipe-read.md) | M5 | detail | Cook from a reading view; source stays the file |
+| [B-9 Recipe read](B-9-recipe-read.md) | M5 | detail | cooking — Cook from a reading view; source stays the file |
 | [B-10 Publish](B-10-publish.md) | M6 | publisher | Export, not onboarding; graph stays in Boris |
 | [B-X Refuse](B-X-refuse.md) | always | policy | The deletion list — read before every PR |
 

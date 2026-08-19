@@ -16,20 +16,57 @@ public enum OliverLocator {
         currentDirectory: URL? = nil,
         fileManager: FileManager = .default
     ) -> URL? {
-        if let configured, !configured.isEmpty {
-            let url = URL(fileURLWithPath: configured)
-            if fileManager.isExecutableFile(atPath: url.path) {
+        candidates(
+            configured: configured,
+            environment: environment,
+            currentDirectory: currentDirectory,
+            fileManager: fileManager
+        ).first
+    }
+
+    /// First Oliver that can `serialize --from cooklang --json`. Same
+    /// search order as `resolve`; skips older binaries that only render.
+    public static func resolveRecipeJSON(
+        configured: String? = nil,
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        currentDirectory: URL? = nil,
+        fileManager: FileManager = .default
+    ) -> URL? {
+        for url in candidates(
+            configured: configured,
+            environment: environment,
+            currentDirectory: currentDirectory,
+            fileManager: fileManager
+        ) {
+            if (try? OliverClient(binaryURL: url).recipe("Add @salt{}.\n")) != nil {
                 return url
             }
+        }
+        return nil
+    }
+
+    private static func candidates(
+        configured: String?,
+        environment: [String: String],
+        currentDirectory: URL?,
+        fileManager: FileManager
+    ) -> [URL] {
+        var urls: [URL] = []
+        var seen = Set<String>()
+        func add(_ url: URL) {
+            let path = url.standardizedFileURL.path
+            guard fileManager.isExecutableFile(atPath: path), !seen.contains(path) else { return }
+            seen.insert(path)
+            urls.append(url.standardizedFileURL)
+        }
+        if let configured, !configured.isEmpty {
+            add(URL(fileURLWithPath: configured))
         }
         if let env = environment["BANAL_OLIVER_BIN"], !env.isEmpty {
-            let url = URL(fileURLWithPath: env)
-            if fileManager.isExecutableFile(atPath: url.path) {
-                return url
-            }
+            add(URL(fileURLWithPath: env))
         }
         if let found = which("oliver", path: environment["PATH"] ?? "", fileManager: fileManager) {
-            return found
+            add(found)
         }
         let cwd = currentDirectory ?? URL(fileURLWithPath: fileManager.currentDirectoryPath)
         let relatives = [
@@ -44,12 +81,9 @@ public enum OliverLocator {
             "../../../../oliver/main/zig-out/bin/oliver",
         ]
         for relative in relatives {
-            let candidate = cwd.appendingPathComponent(relative).standardizedFileURL
-            if fileManager.isExecutableFile(atPath: candidate.path) {
-                return candidate
-            }
+            add(cwd.appendingPathComponent(relative))
         }
-        return nil
+        return urls
     }
 
     private static func which(_ name: String, path: String, fileManager: FileManager) -> URL? {
@@ -92,16 +126,18 @@ public struct OliverRender: Equatable, Sendable {
     }
 }
 
-/// One-shot question to Oliver: what HTML is this buffer?
+/// One-shot question to Oliver: what HTML is this buffer, or what
+/// Recipe is this `.cook` file?
 ///
-/// Invokes `oliver render --from <markdown|textile|cooklang>`. The
-/// frontend is the file extension, never sniffed from the body.
-/// Markdown/Textile stdin is the note **body** (BANAL frontmatter
-/// stripped). Cooklang stdin is the recipe source. `--frontmatter`
-/// is never passed.
+/// Invokes `oliver render --from <markdown|textile|cooklang>`, or
+/// `serialize --from cooklang --json` / `scale --from cooklang` for
+/// the reading view. The frontend is the file extension, never
+/// sniffed from the body. Markdown/Textile stdin is the note **body**
+/// (BANAL frontmatter stripped). Cooklang stdin is the recipe source.
+/// `--frontmatter` is never passed.
 ///
 /// Call this off the caret path. Use a debounce at the call site —
-/// never from `textDidChange`.
+/// never from `textDidChange`. Scale never writes the file.
 public struct OliverClient: Sendable {
     public var binaryURL: URL
 
@@ -111,8 +147,32 @@ public struct OliverClient: Sendable {
 
     public func render(_ source: String, frontend: OliverFrontend = .markdown) throws -> OliverRender {
         let body = Self.bodyForOliver(source, frontend: frontend)
-        let html = try run(body: body, frontend: frontend)
+        let html = try run(body: body, arguments: ["render", "--from", frontend.rawValue])
         return OliverRender(html: html, frontend: frontend)
+    }
+
+    /// Typed Recipe for the reading view. Scale is Oliver's, in memory.
+    /// The caller's `source` is never rewritten.
+    public func recipe(_ source: String, scale: RecipeScale = .one) throws -> OliverRecipe {
+        let body = Self.bodyForOliver(source, frontend: .cooklang)
+        let scaled: String
+        if scale == .one {
+            scaled = body
+        } else {
+            scaled = try run(
+                body: body,
+                arguments: ["scale", "--from", "cooklang", "--factor", scale.factorArgument]
+            )
+        }
+        let json = try run(
+            body: scaled,
+            arguments: ["serialize", "--from", "cooklang", "--json"]
+        )
+        do {
+            return try OliverRecipe.decode(from: json)
+        } catch {
+            throw OliverError.failed(status: 0, stderr: "Oliver did not return a recipe")
+        }
     }
 
     /// BANAL owns local metadata. Send only the body for Markdown/Textile.
@@ -127,14 +187,14 @@ public struct OliverClient: Sendable {
         return parsed.body
     }
 
-    private func run(body: String, frontend: OliverFrontend) throws -> String {
+    private func run(body: String, arguments: [String]) throws -> String {
         guard FileManager.default.isExecutableFile(atPath: binaryURL.path) else {
             throw OliverError.missingBinary
         }
 
         let process = Process()
         process.executableURL = binaryURL
-        process.arguments = ["render", "--from", frontend.rawValue]
+        process.arguments = arguments
 
         let stdin = Pipe()
         let stdout = Pipe()

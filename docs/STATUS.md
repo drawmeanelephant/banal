@@ -22,6 +22,7 @@
 - Menus: ⌘N note, ⇧⌘N folder, ⌘⌫ trash, ⇧⌘P publish, ⌘F find notes, ⇧⌘F find in note
 - Oliver: one-shot render after idle typing (`--from` from the file extension). Missing binary is silent. No preview.
 - Languages: `.md`, `.textile`, and `.cook` are notes. File → New Textile / New Recipe. Recipes keep Cooklang `>>` metadata, not a YAML fence. Opening any of them is source.
+- Recipe Read: `.cook` notes have Edit | Read. Read shows ingredients, cookware, steps, and notes from Oliver’s typed Recipe. ½ 1× 2× 3× scales the view only. Missing or older Oliver (no `serialize --json`) is one sentence; Edit still works.
 
 ## Still open
 
@@ -29,7 +30,7 @@
 | --- | --- |
 | Longer type / ⌘Z sit | Switch + clean Vim reload + dirty keep-buffer verified; 30s undo-in-the-hand still a human pass |
 | Live Cloudflare deploy | Intentionally later — pane exists, Deploy disabled |
-| Recipe reading view | M5 (B-9). Source editor is the file; no Read switcher yet. |
+| Recipe reading view | B-9 landed. Human sit of risotto in the running app still open. |
 | Signed `.app` / sandbox | `swift run` only |
 
 ## Known gaps in the scaffold
