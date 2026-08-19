@@ -320,6 +320,23 @@ final class EditorTextView: NSTextView {
         }
     }
 
+    override func insertNewline(_ sender: Any?) {
+        if let event = NSApp.currentEvent, event.modifierFlags.contains(.shift) {
+            super.insertNewline(sender)
+            return
+        }
+        if let action = ListContinuation.action(in: string, selectedRange: selectedRange()) {
+            if shouldChangeText(in: action.range, replacementString: action.text) {
+                replaceCharacters(in: action.range, with: action.text)
+                didChangeText()
+                setSelectedRange(NSRange(location: action.newCaretPosition, length: 0))
+                scrollRangeToVisible(NSRange(location: action.newCaretPosition, length: 0))
+                return
+            }
+        }
+        super.insertNewline(sender)
+    }
+
     override var readablePasteboardTypes: [NSPasteboard.PasteboardType] {
         var types = super.readablePasteboardTypes
         if !types.contains(.html) { types.append(.html) }
