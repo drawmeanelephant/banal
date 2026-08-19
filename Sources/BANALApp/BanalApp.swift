@@ -188,6 +188,42 @@ final class BanalAppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
+        if ProcessInfo.processInfo.environment["BANAL_SMOKE_TEST"] != nil {
+            // Startup smoke (Scripts/smoke.sh): give the window a beat to
+            // appear, then wait until bootstrap() has written
+            // .banal/config.json (or a deadline passes) before quitting
+            // through the normal path, so applicationWillTerminate runs
+            // and the exit status is 0. The script asserts the files on
+            // disk independently — no race on slow machines.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+                self?.finishSmokeTest()
+            }
+        }
+    }
+
+    /// Quit the smoke-test instance once the vault has actually been
+    /// opened. `bootstrap()` writes `.banal/config.json`; if that never
+    /// happens (wrong BANAL_VAULT, sandbox-blocked path), quit at the
+    /// deadline and let the script report the failure.
+    @MainActor
+    private func finishSmokeTest() {
+        let deadline = Date().addingTimeInterval(10)
+        func poll() {
+            let configURL = model?.store.configuration.configURL
+            let opened = configURL.map { FileManager.default.fileExists(atPath: $0.path) } ?? false
+            if opened {
+                print("BANAL smoke: ready")
+                NSApp.terminate(nil)
+                return
+            }
+            if Date() >= deadline {
+                print("BANAL smoke: timed out waiting for the vault to open")
+                NSApp.terminate(nil)
+                return
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: poll)
+        }
+        poll()
     }
 
     func applicationWillTerminate(_ notification: Notification) {

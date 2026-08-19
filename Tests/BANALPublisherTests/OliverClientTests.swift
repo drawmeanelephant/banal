@@ -79,6 +79,29 @@ final class OliverClientTests: XCTestCase {
         ))
     }
 
+    /// A render-only Oliver (no `serialize --json`) is still found for
+    /// HTML render, but must not be accepted for recipe Read — Read then
+    /// says “This recipe needs Oliver.” instead of “didn’t parse.”
+    func testRecipeJSONRejectsBinaryThatCannotSerialize() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let stub = root.appendingPathComponent("oliver")
+        try makeStub(at: stub)
+        XCTAssertEqual(
+            OliverLocator.resolve(
+                configured: stub.path,
+                environment: ["PATH": ""],
+                currentDirectory: root
+            )?.standardizedFileURL,
+            stub.standardizedFileURL
+        )
+        XCTAssertNil(OliverLocator.resolveRecipeJSON(
+            configured: stub.path,
+            environment: ["PATH": ""],
+            currentDirectory: root
+        ))
+    }
+
     func testDebounceIsSilentWhenUnavailable() {
         let ask = OliverDebounce(client: nil, delay: 0)
         let exp = expectation(description: "no fire")

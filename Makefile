@@ -11,7 +11,7 @@ else
 CODESIGN_FLAGS = --options runtime --timestamp
 endif
 
-.PHONY: test build run app clean
+.PHONY: test build run app smoke clean
 
 test:
 	$(SWIFT) test
@@ -39,6 +39,10 @@ app:
 	@echo "Built $(APP) (version $(VERSION))."
 	@echo "Signed with identity '$(SIGN_IDENTITY)'."
 	@echo "Ad-hoc unless SIGN_IDENTITY is a Developer ID. Not notarized."
+
+# Launch smoke: the signed app boots, opens BANAL_VAULT, quits cleanly.
+smoke: app
+	bash Scripts/smoke.sh
 
 clean:
 	$(SWIFT) package clean

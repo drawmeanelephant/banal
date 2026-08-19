@@ -71,18 +71,16 @@ public final class AppModel: ObservableObject {
         let configured = store.configuration.oliverBinaryPath
         _ = CompilerBookmark.access(path: configured, name: "oliver")
         recipeQueue.async { [weak self] in
-            let url = OliverLocator.resolveRecipeJSON(configured: configured)
-                ?? OliverLocator.resolve(configured: configured)
+            // Recipe Read needs `serialize --json`; a render-only Oliver is
+            // not enough, so Read says “This recipe needs Oliver.” Idle
+            // render keeps the plain fallback — older binaries still render.
+            let recipeURL = OliverLocator.resolveRecipeJSON(configured: configured)
+            let renderURL = recipeURL ?? OliverLocator.resolve(configured: configured)
             Task { @MainActor [weak self] in
                 guard let self else { return }
-                if let url {
-                    let client = OliverClient(binaryURL: url)
-                    self.oliverClient = client
-                    self.oliver = OliverDebounce(client: client)
-                } else {
-                    self.oliverClient = nil
-                    self.oliver = OliverDebounce(client: nil)
-                }
+                self.oliverClient = recipeURL.map { OliverClient(binaryURL: $0) }
+                self.oliver = renderURL.map { OliverDebounce(client: OliverClient(binaryURL: $0)) }
+                    ?? OliverDebounce(client: nil)
                 if self.recipeMode == .read, self.selectedNote?.language == .cooklang {
                     self.askRecipe()
                 }
