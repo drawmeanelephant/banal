@@ -18,6 +18,7 @@ public struct VaultConfiguration: Equatable, Sendable {
     public var siteBaseURL: String
     public var siteAuthor: String
     public var borisBinaryPath: String?
+    public var oliverBinaryPath: String?
     public var cloudflareAccountID: String?
     public var cloudflareProjectName: String
     public var cloudflareCustomDomain: String
@@ -28,6 +29,7 @@ public struct VaultConfiguration: Equatable, Sendable {
         siteBaseURL: String = "",
         siteAuthor: String = "",
         borisBinaryPath: String? = nil,
+        oliverBinaryPath: String? = nil,
         cloudflareAccountID: String? = nil,
         cloudflareProjectName: String = "banal-notes",
         cloudflareCustomDomain: String = ""
@@ -37,6 +39,7 @@ public struct VaultConfiguration: Equatable, Sendable {
         self.siteBaseURL = siteBaseURL
         self.siteAuthor = siteAuthor
         self.borisBinaryPath = borisBinaryPath
+        self.oliverBinaryPath = oliverBinaryPath
         self.cloudflareAccountID = cloudflareAccountID
         self.cloudflareProjectName = cloudflareProjectName
         self.cloudflareCustomDomain = cloudflareCustomDomain
@@ -75,6 +78,7 @@ public struct VaultConfigFile: Codable, Equatable, Sendable {
     public var siteBaseURL: String
     public var siteAuthor: String
     public var borisBinaryPath: String?
+    public var oliverBinaryPath: String?
     public var cloudflareAccountID: String?
     public var cloudflareProjectName: String
     public var cloudflareCustomDomain: String
@@ -84,6 +88,7 @@ public struct VaultConfigFile: Codable, Equatable, Sendable {
         siteBaseURL: String = "",
         siteAuthor: String = "",
         borisBinaryPath: String? = nil,
+        oliverBinaryPath: String? = nil,
         cloudflareAccountID: String? = nil,
         cloudflareProjectName: String = "banal-notes",
         cloudflareCustomDomain: String = ""
@@ -92,6 +97,7 @@ public struct VaultConfigFile: Codable, Equatable, Sendable {
         self.siteBaseURL = siteBaseURL
         self.siteAuthor = siteAuthor
         self.borisBinaryPath = borisBinaryPath
+        self.oliverBinaryPath = oliverBinaryPath
         self.cloudflareAccountID = cloudflareAccountID
         self.cloudflareProjectName = cloudflareProjectName
         self.cloudflareCustomDomain = cloudflareCustomDomain
@@ -103,6 +109,7 @@ public struct VaultConfigFile: Codable, Equatable, Sendable {
             siteBaseURL: configuration.siteBaseURL,
             siteAuthor: configuration.siteAuthor,
             borisBinaryPath: configuration.borisBinaryPath,
+            oliverBinaryPath: configuration.oliverBinaryPath,
             cloudflareAccountID: configuration.cloudflareAccountID,
             cloudflareProjectName: configuration.cloudflareProjectName,
             cloudflareCustomDomain: configuration.cloudflareCustomDomain
@@ -115,6 +122,7 @@ public struct VaultConfigFile: Codable, Equatable, Sendable {
         siteBaseURL = try container.decodeIfPresent(String.self, forKey: .siteBaseURL) ?? ""
         siteAuthor = try container.decodeIfPresent(String.self, forKey: .siteAuthor) ?? ""
         borisBinaryPath = try container.decodeIfPresent(String.self, forKey: .borisBinaryPath)
+        oliverBinaryPath = try container.decodeIfPresent(String.self, forKey: .oliverBinaryPath)
         cloudflareAccountID = try container.decodeIfPresent(String.self, forKey: .cloudflareAccountID)
         cloudflareProjectName = try container.decodeIfPresent(String.self, forKey: .cloudflareProjectName) ?? "banal-notes"
         cloudflareCustomDomain = try container.decodeIfPresent(String.self, forKey: .cloudflareCustomDomain) ?? ""
@@ -182,6 +190,7 @@ public enum VaultBootstrap {
         configuration.siteBaseURL = file.siteBaseURL
         configuration.siteAuthor = file.siteAuthor
         configuration.borisBinaryPath = file.borisBinaryPath
+        configuration.oliverBinaryPath = file.oliverBinaryPath
         configuration.cloudflareAccountID = file.cloudflareAccountID
         configuration.cloudflareProjectName = file.cloudflareProjectName
         configuration.cloudflareCustomDomain = file.cloudflareCustomDomain

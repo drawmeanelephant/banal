@@ -8,6 +8,34 @@ final class OliverClientTests: XCTestCase {
         XCTAssertEqual(OliverLocator.resolve(configured: sh.path), sh)
     }
 
+    func testLocatorPrefersConfiguredOverEnvironment() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let configured = root.appendingPathComponent("configured-oliver")
+        let env = root.appendingPathComponent("env-oliver")
+        try makeStub(at: configured)
+        try makeStub(at: env)
+        let found = OliverLocator.resolve(
+            configured: configured.path,
+            environment: ["BANAL_OLIVER_BIN": env.path, "PATH": ""],
+            currentDirectory: root
+        )
+        XCTAssertEqual(found?.standardizedFileURL, configured.standardizedFileURL)
+    }
+
+    func testRecipeJSONResolveHonorsConfiguredPath() throws {
+        let binary = OliverLocator.resolveRecipeJSON()
+        try XCTSkipUnless(binary != nil, "Oliver binary not on PATH or in a sibling checkout")
+        let isolated = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: isolated) }
+        let found = OliverLocator.resolveRecipeJSON(
+            configured: binary!.path,
+            environment: ["PATH": ""],
+            currentDirectory: isolated
+        )
+        XCTAssertEqual(found?.standardizedFileURL, binary!.standardizedFileURL)
+    }
+
     func testLocatorHonorsOliverBinEnvironment() throws {
         let root = isolatedRoot()
         defer { try? FileManager.default.removeItem(at: root) }

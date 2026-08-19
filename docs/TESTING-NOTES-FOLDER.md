@@ -33,7 +33,14 @@ swift test
 swift run BANAL
 ```
 
-`swift test` covers `NotesFolderAccess` (nil / ready / missing / file-not-folder) and store tests for a vanished root. It does **not** replace sitting in the GUI. You have to do the Finder bits by hand.
+`swift test` covers `NotesFolderAccess` (nil / ready / missing / file-not-folder), bookmark save/restore, and store tests for a vanished root. It does **not** replace sitting in the GUI. You have to do the Finder bits by hand.
+
+The signed `.app` is sandboxed. `swift run` is not. For the bookmark-survives-quit sit, prefer:
+
+```bash
+make app
+open dist/BANAL.app
+```
 
 **`BANAL_VAULT`:** if set to an existing directory, launch opens that folder **without writing the bookmark**. Use it to sit a disposable tree while leaving your real notes folder remembered.
 
@@ -157,7 +164,7 @@ If those two screens are identical, the feature is broken even if both “work.�
 ## What this is not (so you do not file those bugs)
 
 - Not iCloud Drive sync. If the folder is in iCloud and the file is a placeholder, macOS may look “missing” until it downloads. Prefer a local Desktop folder for this sit.
-- Not sandbox-on for `swift run`. Bookmarks still exist; permissions are looser than a signed `.app`.
+- Not sandbox-on for `swift run`. Bookmarks still exist; permissions are looser than a signed `.app`. `make app` turns the sandbox on. Under the sandbox, **Documents/BANAL Notes** creates the folder when the app can write there; otherwise it falls through to Choose… (the powerbox). A vanished folder is still not recreated.
 - Not “BANAL Notes” as a special database. Trash in Finder is Trash. Rename in Finder is rename.
 - Not auto-migrating notes from the missing path into Documents.
 - Not a list of recent vaults. One remembered folder.

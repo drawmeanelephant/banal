@@ -18,7 +18,7 @@ struct SettingsRoot: View {
                 .tabItem { Label("Publish", systemImage: "globe") }
                 .accessibilityLabel("Publish")
         }
-        .frame(width: 520, height: 640)
+        .frame(width: 520, height: 720)
         .accessibilityLabel("Settings")
     }
 }
@@ -64,12 +64,7 @@ private struct GeneralSettingsPane: View {
     }
 
     private func chooseFolder() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.canCreateDirectories = true
-        panel.prompt = "Use Folder"
-        if panel.runModal() == .OK, let url = panel.url {
+        if let url = NotesFolderPicker.run() {
             model.openVault(url)
         }
     }
@@ -133,6 +128,44 @@ private struct PublishSettingsPane: View {
                 Text("Site")
             } footer: {
                 Text("Used for the published site and RSS.")
+            }
+            Section {
+                compilerRow(
+                    title: "Boris (optional)",
+                    path: model.store.configuration.borisBinaryPath,
+                    choose: { chooseBinary(named: "Boris") { path in
+                        var next = model.store.configuration
+                        next.borisBinaryPath = path
+                        model.updateVaultConfiguration(next)
+                    } },
+                    reveal: { revealBinary(model.store.configuration.borisBinaryPath) },
+                    clear: {
+                        CompilerBookmark.forget(name: "boris")
+                        var next = model.store.configuration
+                        next.borisBinaryPath = nil
+                        model.updateVaultConfiguration(next)
+                    }
+                )
+                compilerRow(
+                    title: "Oliver (optional)",
+                    path: model.store.configuration.oliverBinaryPath,
+                    choose: { chooseBinary(named: "Oliver") { path in
+                        var next = model.store.configuration
+                        next.oliverBinaryPath = path
+                        model.updateVaultConfiguration(next)
+                    } },
+                    reveal: { revealBinary(model.store.configuration.oliverBinaryPath) },
+                    clear: {
+                        CompilerBookmark.forget(name: "oliver")
+                        var next = model.store.configuration
+                        next.oliverBinaryPath = nil
+                        model.updateVaultConfiguration(next)
+                    }
+                )
+            } header: {
+                Text("Boris and Oliver")
+            } footer: {
+                Text("Boris compiles the site. Oliver reads recipes. Empty is fine.")
             }
             Section {
                 VStack(alignment: .leading, spacing: 4) {
@@ -202,6 +235,65 @@ private struct PublishSettingsPane: View {
         }
     }
 
+    @ViewBuilder
+    private func compilerRow(
+        title: String,
+        path: String?,
+        choose: @escaping () -> Void,
+        reveal: @escaping () -> Void,
+        clear: @escaping () -> Void
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+            Text(compilerPathLabel(path))
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .help(path ?? "")
+            HStack {
+                Button("Choose…") { choose() }
+                Button("Reveal") { reveal() }
+                    .disabled(!compilerPathIsSet(path))
+                if compilerPathIsSet(path) {
+                    Button("Clear") { clear() }
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(title)
+        .accessibilityValue(compilerPathLabel(path))
+    }
+
+    private func compilerPathLabel(_ path: String?) -> String {
+        guard let path, !path.isEmpty else { return "Not set" }
+        return path
+    }
+
+    private func compilerPathIsSet(_ path: String?) -> Bool {
+        guard let path else { return false }
+        return !path.isEmpty
+    }
+
+    private func chooseBinary(named name: String, set: @escaping (String) -> Void) {
+        let panel = NSOpenPanel()
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = false
+        panel.canCreateDirectories = false
+        panel.prompt = "Choose"
+        panel.message = "Choose \(name)."
+        if panel.runModal() == .OK, let url = panel.url {
+            CompilerBookmark.save(url, name: name.lowercased())
+            set(url.path)
+        }
+    }
+
+    private func revealBinary(_ path: String?) {
+        guard let path, !path.isEmpty else { return }
+        NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
+    }
+
     private var siteTitle: Binding<String> {
         field(\.siteTitle) { $0.siteTitle = $1 }
     }
@@ -224,7 +316,7 @@ private struct PublishSettingsPane: View {
             set: { value in
                 var next = model.store.configuration
                 next.cloudflareAccountID = value.isEmpty ? nil : value
-                try? model.store.updateConfiguration(next)
+                model.updateVaultConfiguration(next)
             }
         )
     }
@@ -242,7 +334,7 @@ private struct PublishSettingsPane: View {
             set: { newValue in
                 var next = model.store.configuration
                 set(&next, newValue)
-                try? model.store.updateConfiguration(next)
+                model.updateVaultConfiguration(next)
             }
         )
     }

@@ -1,6 +1,6 @@
 # Preferences
 
-BANAL has few settings. They exist so the app stays out of the way, and so Cloudflare publishing can be switched on later without redesigning the product.
+BANAL has few settings. They exist so the app stays out of the way, and so publishing can be turned on without redesigning the product.
 
 Schema changes land in this file in the same PR as code.
 
@@ -10,7 +10,7 @@ Standard macOS Settings (`⌘,`). Three panes, in this order:
 
 1. **General** — vault and app behavior
 2. **Editor** — type and editing
-3. **Publish** — site identity + Cloudflare (deploy may be unimplemented; the fields are not)
+3. **Publish** — site identity + Cloudflare. Deploy is enabled when a Keychain token and project name exist.
 
 No Accounts pane. No Themes store. No Plugins.
 
@@ -57,12 +57,12 @@ Local notes do not read these keys. They matter only when the user chooses File 
 | Key | Type | Default | Notes |
 | --- | --- | --- | --- |
 | Prefer Boris when available | bool | true | Else builtin HTML + RSS |
-| Boris binary | optional path | `BANAL_BORIS_BIN`, then `PATH`, then sibling checkout | Reveal / choose file |
-| Oliver binary | optional path | `BANAL_OLIVER_BIN`, then `PATH`, then sibling checkout | Locate only this card; Settings path later |
+| Boris binary | optional path | `BANAL_BORIS_BIN`, then `PATH`, then sibling checkout | Settings → Publish: Choose… / Reveal. Empty is fine. Stored in `.banal/config.json` |
+| Oliver binary | optional path | `BANAL_OLIVER_BIN`, then `PATH`, then sibling checkout | Settings → Publish: Choose… / Reveal. Empty is fine. Stored in `.banal/config.json` |
 
-### Cloudflare (aspirational fields — store now, deploy later)
+### Cloudflare
 
-These controls should appear in Settings **now**, even if the action is “Save” plus a disabled Deploy button. The point is a finished pane, not a surprise form in a future release.
+Deploy is File → Deploy to Cloudflare. These fields are live, not a mockup. Failure is one sentence; the log is copied. Success does not open a sheet.
 
 | Key | Type | Storage | Default | Notes |
 | --- | --- | --- | --- | --- |
@@ -90,8 +90,8 @@ Out of scope for the pane (do not add):
 
 | Kind | Where |
 | --- | --- |
-| Vault bookmark, window frame, last selection | App UserDefaults |
-| Site title, base URL, project name, account ID, Boris path | Vault `.banal/config.json` (travels with the folder) |
+| Vault bookmark, Boris/Oliver sandbox bookmarks, window frame, last selection | App UserDefaults |
+| Site title, base URL, project name, account ID, Boris path, Oliver path | Vault `.banal/config.json` (travels with the folder) |
 | API token | Keychain, service `dev.drawmeanelephant.banal`, account = vault identifier |
 | Notes | `.md`, `.textile`, `.cook` files. Language is the extension. Markdown/Textile use the local YAML fence; Cooklang uses `>>` metadata for title/tags/published and never a BANAL `---` fence. |
 

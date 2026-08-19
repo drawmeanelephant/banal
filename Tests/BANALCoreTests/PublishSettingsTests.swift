@@ -48,6 +48,8 @@ final class PublishSettingsTests: XCTestCase {
             siteTitle: "Field Notes",
             siteBaseURL: "https://notes.example.com",
             siteAuthor: "Ada",
+            borisBinaryPath: "/opt/bin/boris",
+            oliverBinaryPath: "/opt/bin/oliver",
             cloudflareAccountID: "0123456789abcdef0123456789abcdef",
             cloudflareProjectName: "field-notes",
             cloudflareCustomDomain: "notes.example.com"
@@ -60,13 +62,44 @@ final class PublishSettingsTests: XCTestCase {
         XCTAssertEqual(loaded.siteTitle, "Field Notes")
         XCTAssertEqual(loaded.siteBaseURL, "https://notes.example.com")
         XCTAssertEqual(loaded.siteAuthor, "Ada")
+        XCTAssertEqual(loaded.borisBinaryPath, "/opt/bin/boris")
+        XCTAssertEqual(loaded.oliverBinaryPath, "/opt/bin/oliver")
         XCTAssertEqual(loaded.cloudflareProjectName, "field-notes")
         XCTAssertEqual(loaded.cloudflareAccountID, "0123456789abcdef0123456789abcdef")
         XCTAssertEqual(loaded.cloudflareCustomDomain, "notes.example.com")
 
         let raw = try String(contentsOf: configuration.configURL, encoding: .utf8)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(raw.utf8)) as? [String: Any])
+        XCTAssertEqual(json["oliverBinaryPath"] as? String, "/opt/bin/oliver")
+        XCTAssertEqual(json["borisBinaryPath"] as? String, "/opt/bin/boris")
         XCTAssertFalse(raw.lowercased().contains("token"))
         XCTAssertFalse(raw.contains("sk-"))
         XCTAssertFalse(raw.contains("apiToken"))
+    }
+
+    func testConfigWithoutOliverPathLoadsAsNil() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent(
+            "banal-config-old-\(UUID().uuidString)",
+            isDirectory: true
+        )
+        let configuration = VaultConfiguration(rootURL: root)
+        try FileManager.default.createDirectory(at: configuration.metadataURL, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let legacy = """
+        {
+          "siteTitle" : "Notes",
+          "siteBaseURL" : "",
+          "siteAuthor" : "",
+          "borisBinaryPath" : "/usr/local/bin/boris",
+          "cloudflareProjectName" : "banal-notes",
+          "cloudflareCustomDomain" : ""
+        }
+        """
+        try Data(legacy.utf8).write(to: configuration.configURL, options: .atomic)
+
+        let loaded = VaultBootstrap.load(from: root)
+        XCTAssertEqual(loaded.borisBinaryPath, "/usr/local/bin/boris")
+        XCTAssertNil(loaded.oliverBinaryPath)
     }
 }

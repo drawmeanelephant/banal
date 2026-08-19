@@ -1,6 +1,6 @@
 # Card B-5 — Settings as furniture
 
-**Milestone:** M2 · **Lane:** settings · **Status:** cooking — copy + validation landed
+**Milestone:** M2 · **Lane:** settings · **Status:** landed — copy + validation; Deploy enabled in B-10
 
 ## Handoff
 

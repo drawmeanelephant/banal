@@ -7,6 +7,7 @@ public struct PublishConfiguration: Equatable, Sendable {
     public var artifactDirectory: URL
     public var stagingDirectory: URL
     public var borisBinaryURL: URL?
+    public var oliverBinaryURL: URL?
     public var preferBoris: Bool
     public var author: String
 
@@ -16,6 +17,7 @@ public struct PublishConfiguration: Equatable, Sendable {
         artifactDirectory: URL,
         stagingDirectory: URL,
         borisBinaryURL: URL? = nil,
+        oliverBinaryURL: URL? = nil,
         preferBoris: Bool = true,
         author: String = ""
     ) {
@@ -24,6 +26,7 @@ public struct PublishConfiguration: Equatable, Sendable {
         self.artifactDirectory = artifactDirectory
         self.stagingDirectory = stagingDirectory
         self.borisBinaryURL = borisBinaryURL
+        self.oliverBinaryURL = oliverBinaryURL
         self.preferBoris = preferBoris
         self.author = author
     }
@@ -34,7 +37,8 @@ public struct PublishConfiguration: Equatable, Sendable {
             siteBaseURL: vault.siteBaseURL,
             artifactDirectory: vault.publishURL,
             stagingDirectory: vault.metadataURL.appendingPathComponent("stage", isDirectory: true),
-            borisBinaryURL: BorisLocator.resolve(configured: vault.borisBinaryPath, fileManager: fileManager)
+            borisBinaryURL: BorisLocator.resolve(configured: vault.borisBinaryPath, fileManager: fileManager),
+            oliverBinaryURL: OliverLocator.resolve(configured: vault.oliverBinaryPath, fileManager: fileManager)
         )
     }
 }
@@ -67,6 +71,19 @@ public struct PublishResult: Equatable, Sendable {
         self.compiledNoteIDs = compiledNoteIDs
         self.skipped = skipped
         self.compilerName = compilerName
+    }
+
+    /// One sentence for the status strip. Grammar matches the count.
+    public var statusCopy: String {
+        let compiled = compiledNoteIDs.count
+        let engine = usedBorisBinary ? "Boris" : "builtin"
+        let compiledNoun = compiled == 1 ? "note" : "notes"
+        if skipped.isEmpty {
+            return "Published \(compiled) \(compiledNoun) with \(engine)."
+        }
+        let skippedCount = skipped.count
+        let noun = skippedCount == 1 ? skipped[0].label : "notes"
+        return "Published \(compiled) \(compiledNoun). Skipped \(skippedCount) \(noun)."
     }
 }
 

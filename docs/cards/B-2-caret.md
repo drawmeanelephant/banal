@@ -1,6 +1,6 @@
 # Card B-2 — The caret never waits
 
-**Milestone:** M3 · **Lane:** editor · **Status:** cooking — dirty-only flush, caret keyed by note id
+**Milestone:** M3 · **Lane:** editor · **Status:** landed — dirty-only flush, caret keyed by note id; 30s sit is C-1
 
 ## Handoff
 

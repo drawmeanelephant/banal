@@ -12,7 +12,9 @@ public struct BANALPublisher: Sendable {
     }
 
     public static func make(configuration: PublishConfiguration) -> BANALPublisher {
-        let oliver = OliverLocator.resolve().map { OliverClient(binaryURL: $0) }
+        let oliverURL = configuration.oliverBinaryURL
+            ?? OliverLocator.resolve()
+        let oliver = oliverURL.map { OliverClient(binaryURL: $0) }
         if configuration.preferBoris, let binary = configuration.borisBinaryURL {
             return BANALPublisher(compiler: BorisCLICompiler(binaryURL: binary), oliver: oliver)
         }

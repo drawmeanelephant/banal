@@ -115,9 +115,9 @@ Publishing never runs during typing. File → Publish Site… (⇧⌘P) is expli
 
 ## Deferred
 
-The product sequence is [`ROADMAP.md`](ROADMAP.md): **folders → Settings → finish → deploy**. Do not pull these forward ahead of that.
+The product sequence is [`ROADMAP.md`](ROADMAP.md): **folders → Settings → finish → languages → publish → Close**. M1–M6 are drawn. Do not start fluency (preview, highlighting, scaled-recipe save) ahead of C-1.
 
-Later, if ever: live preview (not a webview editor), freebuff `published_at`/`summary`/`--rss`, `{stem}.assets/`, signed `.app`, importers as file copy. Never: wiki-graph, Solipsist Compose, Cloudflare Worker host.
+Later, if ever: live preview (not a webview editor), freebuff `published_at`/`summary`/`--rss`, `{stem}.assets/`, importers as file copy. Signed `.app` is C-3. Never: wiki-graph, Solipsist Compose, Cloudflare Worker host.
 
 ## Tests
 

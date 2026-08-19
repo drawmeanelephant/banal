@@ -30,6 +30,9 @@ public final class AppModel: ObservableObject {
     @Published public var recipeScale: RecipeScale = .one
     @Published public var oliverRecipe: OliverRecipe?
     @Published public var recipeError: String?
+    /// Identity for the open buffer. Changes when the user switches notes,
+    /// not when a folder rename or move rewrites the path.
+    @Published public private(set) var editorSessionID = UUID()
 
     public let editorFocus = FocusToken()
     /// Last Oliver HTML for the open buffer. Not published — a render
@@ -43,8 +46,8 @@ public final class AppModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var sessionRecipeMode: RecipeMode = .edit
     private var recipeGeneration = 0
-    private let oliverClient: OliverClient?
-    private let oliver: OliverDebounce
+    private var oliverClient: OliverClient?
+    private var oliver: OliverDebounce
     private let recipeQueue = DispatchQueue(label: "dev.drawmeanelephant.banal.recipe", qos: .userInitiated)
 
     public init(
@@ -58,15 +61,25 @@ public final class AppModel: ObservableObject {
         self.missingNotesFolder = missingNotesFolder
         self.preferences = preferences
         store.watchesExternalEdits = preferences.watchExternalEdits
-        if let url = OliverLocator.resolveRecipeJSON() ?? OliverLocator.resolve() {
-            let client = OliverClient(binaryURL: url)
-            self.oliverClient = client
-            self.oliver = OliverDebounce(client: client)
-        } else {
-            self.oliverClient = nil
-            self.oliver = OliverDebounce(client: nil)
-        }
+        self.oliverClient = nil
+        self.oliver = OliverDebounce(client: nil)
         bindStore()
+        refreshOliver()
+    }
+
+    /// Honor the notes folder’s Oliver path without a relaunch.
+    public func refreshOliver() {
+        let configured = store.configuration.oliverBinaryPath
+        _ = CompilerBookmark.access(path: configured, name: "oliver")
+        if let url = OliverLocator.resolveRecipeJSON(configured: configured)
+            ?? OliverLocator.resolve(configured: configured) {
+            let client = OliverClient(binaryURL: url)
+            oliverClient = client
+            oliver = OliverDebounce(client: client)
+        } else {
+            oliverClient = nil
+            oliver = OliverDebounce(client: nil)
+        }
     }
 
     private func bindStore() {
@@ -109,6 +122,7 @@ public final class AppModel: ObservableObject {
     public func bootstrap() {
         do {
             try store.open()
+            refreshOliver()
             if selectedID == nil {
                 select(store.notes.first?.id)
             }
@@ -121,6 +135,7 @@ public final class AppModel: ObservableObject {
         if id == selectedID { return }
         persistEditor(to: selectedID)
         selectedID = id
+        editorSessionID = UUID()
         loadEditor(from: store.note(id: id ?? ""))
     }
 
@@ -240,8 +255,16 @@ public final class AppModel: ObservableObject {
     }
 
     public func saveVaultConfiguration() {
+        updateVaultConfiguration(store.configuration)
+    }
+
+    public func updateVaultConfiguration(_ next: VaultConfiguration) {
+        let oliverChanged = next.oliverBinaryPath != store.configuration.oliverBinaryPath
         do {
-            try store.updateConfiguration(store.configuration)
+            try store.updateConfiguration(next)
+            if oliverChanged {
+                refreshOliver()
+            }
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -374,6 +397,7 @@ public final class AppModel: ObservableObject {
         flushEditor()
         store.flush()
         store.monitorStopForReplacement()
+        VaultBookmark.endAccess()
         let next = NoteStore(configuration: VaultConfiguration(rootURL: url))
         next.watchesExternalEdits = preferences.watchExternalEdits
         store = next
@@ -396,12 +420,12 @@ public final class AppModel: ObservableObject {
         do {
             let result = try publishNow()
             lastPublishResult = result
-            statusMessage = Self.publishCopy(result)
+            statusMessage = result.statusCopy
             NSWorkspace.shared.activateFileViewerSelecting([result.artifactDirectory])
         } catch PublishError.noPublishedNotes {
             statusMessage = "Nothing published."
         } catch PublishError.nothingCompiled {
-            statusMessage = "Nothing published. Recipes need Oliver."
+            statusMessage = "Nothing published — recipes need Oliver."
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -430,7 +454,7 @@ public final class AppModel: ObservableObject {
             _ = try CloudflareDeployer.deploy(plan: plan, token: token)
             statusMessage = "Deployed to Cloudflare Pages."
         } catch CloudflareDeployError.wranglerMissing {
-            statusMessage = "wrangler isn’t available."
+            statusMessage = "Can’t deploy — wrangler isn’t installed."
         } catch CloudflareDeployError.failed(_, let log) {
             NSPasteboard.general.clearContents()
             NSPasteboard.general.setString(log, forType: .string)
@@ -438,7 +462,7 @@ public final class AppModel: ObservableObject {
         } catch PublishError.noPublishedNotes {
             statusMessage = "Nothing published."
         } catch PublishError.nothingCompiled {
-            statusMessage = "Nothing published. Recipes need Oliver."
+            statusMessage = "Nothing published — recipes need Oliver."
         } catch {
             statusMessage = error.localizedDescription
         }
@@ -446,21 +470,14 @@ public final class AppModel: ObservableObject {
 
     private func publishNow() throws -> PublishResult {
         let vault = store.configuration
+        _ = CompilerBookmark.access(path: vault.borisBinaryPath, name: "boris")
+        _ = CompilerBookmark.access(path: vault.oliverBinaryPath, name: "oliver")
         let configuration = PublishConfiguration.default(for: vault)
         return try BANALPublisher.make(configuration: configuration).publish(
             notes: store.notes,
             vault: vault,
             configuration: configuration
         )
-    }
-
-    static func publishCopy(_ result: PublishResult) -> String {
-        let engine = result.usedBorisBinary ? "Boris" : "builtin"
-        if result.skipped.isEmpty {
-            return "Published \(result.compiledNoteIDs.count) notes with \(engine)."
-        }
-        let noun = result.skipped.count == 1 ? result.skipped[0].label : "notes"
-        return "Published \(result.compiledNoteIDs.count) notes. Skipped \(result.skipped.count) \(noun)."
     }
 
     public func revealVault() {
@@ -548,7 +565,7 @@ public final class AppModel: ObservableObject {
         }
         guard let client = oliverClient else {
             oliverRecipe = nil
-            recipeError = "This recipe didn’t parse."
+            recipeError = "This recipe needs Oliver."
             return
         }
         recipeGeneration += 1
@@ -597,60 +614,6 @@ public enum RecipeMode: String, Equatable, Hashable, Sendable {
 public final class FocusToken {
     public var handler: (() -> Void)?
     public func request() { handler?() }
-}
-
-public enum VaultBookmark {
-    private static let key = "banal.vaultBookmark"
-
-    public static func overrideURL() -> URL? {
-        let path = ProcessInfo.processInfo.environment["BANAL_VAULT"]?
-            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        guard !path.isEmpty else { return nil }
-        return URL(fileURLWithPath: path, isDirectory: true)
-    }
-
-    public static func save(_ url: URL) {
-        if overrideURL() != nil { return }
-        do {
-            let data = try url.bookmarkData(
-                options: [.withSecurityScope],
-                includingResourceValuesForKeys: nil,
-                relativeTo: nil
-            )
-            UserDefaults.standard.set(data, forKey: key)
-        } catch {
-            UserDefaults.standard.set(url.path, forKey: "banal.vaultPath")
-        }
-    }
-
-    public static func restore() -> URL? {
-        if let override = overrideURL() { return override }
-        if let data = UserDefaults.standard.data(forKey: key) {
-            var stale = false
-            if let url = try? URL(
-                resolvingBookmarkData: data,
-                options: [.withSecurityScope],
-                relativeTo: nil,
-                bookmarkDataIsStale: &stale
-            ) {
-                _ = url.startAccessingSecurityScopedResource()
-                if stale {
-                    save(url)
-                }
-                return url
-            }
-        }
-        if let path = UserDefaults.standard.string(forKey: "banal.vaultPath") {
-            return URL(fileURLWithPath: path)
-        }
-        return nil
-    }
-
-    public static func defaultVaultURL() -> URL {
-        FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent("Documents", isDirectory: true)
-            .appendingPathComponent("BANAL Notes", isDirectory: true)
-    }
 }
 
 extension NoteStore {

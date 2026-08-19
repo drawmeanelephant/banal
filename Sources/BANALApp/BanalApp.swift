@@ -44,6 +44,12 @@ struct BanalApp: App {
         .defaultSize(width: 1100, height: 720)
         .windowResizability(.contentMinSize)
         .commands {
+            CommandGroup(replacing: .appInfo) {
+                Button("About BANAL") {
+                    BanalAbout.show()
+                }
+            }
+
             CommandGroup(replacing: .newItem) {
                 Button("New Note") {
                     model.createNote()
@@ -146,14 +152,33 @@ struct BanalApp: App {
     }
 
     private func chooseVault() {
-        let panel = NSOpenPanel()
-        panel.canChooseFiles = false
-        panel.canChooseDirectories = true
-        panel.canCreateDirectories = true
-        panel.prompt = "Use Folder"
-        if panel.runModal() == .OK, let url = panel.url {
+        if let url = NotesFolderPicker.run() {
             model.openVault(url)
         }
+    }
+}
+
+enum BanalAbout {
+    static let applicationName = "BANAL"
+    static let version = "0.1.0"
+    static let mission = "BANAL is a beautiful, boring, local Mac notes app whose files are allowed to be excellent."
+
+    @MainActor
+    static func show() {
+        let credits = NSMutableParagraphStyle()
+        credits.alignment = .center
+        NSApp.orderFrontStandardAboutPanel(options: [
+            .applicationName: applicationName,
+            .applicationVersion: version,
+            .credits: NSAttributedString(
+                string: mission,
+                attributes: [
+                    .font: NSFont.systemFont(ofSize: NSFont.smallSystemFontSize),
+                    .paragraphStyle: credits,
+                    .foregroundColor: NSColor.labelColor,
+                ]
+            ),
+        ])
     }
 }
 
@@ -168,6 +193,8 @@ final class BanalAppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         MainActor.assumeIsolated {
             model?.flushEditor()
+            VaultBookmark.endAccess()
+            SecurityScope.stopAll()
         }
     }
 }

@@ -25,7 +25,7 @@ struct EditorView: View {
                 } else {
                     MarkdownTextView(
                         text: $model.editorText,
-                        documentID: model.selectedID ?? "",
+                        documentID: model.editorSessionID.uuidString,
                         findToken: model.findInNoteToken,
                         focusToken: model.editorFocus,
                         style: EditorStyle(from: model.preferences)

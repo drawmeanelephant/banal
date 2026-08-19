@@ -1,6 +1,6 @@
 # Card B-4 — Folders are directories
 
-**Milestone:** M1 · **Lane:** core + sidebar · **Status:** cooking — New Note Here, rename rewrite, Finder rename tested
+**Milestone:** M1 · **Lane:** core + sidebar · **Status:** landed — New Note Here, rename rewrite, Finder rename tested
 
 ## Handoff
 

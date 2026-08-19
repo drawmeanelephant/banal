@@ -1,6 +1,6 @@
 # Card B-1 — Type
 
-**Milestone:** M3 · **Lane:** type · **Status:** cooking — SF Pro, 680pt measure, live line height
+**Milestone:** M3 · **Lane:** type · **Status:** landed — SF Pro, 680pt measure, live line height
 
 ## Handoff
 
