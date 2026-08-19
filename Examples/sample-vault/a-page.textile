@@ -1,0 +1,10 @@
+---
+title: A Textile page
+created: 2026-08-18T16:10:00Z
+updated: 2026-08-18T16:10:00Z
+published: false
+---
+
+h1. A Textile page
+
+Textile is an ordinary file in this folder. File → New Textile writes another one.

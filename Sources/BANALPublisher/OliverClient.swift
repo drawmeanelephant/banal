@@ -65,6 +65,16 @@ public enum OliverLocator {
 
 public enum OliverFrontend: String, Sendable {
     case markdown
+    case textile
+    case cooklang
+
+    public init(language: NoteLanguage) {
+        switch language {
+        case .markdown: self = .markdown
+        case .textile: self = .textile
+        case .cooklang: self = .cooklang
+        }
+    }
 }
 
 public enum OliverError: Error, Equatable, Sendable {
@@ -82,11 +92,13 @@ public struct OliverRender: Equatable, Sendable {
     }
 }
 
-/// One-shot question to Oliver: what HTML is this Markdown?
+/// One-shot question to Oliver: what HTML is this buffer?
 ///
-/// Invokes `oliver render --from markdown`. Stdin is the note **body**.
-/// BANAL frontmatter is stripped first and `--frontmatter` is never
-/// passed, so Oliver cannot reinterpret local keys.
+/// Invokes `oliver render --from <markdown|textile|cooklang>`. The
+/// frontend is the file extension, never sniffed from the body.
+/// Markdown/Textile stdin is the note **body** (BANAL frontmatter
+/// stripped). Cooklang stdin is the recipe source. `--frontmatter`
+/// is never passed.
 ///
 /// Call this off the caret path. Use a debounce at the call site —
 /// never from `textDidChange`.
@@ -98,13 +110,17 @@ public struct OliverClient: Sendable {
     }
 
     public func render(_ source: String, frontend: OliverFrontend = .markdown) throws -> OliverRender {
-        let body = Self.bodyForOliver(source)
+        let body = Self.bodyForOliver(source, frontend: frontend)
         let html = try run(body: body, frontend: frontend)
         return OliverRender(html: html, frontend: frontend)
     }
 
-    /// BANAL owns local metadata. Send only the body.
-    public static func bodyForOliver(_ source: String) -> String {
+    /// BANAL owns local metadata. Send only the body for Markdown/Textile.
+    /// Cooklang source is sent whole — BANAL does not strip `---` from recipes.
+    public static func bodyForOliver(_ source: String, frontend: OliverFrontend = .markdown) -> String {
+        if frontend == .cooklang {
+            return source
+        }
         guard let parsed = try? FrontmatterCodec.parse(source), parsed.hasFrontmatter else {
             return source
         }
@@ -171,7 +187,7 @@ private final class PipeBox: @unchecked Sendable {
 public final class OliverDebounce: @unchecked Sendable {
     public static let delay: TimeInterval = 0.4
 
-    private let render: (@Sendable (String) -> OliverRender?)?
+    private let render: (@Sendable (String, OliverFrontend) -> OliverRender?)?
     private let delay: TimeInterval
     private let queue: DispatchQueue
     private var pending: DispatchWorkItem?
@@ -181,7 +197,7 @@ public final class OliverDebounce: @unchecked Sendable {
 
     public init(client: OliverClient?, delay: TimeInterval = OliverDebounce.delay) {
         if let client {
-            self.render = { try? client.render($0) }
+            self.render = { source, frontend in try? client.render(source, frontend: frontend) }
         } else {
             self.render = nil
         }
@@ -199,17 +215,21 @@ public final class OliverDebounce: @unchecked Sendable {
 
     /// Test seam: a render function instead of a process.
     public init(delay: TimeInterval, render: @escaping @Sendable (String) -> OliverRender?) {
-        self.render = render
+        self.render = { source, _ in render(source) }
         self.delay = delay
         self.queue = DispatchQueue(label: "dev.drawmeanelephant.banal.oliver.test", qos: .utility)
     }
 
-    public func schedule(source: String, completion: @escaping @Sendable (OliverRender) -> Void) {
+    public func schedule(
+        source: String,
+        frontend: OliverFrontend = .markdown,
+        completion: @escaping @Sendable (OliverRender) -> Void
+    ) {
         guard let render else { return }
         lock.lock()
         pending?.cancel()
         let work = DispatchWorkItem {
-            guard let result = render(source) else { return }
+            guard let result = render(source, frontend) else { return }
             completion(result)
         }
         pending = work

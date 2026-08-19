@@ -57,6 +57,16 @@ struct BanalApp: App {
                 .keyboardShortcut("n", modifiers: [.command, .shift])
                 .disabled(model.needsVault)
 
+                Button("New Textile") {
+                    model.createNote(language: .textile)
+                }
+                .disabled(model.needsVault)
+
+                Button("New Recipe") {
+                    model.createNote(language: .cooklang)
+                }
+                .disabled(model.needsVault)
+
                 Button("Move to Trash") {
                     if model.selectedID != nil {
                         model.trashSelected()

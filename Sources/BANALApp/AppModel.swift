@@ -116,10 +116,10 @@ public final class AppModel: ObservableObject {
         )
     }
 
-    public func createNote(in folder: String? = nil) {
+    public func createNote(language: NoteLanguage = .markdown, in folder: String? = nil) {
         do {
             let dest = folder ?? preferences.folderForNewNote(selected: filter)
-            let note = try store.createNote(folder: dest)
+            let note = try store.createNote(folder: dest, language: language)
             if let dest {
                 filter = .folder(dest)
             }
@@ -411,7 +411,8 @@ public final class AppModel: ObservableObject {
             return
         }
         let noteID = selectedID
-        oliver.schedule(source: editorText) { [weak self] render in
+        let frontend = OliverFrontend(language: selectedNote?.language ?? .markdown)
+        oliver.schedule(source: editorText, frontend: frontend) { [weak self] render in
             Task { @MainActor [weak self] in
                 guard let self, self.selectedID == noteID else { return }
                 self.lastOliverRender = render

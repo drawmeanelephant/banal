@@ -115,6 +115,12 @@ private struct NoteRow: View {
                     .font(.body.weight(.medium))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
+                if note.language == .cooklang {
+                    Image(systemName: "fork.knife")
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                        .accessibilityLabel("Recipe")
+                }
                 if note.published {
                     Image(systemName: "globe")
                         .font(.caption)
@@ -139,6 +145,7 @@ private struct NoteRow: View {
 
     private var accessibilityLabel: String {
         var parts = [note.displayTitle]
+        if note.language == .cooklang { parts.append("Recipe") }
         if note.published { parts.append("Published") }
         parts.append(note.updated.formatted(.relative(presentation: .named)))
         return parts.joined(separator: ", ")

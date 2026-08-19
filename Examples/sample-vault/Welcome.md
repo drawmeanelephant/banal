@@ -8,6 +8,6 @@ published: false
 
 # Welcome to BANAL
 
-This folder is a vault. Every file is just Markdown.
+This folder is a vault. Files are Markdown, Textile, or Cooklang — same list.
 
 Drop images in `assets/` and write `![alt](assets/name.png)`.

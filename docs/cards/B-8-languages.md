@@ -1,6 +1,11 @@
 # Card B-8 — Three languages, one list
 
-**Milestone:** M5 · **Lane:** core + app · **Depends:** B-7 · **Status:** ready
+**Milestone:** M5 · **Lane:** core + app · **Depends:** B-7 · **Status:** cooking — three extensions in one list
+
+## Handoff
+
+- **Landed:** Vault scan accepts `.md`, `.textile`, `.cook`. File → New Note / New Textile / New Recipe. `Note.id` is the vault-relative path *with* the extension so `hello.md` and `hello.cook` can coexist. `.md`/`.textile` keep BANAL YAML; `.cook` writes `>> title` / `>> tags` / `>> published` and never a `---` fence. Cooklang `>> servings` and user YAML stay in the body. List: quiet `fork.knife` on recipes, no legend, no All Recipes. Oliver is asked `--from` from the extension (still no preview). Sample vault has a Textile page and `Recipes/risotto.cook`.
+- **Not this card:** recipe Read view (B-9), Boris staging of mixed extensions (B-10), a Languages pane.
 
 ## Owns
 
