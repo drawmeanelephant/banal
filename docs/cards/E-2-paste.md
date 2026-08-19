@@ -1,11 +1,13 @@
 # Card E-2 — Smart paste and links
 
-**Milestone:** M9 · **Lane:** editor · **Depends:** M8 done · **Status:** ready — clean paste from the web & URLs
+**Milestone:** M9 · **Lane:** editor · **Depends:** M8 done · **Status:** landed — clean paste from the web & URLs
 
 ## Handoff
 
-- **Not started.** Pasting rich text or HTML from Safari / PDF inserts unformatted raw text or messy escaped HTML with style spans. Pasting a URL over a selection replaces the selected text.
-- **Not this card:** column focus (E-1), list indentation (E-3), images (G-1).
+- **Landed.** Pasting a URL over selected text creates `[selectedText](url)` with caret right after `)`.
+- Pasting rich text or HTML converts cleanly to Markdown (headings, bold, italic, links, lists, code blocks, blockquotes) while stripping spans, styles, divs, and classes via `HTMLToMarkdown` in `BANALCore`.
+- Full undo support with `⌘Z`.
+- **Not this card:** list indentation (E-3), images (G-1).
 
 ## Owns
 

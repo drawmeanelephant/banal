@@ -319,5 +319,74 @@ final class EditorTextView: NSTextView {
             super.insertBacktab(sender)
         }
     }
+
+    override var readablePasteboardTypes: [NSPasteboard.PasteboardType] {
+        var types = super.readablePasteboardTypes
+        if !types.contains(.html) { types.append(.html) }
+        if !types.contains(.rtf) { types.append(.rtf) }
+        if !types.contains(.string) { types.append(.string) }
+        if !types.contains(.URL) { types.append(.URL) }
+        return types
+    }
+
+    override func paste(_ sender: Any?) {
+        if handleSmartPaste(from: NSPasteboard.general) {
+            return
+        }
+        super.paste(sender)
+    }
+
+    override func readSelection(from pboard: NSPasteboard) -> Bool {
+        if handleSmartPaste(from: pboard) {
+            return true
+        }
+        return super.readSelection(from: pboard)
+    }
+
+    override func readSelection(from pboard: NSPasteboard, type: NSPasteboard.PasteboardType) -> Bool {
+        if handleSmartPaste(from: pboard) {
+            return true
+        }
+        return super.readSelection(from: pboard, type: type)
+    }
+
+    @discardableResult
+    func handleSmartPaste(from pboard: NSPasteboard) -> Bool {
+        let range = selectedRange()
+
+        // 1. Paste URL over selection: wrap into [selectedText](url)
+        if range.length > 0 {
+            let candidateURL = pboard.string(forType: .string) ?? pboard.string(forType: .URL)
+            if let candidateURL,
+               let selectedText = (string as NSString).substring(with: range) as String?,
+               let link = SmartPaste.linkWrapped(selectedText: selectedText, urlString: candidateURL) {
+                return applySmartReplacement(link, for: range)
+            }
+        }
+
+        // 2. Clean Markdown paste from HTML / RTF
+        if let html = pboard.string(forType: .html), !html.isEmpty {
+            if let markdown = SmartPaste.cleanMarkdown(fromHTML: html) {
+                return applySmartReplacement(markdown, for: range)
+            }
+        } else if let rtfData = pboard.data(forType: .rtf) {
+            if let markdown = SmartPaste.cleanMarkdown(fromRTFData: rtfData) {
+                return applySmartReplacement(markdown, for: range)
+            }
+        }
+
+        return false
+    }
+
+    private func applySmartReplacement(_ text: String, for range: NSRange) -> Bool {
+        guard shouldChangeText(in: range, replacementString: text) else {
+            return false
+        }
+        replaceCharacters(in: range, with: text)
+        didChangeText()
+        let newLocation = range.location + (text as NSString).length
+        setSelectedRange(NSRange(location: newLocation, length: 0))
+        return true
+    }
 }
 
