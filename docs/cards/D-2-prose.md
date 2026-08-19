@@ -87,3 +87,17 @@ pipeline was also exercised directly on Oliver's real output). The
 page not a browser — needs a human at the window, with a real Markdown
 essay (this machine's Oliver renders oddly; that is Oliver's contract,
 not this card's).
+
+**Sit note (2026-08-19):** the gate's second half found a real gap —
+switching Read → Edit restored the source but did not request focus,
+so the caret was not in the Markdown. Fixed: `EditorView` observes
+`viewMode` and, on returning to `.edit`, hops past the SwiftUI commit
+(`DispatchQueue.main.async`) before asking `editorFocus`, so the fresh
+text view exists and its focus handler is installed first. Proven on
+the signed app: Read → Edit → ⌘A → ⌘C puts the essay's source on the
+pasteboard (the editor is first responder), and the Edit capture shows
+the selection. One caveat for the human sit: the *sandboxed* signed app
+cannot exec an un-bookmarked Oliver (execute bit denied outside the
+bundle), so Read shows “This note needs Oliver.” until the user
+bookmarks the binary in Settings → Publish, or runs the unsandboxed
+`swift run BANAL` path — both render the page once Oliver resolves.
