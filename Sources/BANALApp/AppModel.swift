@@ -49,6 +49,9 @@ public final class AppModel: ObservableObject {
     private var oliverClient: OliverClient?
     private var oliver: OliverDebounce
     private let recipeQueue = DispatchQueue(label: "dev.drawmeanelephant.banal.recipe", qos: .userInitiated)
+    /// Files opened (Finder double-click, Dock drag) before a vault exists.
+    /// Imported once `bootstrap()` opens a notes folder.
+    private var pendingImports: [URL] = []
 
     public init(
         store: NoteStore,
@@ -132,8 +135,56 @@ public final class AppModel: ObservableObject {
             if selectedID == nil {
                 select(store.notes.first?.id)
             }
+            drainPendingImports()
         } catch {
             statusMessage = error.localizedDescription
+        }
+    }
+
+    /// A `.md`, `.textile`, or `.cook` file opened from Finder or dropped
+    /// on the Dock icon. Inside the vault: select it. Outside: copy it in
+    /// and select it. With no vault open yet, queue it until one opens.
+    public func openExternalNote(at url: URL) {
+        guard !needsVault else {
+            if !pendingImports.contains(url) {
+                pendingImports.append(url)
+            }
+            return
+        }
+        openImportedNote(at: url)
+    }
+
+    private func openImportedNote(at url: URL) {
+        let root = store.configuration.rootURL.standardizedFileURL.path
+        let path = url.standardizedFileURL.path
+        if path == root || path.hasPrefix(root + "/") {
+            let id = NoteIdentity.id(for: url, vaultURL: store.configuration.rootURL)
+            if store.note(id: id) != nil {
+                filter = .all
+                select(id)
+                editorFocus.request()
+            } else {
+                statusMessage = "Not a BANAL note file."
+            }
+            return
+        }
+        do {
+            let imported = try store.importFile(from: url)
+            filter = .all
+            select(imported.id)
+            editorFocus.request()
+            statusMessage = "Imported “\(url.lastPathComponent)” into the notes folder."
+            dismissStatusLater()
+        } catch {
+            statusMessage = error.localizedDescription
+        }
+    }
+
+    private func drainPendingImports() {
+        let urls = pendingImports
+        pendingImports.removeAll()
+        for url in urls {
+            openImportedNote(at: url)
         }
     }
 

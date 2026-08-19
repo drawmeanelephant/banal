@@ -15,6 +15,8 @@ public enum NoteStoreError: Error, Equatable, Sendable {
     case invalidFolderName(String)
     case reservedName(String)
     case folderExists(String)
+    case noteAlreadyInVault
+    case unsupportedFileType(String)
 }
 
 /// Loads, indexes, debounced-writes, and watches a vault of notes.
@@ -435,6 +437,48 @@ public final class NoteStore: ObservableObject {
             notes.append(note)
         }
         notes.sort { $0.updated > $1.updated }
+    }
+
+    /// Copy an external note file into the vault and index it, like any
+    /// note on disk. The source file is left untouched; the extension
+    /// decides the language. The name is made unique with a `-2` suffix on
+    /// collision, so dragging the same file twice never overwrites.
+    @discardableResult
+    public func importFile(from sourceURL: URL, folder: String? = nil) throws -> Note {
+        let source = sourceURL.standardizedFileURL
+        let root = configuration.rootURL.standardizedFileURL.path
+        var isDirectory: ObjCBool = false
+        _ = fileManager.fileExists(atPath: source.path, isDirectory: &isDirectory)
+        if source.path == root || source.path.hasPrefix(root + "/") {
+            throw NoteStoreError.noteAlreadyInVault
+        }
+        if isDirectory.boolValue || NoteLanguage(pathExtension: source.pathExtension) == nil {
+            throw NoteStoreError.unsupportedFileType(source.pathExtension)
+        }
+        if let folder {
+            try ensureFolderExists(folder)
+        }
+        let relative = uniqueRelativePath(forLeaf: source.lastPathComponent, folder: folder)
+        let destination = configuration.rootURL.appendingPathComponent(relative)
+        try fileManager.copyItem(at: source, to: destination)
+        let note = try NoteIO.load(url: destination, vaultURL: configuration.rootURL, fileManager: fileManager)
+        upsert(note)
+        refreshFolders()
+        return note
+    }
+
+    private func uniqueRelativePath(forLeaf leaf: String, folder: String?) -> String {
+        let base = folder.map { "\($0)/\(leaf)" } ?? leaf
+        var candidate = base
+        var suffix = 2
+        let stem = (leaf as NSString).deletingPathExtension
+        let ext = (leaf as NSString).pathExtension
+        let existing = Set(notes.map(\.id))
+        while existing.contains(candidate) || fileManager.fileExists(atPath: configuration.rootURL.appendingPathComponent(candidate).path) {
+            candidate = folder.map { "\($0)/\(stem)-\(suffix).\(ext)" } ?? "\(stem)-\(suffix).\(ext)"
+            suffix += 1
+        }
+        return candidate
     }
 
     private func uniqueRelativePath(from title: String, now: Date, folder: String?, language: NoteLanguage) -> String {

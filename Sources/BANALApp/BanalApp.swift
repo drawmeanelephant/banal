@@ -39,7 +39,10 @@ struct BanalApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView(model: model)
-                .onAppear { appDelegate.model = model }
+                .onAppear {
+                    appDelegate.model = model
+                    appDelegate.flushPendingOpens()
+                }
         }
         .defaultSize(width: 1100, height: 720)
         .windowResizability(.contentMinSize)
@@ -184,6 +187,31 @@ enum BanalAbout {
 
 final class BanalAppDelegate: NSObject, NSApplicationDelegate {
     weak var model: AppModel?
+    /// Open-file events (Finder double-click, Dock drag) that arrived
+    /// before ContentView handed us the model. Drained in
+    /// `flushPendingOpens()`.
+    private var pendingOpenURLs: [URL] = []
+
+    /// File opens when BANAL is the handler for `.md` / `.textile` /
+    /// `.cook` (double-click, Open With, Dock drag). One route only — the
+    /// app has no `.onOpenURL`, so a single action can never import twice.
+    func application(_ sender: NSApplication, openFiles filenames: [String]) {
+        pendingOpenURLs.append(contentsOf: filenames.map { URL(fileURLWithPath: $0) })
+        flushPendingOpens()
+    }
+
+    /// The model is set from `ContentView.onAppear`, which can race an
+    /// open-file event during launch. Queue until then. Called only from
+    /// MainActor contexts (the open-files delegate hook and `.onAppear`).
+    @MainActor
+    func flushPendingOpens() {
+        guard !pendingOpenURLs.isEmpty else { return }
+        let urls = pendingOpenURLs
+        pendingOpenURLs.removeAll()
+        for url in urls {
+            model?.openExternalNote(at: url)
+        }
+    }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
