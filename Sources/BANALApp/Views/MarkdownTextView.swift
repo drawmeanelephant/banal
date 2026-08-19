@@ -43,6 +43,9 @@ struct MarkdownTextView: NSViewRepresentable {
     var findToken: Int
     var focusToken: FocusToken
     var style: EditorStyle
+    var onEscape: (() -> Void)?
+    var onTab: (() -> Void)?
+    var onBacktab: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -56,7 +59,7 @@ struct MarkdownTextView: NSViewRepresentable {
         scroll.borderType = .noBorder
         scroll.drawsBackground = false
 
-        let textView = NSTextView()
+        let textView = EditorTextView()
         textView.delegate = context.coordinator
         textView.isRichText = false
         textView.allowsUndo = true
@@ -76,6 +79,9 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.minSize = NSSize(width: 0, height: 0)
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         textView.setAccessibilityLabel("Note")
+        textView.onEscape = onEscape
+        textView.onTab = onTab
+        textView.onBacktab = onBacktab
         apply(style, to: textView)
         context.coordinator.lastStyle = style
         context.coordinator.lastDocumentID = documentID
@@ -86,7 +92,10 @@ struct MarkdownTextView: NSViewRepresentable {
         context.coordinator.textView = textView
         focusToken.handler = { [weak textView] in
             DispatchQueue.main.async {
-                textView?.window?.makeFirstResponder(textView)
+                guard let textView, let window = textView.window else { return }
+                window.makeFirstResponder(textView)
+                let selected = textView.selectedRange()
+                textView.scrollRangeToVisible(selected)
             }
         }
         return scroll
@@ -94,6 +103,11 @@ struct MarkdownTextView: NSViewRepresentable {
 
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         guard let textView = scroll.documentView as? NSTextView else { return }
+        if let editorTextView = textView as? EditorTextView {
+            editorTextView.onEscape = onEscape
+            editorTextView.onTab = onTab
+            editorTextView.onBacktab = onBacktab
+        }
         let documentChanged = context.coordinator.lastDocumentID != documentID
         if documentChanged || textView.string != text {
             let previous = textView.selectedRange()
@@ -232,3 +246,78 @@ private final class TextFinderSender: NSObject {
         tag = action.rawValue
     }
 }
+
+final class EditorTextView: NSTextView {
+    var onEscape: (() -> Void)?
+    var onTab: (() -> Void)?
+    var onBacktab: (() -> Void)?
+
+    override func cancelOperation(_ sender: Any?) {
+        if let scroll = enclosingScrollView, scroll.isFindBarVisible {
+            super.cancelOperation(sender)
+            return
+        }
+        if let onEscape {
+            onEscape()
+        } else {
+            super.cancelOperation(sender)
+        }
+    }
+
+    override func keyDown(with event: NSEvent) {
+        if event.keyCode == 53 { // Escape
+            if let scroll = enclosingScrollView, scroll.isFindBarVisible {
+                super.keyDown(with: event)
+                return
+            }
+            if let onEscape {
+                onEscape()
+                return
+            }
+        }
+        if event.keyCode == 48 { // Tab
+            let insideFence = CodeFenceScan.isInsideCodeFence(in: string, at: selectedRange().location)
+            if event.modifierFlags.contains(.shift) {
+                if insideFence {
+                    super.keyDown(with: event)
+                } else if let onBacktab {
+                    onBacktab()
+                } else {
+                    super.keyDown(with: event)
+                }
+                return
+            } else {
+                if insideFence {
+                    super.keyDown(with: event)
+                } else if let onTab {
+                    onTab()
+                } else {
+                    super.keyDown(with: event)
+                }
+                return
+            }
+        }
+        super.keyDown(with: event)
+    }
+
+    override func insertTab(_ sender: Any?) {
+        if CodeFenceScan.isInsideCodeFence(in: string, at: selectedRange().location) {
+            super.insertTab(sender)
+        } else if let onTab {
+            onTab()
+        } else {
+            super.insertTab(sender)
+        }
+    }
+
+    override func insertBacktab(_ sender: Any?) {
+        if CodeFenceScan.isInsideCodeFence(in: string, at: selectedRange().location) {
+            super.insertBacktab(sender)
+        } else if let onBacktab {
+            onBacktab()
+        } else {
+            super.insertBacktab(sender)
+        }
+    }
+}
+

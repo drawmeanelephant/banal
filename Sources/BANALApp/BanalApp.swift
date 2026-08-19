@@ -140,6 +140,26 @@ struct BanalApp: App {
             }
 
             CommandGroup(after: .toolbar) {
+                Button("Focus Sidebar") {
+                    model.focusSidebar()
+                }
+                .keyboardShortcut("1", modifiers: .command)
+                .disabled(model.needsVault)
+
+                Button("Focus Note List") {
+                    model.focusNoteList()
+                }
+                .keyboardShortcut("2", modifiers: .command)
+                .disabled(model.needsVault)
+
+                Button("Focus Editor") {
+                    model.focusEditor()
+                }
+                .keyboardShortcut("3", modifiers: .command)
+                .disabled(model.needsVault || model.selectedID == nil)
+
+                Divider()
+
                 Button("Edit Note") {
                     model.setViewMode(.edit)
                 }

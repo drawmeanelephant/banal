@@ -40,7 +40,10 @@ struct EditorView: View {
                         language: model.selectedNote?.language ?? .markdown,
                         findToken: model.findInNoteToken,
                         focusToken: model.editorFocus,
-                        style: EditorStyle(from: model.preferences)
+                        style: EditorStyle(from: model.preferences),
+                        onEscape: { [weak model] in model?.focusNoteList() },
+                        onTab: { [weak model] in model?.focusSidebar() },
+                        onBacktab: { [weak model] in model?.focusNoteList() }
                     )
                     .onChange(of: model.editorText) { _, _ in
                         model.applyEditorChanges()

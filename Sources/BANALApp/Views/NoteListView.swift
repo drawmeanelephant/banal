@@ -1,3 +1,4 @@
+import AppKit
 import BANALCore
 import SwiftUI
 
@@ -41,6 +42,7 @@ struct NoteListView: View {
             }
         }
         .background(Color(nsColor: .controlBackgroundColor))
+        .background(NoteListFocusHelper(model: model))
         .navigationTitle(title)
         .navigationSplitViewColumnWidth(min: 240, ideal: 280, max: 360)
         .onChange(of: model.searchFocusToken) { _, _ in
@@ -149,5 +151,137 @@ private struct NoteRow: View {
         if note.published { parts.append("Published") }
         parts.append(note.updated.formatted(.relative(presentation: .named)))
         return parts.joined(separator: ", ")
+    }
+}
+
+private struct NoteListFocusHelper: NSViewRepresentable {
+    @ObservedObject var model: AppModel
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(model: model)
+    }
+
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView(frame: .zero)
+        context.coordinator.setup(view: view)
+        return view
+    }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        context.coordinator.model = model
+        context.coordinator.attachIfNeeded()
+    }
+
+    static func dismantleNSView(_ nsView: NSView, coordinator: Coordinator) {
+        coordinator.teardown()
+    }
+
+    @MainActor
+    final class Coordinator: NSObject {
+        weak var model: AppModel?
+        weak var tableView: NSTableView?
+        private var eventMonitor: Any?
+        private weak var hostView: NSView?
+
+        init(model: AppModel) {
+            self.model = model
+        }
+
+        func setup(view: NSView) {
+            self.hostView = view
+            installFocusHandler()
+            installMonitor()
+            DispatchQueue.main.async { [weak self] in
+                self?.attachIfNeeded()
+            }
+        }
+
+        func installFocusHandler() {
+            model?.noteListFocus.handler = { [weak self] in
+                self?.focus()
+            }
+        }
+
+        func attachIfNeeded() {
+            installFocusHandler()
+            if tableView == nil, let hostView {
+                tableView = findTableView(from: hostView)
+            }
+        }
+
+        func focus() {
+            attachIfNeeded()
+            guard let tableView, let window = tableView.window else { return }
+            if let selectedID = model?.selectedID,
+               let index = model?.visibleNotes.firstIndex(where: { $0.id == selectedID }) {
+                tableView.selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
+                tableView.scrollRowToVisible(index)
+            }
+            window.makeFirstResponder(tableView)
+        }
+
+        private func installMonitor() {
+            guard eventMonitor == nil else { return }
+            eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                guard let self,
+                      let tableView = self.tableView,
+                      let window = tableView.window,
+                      window.firstResponder === tableView else {
+                    return event
+                }
+                if event.keyCode == 36 || event.keyCode == 76 { // Return / Enter
+                    self.model?.focusEditor()
+                    return nil
+                }
+                if event.keyCode == 48 { // Tab
+                    if event.modifierFlags.contains(.shift) {
+                        self.model?.focusSidebar()
+                    } else {
+                        self.model?.focusEditor()
+                    }
+                    return nil
+                }
+                return event
+            }
+        }
+
+        func teardown() {
+            if let eventMonitor {
+                NSEvent.removeMonitor(eventMonitor)
+                self.eventMonitor = nil
+            }
+            model?.noteListFocus.handler = nil
+        }
+
+        private func findTableView(from view: NSView) -> NSTableView? {
+            var current: NSView? = view
+            while let v = current {
+                if let table = v as? NSTableView { return table }
+                if let scroll = v as? NSScrollView, let table = scroll.documentView as? NSTableView {
+                    return table
+                }
+                current = v.superview
+            }
+            if let parent = view.superview, let found = findTableViewInSubviews(of: parent) {
+                return found
+            }
+            if let root = view.window?.contentView {
+                return findTableViewInSubviews(of: root)
+            }
+            return nil
+        }
+
+        private func findTableViewInSubviews(of root: NSView) -> NSTableView? {
+            if let table = root as? NSTableView { return table }
+            if let scroll = root as? NSScrollView, let table = scroll.documentView as? NSTableView {
+                return table
+            }
+            for subview in root.subviews {
+                if let found = findTableViewInSubviews(of: subview) {
+                    return found
+                }
+            }
+            return nil
+        }
     }
 }
