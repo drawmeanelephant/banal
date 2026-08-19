@@ -1,6 +1,11 @@
 # Card B-7 — Oliver in the basement
 
-**Milestone:** M4 · **Lane:** engine · **Status:** ready · **Do not start until B-0–B-3 have been sat in**
+**Milestone:** M4 · **Lane:** engine · **Status:** cooking — client landed; no preview
+
+## Handoff
+
+- **Landed:** `Sources/BANALPublisher/OliverClient.swift`. Locate like Boris (`BANAL_OLIVER_BIN`, PATH, sibling `oliver/zig-out/bin/oliver`). One-shot `oliver render --from markdown` on stdin. Body only — BANAL frontmatter is stripped, `--frontmatter` is never passed. Tests skip if the binary is missing; with Oliver present, `# Hello` renders to `<h1>`. AppModel asks after 400ms idle; never from `textDidChange`. Missing binary is silent. `lastOliverRender` is not `@Published`.
+- **Not this card:** preview column, `.cook` / Textile, Settings path picker.
 
 ## Owns
 
