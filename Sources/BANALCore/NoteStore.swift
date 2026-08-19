@@ -263,27 +263,44 @@ public final class NoteStore: ObservableObject {
     }
 
     public func update(_ note: Note, debounce: Bool = true) {
-        if let existing = self.note(id: note.id),
-           existing.title == note.title,
-           existing.body == note.body,
-           existing.tags == note.tags,
-           existing.published == note.published {
+        guard let existing = self.note(id: note.id) else {
+            // Not in memory. Persist as-is — never invent a timestamp for
+            // a note we did not create or load (F-9: imported notes keep
+            // their own `updated`).
+            upsert(note)
+            if debounce {
+                scheduleWrite(note)
+            } else {
+                writeImmediately(note)
+            }
             return
         }
+        // Only a real content change may touch the file or bump `updated`.
+        // A re-persist of identical fields (stale buffer echoes, F-9) must
+        // be a no-op even if the caller's note carries a different
+        // `updated`.
+        guard existing.title != note.title
+            || existing.body != note.body
+            || existing.tags != note.tags
+            || existing.published != note.published else { return }
         var next = note
         next.updated = Date()
         upsert(next)
         if debounce {
             scheduleWrite(next)
         } else {
-            writeTasks[next.id]?.cancel()
-            pendingWrites.removeValue(forKey: next.id)
-            do {
-                let saved = try persistImmediately(next)
-                upsert(saved)
-            } catch {
-                lastError = error.localizedDescription
-            }
+            writeImmediately(next)
+        }
+    }
+
+    private func writeImmediately(_ note: Note) {
+        writeTasks[note.id]?.cancel()
+        pendingWrites.removeValue(forKey: note.id)
+        do {
+            let saved = try persistImmediately(note)
+            upsert(saved)
+        } catch {
+            lastError = error.localizedDescription
         }
     }
 

@@ -18,6 +18,8 @@
 
 ### Fixed
 
+- Imported notes no longer risk a bumped `updated:` frontmatter from a rare stale editor write-back race: editor writes are session-guarded, and a save that changes nothing on disk is a no-op (F-9).
+
 - Opening a note file (Finder double-click, Open With → BANAL, Dock drag) now actually opens it: SwiftUI `WindowGroup` delivers file opens to `.onOpenURL`, not the app delegate's `openFiles` hook, so the first F-8 build silently swallowed them. Both routes now feed `AppModel.openExternalNote` with a 2s dedupe guard.
 
 - Recipe Read on a render-only Oliver (no `serialize --json`) now says “This recipe needs Oliver.” instead of the misleading “This recipe didn’t parse.” Idle render still works with older binaries.
