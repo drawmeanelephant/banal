@@ -12,10 +12,16 @@ struct ContentView: View {
             } else {
                 NavigationSplitView {
                     SidebarView(model: model)
+                        .accessibilityElement(children: .contain)
+                        .accessibilityLabel("Folders")
                 } content: {
                     NoteListView(model: model)
+                        .accessibilityElement(children: .contain)
+                        .accessibilityLabel("Notes")
                 } detail: {
                     EditorView(model: model)
+                        .accessibilityElement(children: .contain)
+                        .accessibilityLabel("Note")
                 }
                 .navigationSplitViewStyle(.balanced)
             }
@@ -35,6 +41,7 @@ struct ContentView: View {
                         Divider()
                     }
                     .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
+                    .accessibilityLabel(status)
                     .accessibilityAddTraits(.updatesFrequently)
                     .onTapGesture { model.statusMessage = nil }
             }
@@ -67,6 +74,7 @@ struct VaultPicker: View {
                     .lineLimit(1)
                     .truncationMode(.middle)
                     .frame(maxWidth: 360)
+                    .accessibilityLabel(model.store.configuration.rootURL.path)
             }
             HStack(spacing: 10) {
                 Button("Documents/BANAL Notes") {
@@ -74,6 +82,7 @@ struct VaultPicker: View {
                     try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
                     model.openVault(url)
                 }
+                .accessibilityLabel("Documents/BANAL Notes")
                 Button("Choose…") {
                     let panel = NSOpenPanel()
                     panel.canChooseFiles = false
@@ -85,9 +94,12 @@ struct VaultPicker: View {
                     }
                 }
                 .keyboardShortcut(.defaultAction)
+                .accessibilityLabel("Choose…")
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(model.missingNotesFolder ? "This notes folder is missing." : "Choose a notes folder.")
     }
 }

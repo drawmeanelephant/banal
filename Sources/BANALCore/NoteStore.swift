@@ -24,6 +24,10 @@ public final class NoteStore: ObservableObject {
     @Published public private(set) var folderTree: [FolderNode] = []
     @Published public private(set) var configuration: VaultConfiguration
     @Published public private(set) var lastError: String?
+    @Published public private(set) var rootMissing = false
+
+    /// When false, FSEvents still detect a vanished notes folder but do not reload note files.
+    public var watchesExternalEdits = true
 
     public let writeDebounceNanoseconds: UInt64
 
@@ -103,6 +107,7 @@ public final class NoteStore: ObservableObject {
         }
         try VaultBootstrap.prepare(configuration, fileManager: fileManager)
         configuration = VaultBootstrap.load(from: configuration.rootURL, fileManager: fileManager)
+        rootMissing = false
         try reloadAll()
         startMonitor()
     }
@@ -310,6 +315,16 @@ public final class NoteStore: ObservableObject {
     /// Apply an observed filesystem change. Tests can call this without FSEvents.
     public func applyExternalChange(at url: URL) {
         if isReloading { return }
+        if !rootExists() {
+            rootMissing = true
+            notes = []
+            folderTree = []
+            return
+        }
+        if rootMissing {
+            rootMissing = false
+        }
+        if !watchesExternalEdits { return }
         let standardized = url.standardizedFileURL
         if standardized.hasDirectoryPath || configuration.isReservedDirectory(standardized) {
             if standardized == configuration.rootURL || configuration.isReservedDirectory(standardized) {
@@ -335,6 +350,11 @@ public final class NoteStore: ObservableObject {
     }
 
     // MARK: - Private
+
+    private func rootExists() -> Bool {
+        var isDirectory: ObjCBool = false
+        return fileManager.fileExists(atPath: configuration.rootURL.path, isDirectory: &isDirectory) && isDirectory.boolValue
+    }
 
     private func startMonitor() {
         monitor?.start(url: configuration.rootURL) { [weak self] urls in

@@ -44,6 +44,7 @@ public final class AppModel: ObservableObject {
         self.needsVault = needsVault
         self.missingNotesFolder = missingNotesFolder
         self.preferences = preferences
+        store.watchesExternalEdits = preferences.watchExternalEdits
         bindStore()
     }
 
@@ -56,8 +57,16 @@ public final class AppModel: ObservableObject {
             .store(in: &cancellables)
         store.$notes
             .sink { [weak self] _ in
-                self?.reconcileFilter()
-                self?.reconcileExternalSelection()
+                guard let self, !self.store.rootMissing else { return }
+                self.reconcileFilter()
+                self.reconcileExternalSelection()
+            }
+            .store(in: &cancellables)
+        store.$rootMissing
+            .sink { [weak self] missing in
+                guard let self, missing else { return }
+                self.needsVault = true
+                self.missingNotesFolder = true
             }
             .store(in: &cancellables)
     }
@@ -199,6 +208,7 @@ public final class AppModel: ObservableObject {
 
     public func savePreferences() {
         AppPreferencesStore.save(preferences)
+        store.watchesExternalEdits = preferences.watchExternalEdits
     }
 
     public func saveVaultConfiguration() {
@@ -238,6 +248,7 @@ public final class AppModel: ObservableObject {
     }
 
     public func flushEditor() {
+        guard !store.rootMissing else { return }
         persistEditor(to: selectedID)
         store.flush()
     }
@@ -332,6 +343,7 @@ public final class AppModel: ObservableObject {
         store.flush()
         store.monitorStopForReplacement()
         let next = NoteStore(configuration: VaultConfiguration(rootURL: url))
+        next.watchesExternalEdits = preferences.watchExternalEdits
         store = next
         bindStore()
         needsVault = false
@@ -389,7 +401,15 @@ public final class FocusToken {
 public enum VaultBookmark {
     private static let key = "banal.vaultBookmark"
 
+    public static func overrideURL() -> URL? {
+        let path = ProcessInfo.processInfo.environment["BANAL_VAULT"]?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !path.isEmpty else { return nil }
+        return URL(fileURLWithPath: path, isDirectory: true)
+    }
+
     public static func save(_ url: URL) {
+        if overrideURL() != nil { return }
         do {
             let data = try url.bookmarkData(
                 options: [.withSecurityScope],
@@ -403,6 +423,7 @@ public enum VaultBookmark {
     }
 
     public static func restore() -> URL? {
+        if let override = overrideURL() { return override }
         if let data = UserDefaults.standard.data(forKey: key) {
             var stale = false
             if let url = try? URL(
