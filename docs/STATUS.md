@@ -1,7 +1,7 @@
 # Status
 
-**Phase:** 1.0 Silhouette (sit open)  
-**Bar:** The first product is drawn — folders · list · page, three languages, recipe Read, publish as Export. A whole-window sit is C-1, not another B card.
+**Phase:** 1.0 Silhouette (sit open) · Fluency board written  
+**Bar:** The first product is drawn — folders · list · page, three languages, recipe Read, publish as Export. A whole-window sit is still C-1. Fluency (D) deepens the file after that sit — it does not add a column.
 
 ## What works today
 
@@ -30,9 +30,20 @@
 
 | Gap | Card | Notes |
 | --- | --- | --- |
-| Whole-window sit | [C-1](cards/C-1-sit.md) | Script: [`TESTING-WINDOW.md`](TESTING-WINDOW.md). Code-backed sit landed (nested publish nav, status grammar, caret id on move). **GUI not sat in this environment** — 30s type / ⌘Z, light+dark 720/1100/1400, and VoiceOver stay open until a human runs the window |
+| Whole-window sit | [C-1](cards/C-1-sit.md) | Script: [`TESTING-WINDOW.md`](TESTING-WINDOW.md). Code-backed sit landed (nested publish nav, status grammar, caret id on move). **GUI not sat in this environment** — 30s type / ⌘Z, light+dark 720/1100/1400, and VoiceOver stay open until a human runs the window. Outranks every D card. |
 | Oliver / Boris paths, About, first-run copy | [C-2](cards/C-2-honesty.md) | Landed. Settings → Publish Choose… / Reveal. About BANAL. |
 | Signed `.app` / sandbox | [C-3](cards/C-3-hand-it.md) | Landed — ad-hoc signed `dist/BANAL.app` via `make app`, sandbox on, app icon, bookmarks start/stop. No Developer ID on this machine; not notarized. GUI sit of the signed app still wants a human. |
+
+## Next (Fluency)
+
+Board written. Do not pick until C-1 has been sat.
+
+| Gap | Card | Notes |
+| --- | --- | --- |
+| Whispered source | [D-1](cards/D-1-whisper.md) | Headings and Cooklang sigils as hints. Not a theme. |
+| Markdown/Textile Read | [D-2](cards/D-2-prose.md) | Same Edit \| Read kindness as recipes. Source stays the editor. |
+| Recipe references | [D-3](cards/D-3-sauce.md) | `@./sauces/…` inlines for Read. Disk stays two files. |
+| Ingredient search | [D-4](cards/D-4-find.md) | ⌘F matches names Oliver parsed. No food ontology. |
 
 ## Known gaps in the scaffold
 

@@ -12,7 +12,7 @@
   stay PATH + Settings (C-2); user-chosen binaries get their own
   bookmarks so the sandbox can still run them. `swift run` is still
   unsandboxed.
-- **Not this card:** fluency (highlighting, prose preview), a
+- **Not this card:** fluency ([D-1](D-1-whisper.md)–[D-4](D-4-find.md)), a
   website, notarization-as-a-product, auto-update SaaS.
 
 ## Owns

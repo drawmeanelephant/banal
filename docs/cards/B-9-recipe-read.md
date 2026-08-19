@@ -5,7 +5,7 @@
 ## Handoff
 
 - **Landed:** `.cook` gets Edit | Read in the metadata row (View → Edit Recipe / Read Recipe). Read is a native list: ingredients, cookware, steps, notes. Scale is ½ 1× 2× 3× via `oliver scale` then `serialize --json`; the file is never rewritten. Session remembers Edit/Read; new recipes open in Edit; scale resets per note. Parse failure is one sentence. Markdown/Textile have no switcher. Sample `Recipes/risotto.cook` is cookable.
-- **Not this card:** Markdown/Textile preview, save a scaled copy, resolving `@./sauces/…`, Oliver path in Settings.
+- **Not this card:** Markdown/Textile preview ([D-2](D-2-prose.md)), resolving `@./sauces/…` ([D-3](D-3-sauce.md)), save a scaled copy (B-X until a cook asks), Oliver path in Settings (C-2).
 
 ## Owns
 
@@ -41,13 +41,13 @@ recipe graph UI.
    **Edit** for a new file, **Read** if you must pick one for
    cooking — prefer remembering the last choice per session.
 2. Edit is the existing source editor. Nothing special except
-   maybe whispered sigils later (not this card).
+   maybe whispered sigils later ([D-1](D-1-whisper.md)).
 3. Read shows: title, ingredient list with quantities/units,
    cookware, steps, notes. Type matches B-1 (SF, measure).
 4. Scale control: ½ 1× 2× 3×. Numbers update in the view only.
 5. Parse error: one sentence, switcher still offers Edit.
 6. Markdown/Textile do **not** gain this switcher in this card.
-   Optional prose preview is a different, later card.
+   Optional prose preview is [D-2](D-2-prose.md).
 
 ## Do not
 

@@ -4,6 +4,11 @@
 
 ### Changed
 
+- Fluency (D-0): Close is archive. Next *feature* work is whispered source, prose Read, sauce walks, and ingredient search — after the C-1 sit, and without a new column. See [`docs/cards/README.md`](docs/cards/README.md).
+- Horizon: looking-forward notes for furniture, system pickers, and import-as-files. Not a board. [`docs/HORIZON.md`](docs/HORIZON.md).
+- Platform cut (macOS 15–27 SDK): sit Writing Tools and dictation; later App Intents + Spotlight entities and the system Translate sheet. SwiftData, Inspector, canvas, Genmoji stay refused.
+- Beyond M8: M9 Type, M10 System, M11 Files are implement-after-Fluency. M12 is consider-only. A rendered canvas in the editor is refused. See [`docs/ROADMAP.md`](docs/ROADMAP.md).
+- Hope chest: the route to M99 (Home). Tucson is M9–M12. California is 1.0. Japan is vacation after that. [`docs/HOPE-CHEST.md`](docs/HOPE-CHEST.md).
 - Close (C-0): B-0–B-10 marked landed. Next work is sit, Settings honesty, and a signed `.app` — not a new language or pane. See [`docs/cards/README.md`](docs/cards/README.md).
 - Honesty (C-2): Publish, skip, and deploy status is a spoken sentence. Missing Oliver on a recipe Read says so.
 - Editor type is SF Pro. Serif toggle is gone. Stylesheets later.
@@ -14,6 +19,7 @@
 ### Added
 
 - Hand it (C-3): a crafted notes-app icon (tactile cotton pad, machined brass pen, terracotta ribbon), candidate icon reference gallery, sandbox on, and `make app` which writes an ad-hoc signed `dist/BANAL.app` stamped with version. Security-scoped bookmarks start on restore and stop on quit. Stale compiler bookmarks are dropped on path change. Settings binary pickers are individually accessible to VoiceOver.
+- Fluency briefs: [`docs/cards/D-1-whisper.md`](docs/cards/D-1-whisper.md), [`D-2-prose.md`](docs/cards/D-2-prose.md), [`D-3-sauce.md`](docs/cards/D-3-sauce.md), [`D-4-find.md`](docs/cards/D-4-find.md). Save a scaled recipe stays off the board until a cook asks.
 - Tester brief for the whole window: [`docs/TESTING-WINDOW.md`](docs/TESTING-WINDOW.md) (first-run, light+dark 720/1100/1400, 30s type/⌘Z, dirty Vim, empties, three languages, risotto Read, ⇧⌘P, VoiceOver).
 - Honesty (C-2): Settings → Publish chooses Boris and Oliver (empty is fine). BANAL → About names the app, version 0.1.0, and the mission. Oliver’s path lives in `.banal/config.json` like Boris. Probing Oliver runs asynchronously off the main actor.
 

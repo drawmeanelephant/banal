@@ -39,7 +39,7 @@ BANAL should feel like a finished Mac app that happens to be small — not a sca
 
 ## Motion and latency
 
-- Typing must never wait on disk, publish, or FSEvents.
+- Typing must never wait on disk, publish, FSEvents, Oliver, or an on-device model.
 - Saves are debounced and atomic; the caret does not jump.
 - Folder and note selection is immediate. No progress spinners for opening a Markdown file.
 - Sidebar disclosure and window resize do not jitter the editor measure more than a standard `NavigationSplitView`.

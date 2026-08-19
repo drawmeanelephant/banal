@@ -37,8 +37,8 @@ not need a Recipes tab.
    rewrites prose into Cooklang.
 4. List: same row chrome. Optional tiny glyph for `.cook` — if it
    needs a legend, delete the glyph.
-5. Search still matches title and body. Later B-9 can add
-   ingredient names from Oliver’s `Recipe`; not required here.
+5. Search still matches title and body. Ingredient names from
+   Oliver’s `Recipe` are [D-4](D-4-find.md).
 6. Tests: create each kind, reload, extension preserved.
 
 ## Do not

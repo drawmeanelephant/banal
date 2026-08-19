@@ -12,7 +12,8 @@
   and relative nav are proven in tests. This machine’s Oliver has
   no `serialize --json`, so Read is the one-sentence path here.
 - **Not this card:** Oliver path in Settings (C-2), signed `.app` (C-3),
-  whispered highlighting, prose preview.
+  whispered highlighting ([D-1](D-1-whisper.md)), prose preview
+  ([D-2](D-2-prose.md)).
 
 ## Owns
 
@@ -41,6 +42,7 @@ Compile is not QA.
    - First-run picker and `Documents/BANAL Notes`
    - Light + dark at 720, 1100, 1400
    - Type thirty seconds, switch notes, ⌘Z still makes sense
+   - System dictation and Writing Tools in the body if this Mac has them (skip if TextEdit also lacks them)
    - Dirty Vim keeps the buffer; clean Vim reloads
    - Empty folder, empty search, missing folder
    - New Textile, New Recipe; Finder shows three extensions

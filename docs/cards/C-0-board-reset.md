@@ -5,7 +5,7 @@
 ## Handoff
 
 - **Landed:** B-0 through B-10 marked landed. STATUS is 1.0 silhouette, sit open. Cards README session is Close. ROADMAP has M7. PREFERENCES treats Deploy as live. Signed `.app` moved off B-X “maybe later” onto C-3.
-- **Not this card:** sitting the window (C-1), Settings honesty (C-2), a signed app (C-3).
+- **Not this card:** sitting the window (C-1), Settings honesty (C-2), a signed app (C-3). Fluency board is [D-0](D-0-board.md).
 
 ## Owns
 

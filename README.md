@@ -78,7 +78,9 @@ Mark notes **Published**, then File → Publish Site….
 | [`docs/MISSION.md`](docs/MISSION.md) | One-page version |
 | [`docs/QUALITY.md`](docs/QUALITY.md) | AAA finish bar |
 | [`docs/PREFERENCES.md`](docs/PREFERENCES.md) | Settings + Publish pane (Deploy is live) |
-| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Folders → Settings → Finish → Languages → Publish → Close |
+| [`docs/ROADMAP.md`](docs/ROADMAP.md) | Gas stations: Folders → … → Close → Fluency → Type / System / Files |
+| [`docs/HOPE-CHEST.md`](docs/HOPE-CHEST.md) | The route to M99. Tucson before California. Not a board. |
+| [`docs/HORIZON.md`](docs/HORIZON.md) | Looking forward. Not a board. Furniture, pickers, import-as-files. |
 | [`docs/STATUS.md`](docs/STATUS.md) | What works now |
 | [`docs/TESTING-NOTES-FOLDER.md`](docs/TESTING-NOTES-FOLDER.md) | How to sit the notes-folder picker (first run, missing, vanish while open) |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Boris / Solipsist boundary |
