@@ -25,7 +25,7 @@ Each card’s **Handoff** block is the note for the next person.
 | Card | Status |
 |------|--------|
 | D-0 | landed — C Close archived; this README is the D board |
-| D-1 | ready — waits for C-1 sat |
+| D-1 | cooking — whisper implemented + unit-tested; card mini-sit open |
 | D-2 | ready — waits for C-1 sat |
 | D-3 | ready — waits for C-1 sat |
 | D-4 | ready — waits for C-1 sat |
