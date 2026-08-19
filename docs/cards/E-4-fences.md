@@ -1,10 +1,10 @@
 # Card E-4 — Punctuation discipline in fences
 
-**Milestone:** M9 · **Lane:** editor · **Depends:** M8 done · **Status:** ready — code blocks stay code
+**Milestone:** M9 · **Lane:** editor · **Depends:** M8 done · **Status:** landed — code blocks stay code
 
 ## Handoff
 
-- **Not started.** `NSTextView` standard smart quotes, smart dashes, and automatic capitalization currently apply globally across the buffer, mutating code inside \`\`\` blocks and inline \`backticks\`.
+- **Landed.** Dynamic punctuation substitution suppression (`isAutomaticQuoteSubstitutionEnabled`, `isAutomaticDashSubstitutionEnabled`, `isAutomaticTextReplacementEnabled`, `isContinuousSpellCheckingEnabled`, `isAutomaticSpellingCorrectionEnabled`) active in code fences (`` ``` `` / `~~~`), inline backtick spans (`` `...` ``), and Cooklang metadata lines (`>>`). Plain ASCII quotes and dashes are preserved when typing and pasting into code. Normal prose retains user preference settings.
 - **Not this card:** syntax whisper (D-1), custom code editor theme.
 
 ## Owns

@@ -149,6 +149,9 @@ struct MarkdownTextView: NSViewRepresentable {
     }
 
     private func apply(_ style: EditorStyle, to textView: NSTextView) {
+        if let editorTextView = textView as? EditorTextView {
+            editorTextView.style = style
+        }
         textView.font = style.font
         textView.textColor = NSColor.textColor
         textView.insertionPointColor = NSColor.textColor
@@ -156,9 +159,15 @@ struct MarkdownTextView: NSViewRepresentable {
             .backgroundColor: NSColor.selectedTextBackgroundColor,
             .foregroundColor: NSColor.selectedTextColor,
         ]
-        textView.isAutomaticQuoteSubstitutionEnabled = style.smartQuotes
-        textView.isContinuousSpellCheckingEnabled = style.spellCheck
-        textView.isAutomaticSpellingCorrectionEnabled = style.spellCheck
+        if let editorTextView = textView as? EditorTextView {
+            editorTextView.updatePunctuationDiscipline()
+        } else {
+            textView.isAutomaticQuoteSubstitutionEnabled = style.smartQuotes
+            textView.isAutomaticDashSubstitutionEnabled = style.smartQuotes
+            textView.isAutomaticTextReplacementEnabled = true
+            textView.isContinuousSpellCheckingEnabled = style.spellCheck
+            textView.isAutomaticSpellingCorrectionEnabled = style.spellCheck
+        }
         let paragraph = NSMutableParagraphStyle()
         paragraph.lineHeightMultiple = style.lineHeight
         textView.defaultParagraphStyle = paragraph
@@ -195,7 +204,15 @@ struct MarkdownTextView: NSViewRepresentable {
         func textDidChange(_ notification: Notification) {
             guard let textView, !applyingProgrammaticText else { return }
             text.wrappedValue = textView.string
+            if let editorTextView = textView as? EditorTextView {
+                editorTextView.updatePunctuationDiscipline()
+            }
             scheduleWhisper()
+        }
+
+        func textViewDidChangeSelection(_ notification: Notification) {
+            guard let editorTextView = textView as? EditorTextView else { return }
+            editorTextView.updatePunctuationDiscipline()
         }
 
         /// Coalesce whisper marks ~0.4s after the last keystroke, in the
@@ -251,6 +268,34 @@ final class EditorTextView: NSTextView {
     var onEscape: (() -> Void)?
     var onTab: (() -> Void)?
     var onBacktab: (() -> Void)?
+    var style: EditorStyle?
+
+    func updatePunctuationDiscipline(for range: NSRange? = nil) {
+        let targetRange = range ?? selectedRange()
+        let suppress = CodeFenceScan.shouldSuppressSubstitutions(in: string, for: targetRange)
+        if suppress {
+            isAutomaticQuoteSubstitutionEnabled = false
+            isAutomaticDashSubstitutionEnabled = false
+            isAutomaticTextReplacementEnabled = false
+            isContinuousSpellCheckingEnabled = false
+            isAutomaticSpellingCorrectionEnabled = false
+        } else {
+            let smartQuotes = style?.smartQuotes ?? true
+            let spellCheck = style?.spellCheck ?? true
+            isAutomaticQuoteSubstitutionEnabled = smartQuotes
+            isAutomaticDashSubstitutionEnabled = smartQuotes
+            isAutomaticTextReplacementEnabled = true
+            isContinuousSpellCheckingEnabled = spellCheck
+            isAutomaticSpellingCorrectionEnabled = spellCheck
+        }
+    }
+
+    override func setSelectedRanges(_ ranges: [NSValue], affinity: NSSelectionAffinity, stillSelecting: Bool) {
+        super.setSelectedRanges(ranges, affinity: affinity, stillSelecting: stillSelecting)
+        if let first = ranges.first?.rangeValue {
+            updatePunctuationDiscipline(for: first)
+        }
+    }
 
     override func cancelOperation(_ sender: Any?) {
         if let scroll = enclosingScrollView, scroll.isFindBarVisible {
@@ -347,6 +392,7 @@ final class EditorTextView: NSTextView {
     }
 
     override func paste(_ sender: Any?) {
+        updatePunctuationDiscipline()
         if handleSmartPaste(from: NSPasteboard.general) {
             return
         }
@@ -354,6 +400,7 @@ final class EditorTextView: NSTextView {
     }
 
     override func readSelection(from pboard: NSPasteboard) -> Bool {
+        updatePunctuationDiscipline()
         if handleSmartPaste(from: pboard) {
             return true
         }
@@ -361,6 +408,7 @@ final class EditorTextView: NSTextView {
     }
 
     override func readSelection(from pboard: NSPasteboard, type: NSPasteboard.PasteboardType) -> Bool {
+        updatePunctuationDiscipline()
         if handleSmartPaste(from: pboard) {
             return true
         }
@@ -370,6 +418,12 @@ final class EditorTextView: NSTextView {
     @discardableResult
     func handleSmartPaste(from pboard: NSPasteboard) -> Bool {
         let range = selectedRange()
+
+        // In code fences, inline code backticks, or Cooklang metadata lines,
+        // preserve literal ASCII characters without wrapping or markdown conversion.
+        if CodeFenceScan.shouldSuppressSubstitutions(in: string, for: range) {
+            return false
+        }
 
         // 1. Paste URL over selection: wrap into [selectedText](url)
         if range.length > 0 {
