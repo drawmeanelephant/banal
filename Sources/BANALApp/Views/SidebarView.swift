@@ -7,7 +7,7 @@ struct SidebarView: View {
     @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
-        List(selection: $model.filter) {
+        List(selection: selectionBinding) {
             Label("All Notes", systemImage: "square.stack")
                 .tag(SidebarFilter.all)
                 .accessibilityLabel("All Notes")
@@ -57,6 +57,19 @@ struct SidebarView: View {
                     }
                 }
             }
+
+            if !model.store.tags.isEmpty {
+                Section("Tags") {
+                    ForEach(model.store.tags, id: \.self) { tag in
+                        let count = model.store.notes.filter { $0.tags.contains(tag) }.count
+                        Label("#\(tag)", systemImage: "number")
+                            .tag(SidebarFilter.tag(tag))
+                            .accessibilityLabel("Tag \(tag)")
+                            .accessibilityValue(AccessibilityFormatting.noteCount(count))
+                            .accessibilityHint("Filter notes by tag")
+                    }
+                }
+            }
         }
         .listStyle(.sidebar)
         .background(SidebarFocusHelper(model: model))
@@ -81,6 +94,23 @@ struct SidebarView: View {
             Button("Rename") { model.confirmRenameFolder() }
             Button("Cancel", role: .cancel) {}
         }
+    }
+
+    private var selectionBinding: Binding<SidebarFilter?> {
+        Binding(
+            get: { model.filter },
+            set: { newFilter in
+                guard let newFilter else {
+                    model.filter = .all
+                    return
+                }
+                if case .tag(let activeTag) = model.filter, case .tag(let clickedTag) = newFilter, activeTag == clickedTag {
+                    model.filter = .all
+                } else {
+                    model.filter = newFilter
+                }
+            }
+        )
     }
 }
 

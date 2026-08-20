@@ -82,7 +82,7 @@ struct NoteListView: View {
         switch model.filter {
         case .all: return "Notes"
         case .published: return "Published"
-        case .tag(let tag): return tag
+        case .tag(let tag): return "#\(tag)"
         case .folder(let folder): return (folder as NSString).lastPathComponent
         }
     }
@@ -100,6 +100,7 @@ struct NoteListView: View {
         if !model.searchQuery.isEmpty { return "No notes match." }
         if case .folder = model.filter { return "No notes in this folder." }
         if case .published = model.filter { return "Nothing published." }
+        if case .tag = model.filter { return "No notes with this tag." }
         return "Create a note with ⌘N."
     }
 }
