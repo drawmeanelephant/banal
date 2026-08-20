@@ -81,6 +81,9 @@ public final class AppModel: ObservableObject {
         self.missingNotesFolder = missingNotesFolder
         self.preferences = preferences
         store.watchesExternalEdits = preferences.watchExternalEdits
+        if store.spotlightIndexer == nil {
+            store.spotlightIndexer = NoteSpotlightIndexer.shared
+        }
         self.oliverClient = nil
         self.oliver = OliverDebounce(client: nil)
         bindStore()
@@ -515,7 +518,10 @@ public final class AppModel: ObservableObject {
         store.flush()
         store.monitorStopForReplacement()
         VaultBookmark.endAccess()
-        let next = NoteStore(configuration: VaultConfiguration(rootURL: url))
+        let next = NoteStore(
+            configuration: VaultConfiguration(rootURL: url),
+            spotlightIndexer: NoteSpotlightIndexer.shared
+        )
         next.watchesExternalEdits = preferences.watchExternalEdits
         store = next
         bindStore()

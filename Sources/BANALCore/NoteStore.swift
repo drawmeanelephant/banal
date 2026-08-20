@@ -31,6 +31,9 @@ public final class NoteStore: ObservableObject {
     /// When false, FSEvents still detect a vanished notes folder but do not reload note files.
     public var watchesExternalEdits = true
 
+    /// Spotlight indexer for system-wide note discovery. Non-blocking.
+    public var spotlightIndexer: (any NoteSpotlightIndexing)?
+
     public let writeDebounceNanoseconds: UInt64
 
     private let fileManager: FileManager
@@ -47,12 +50,14 @@ public final class NoteStore: ObservableObject {
         configuration: VaultConfiguration,
         monitor: DirectoryMonitor? = DirectoryMonitor(),
         writeDebounceNanoseconds: UInt64 = 400_000_000,
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        spotlightIndexer: (any NoteSpotlightIndexing)? = nil
     ) {
         self.configuration = configuration
         self.monitor = monitor
         self.writeDebounceNanoseconds = writeDebounceNanoseconds
         self.fileManager = fileManager
+        self.spotlightIndexer = spotlightIndexer
     }
 
     deinit {
@@ -165,6 +170,7 @@ public final class NoteStore: ObservableObject {
         }
         notes = loaded.sorted { $0.updated > $1.updated }
         refreshFolders()
+        reindexSpotlight()
     }
 
     public func updateConfiguration(_ next: VaultConfiguration) throws {
@@ -205,6 +211,7 @@ public final class NoteStore: ObservableObject {
         note = try persistImmediately(note)
         upsert(note)
         refreshFolders()
+        donateSpotlight(note)
         return note
     }
 
@@ -249,9 +256,17 @@ public final class NoteStore: ObservableObject {
         if fileManager.fileExists(atPath: dest.path) {
             throw NoteStoreError.folderExists(destRelative)
         }
+        let oldIDs = notes.filter { FolderPath.contains($0.id, folder: id) || $0.id.hasPrefix(id + "/") }.map(\.id)
         try fileManager.moveItem(at: source, to: dest)
         rewriteNoteLocations(prefix: id, to: destRelative)
         refreshFolders()
+        deindexSpotlight(ids: oldIDs)
+        let remappedNotes = notes.filter { FolderPath.contains($0.id, folder: destRelative) || $0.id.hasPrefix(destRelative + "/") }
+        var map: [String: [String]] = [:]
+        for note in remappedNotes where note.language == .cooklang {
+            map[note.id] = ingredients(for: note)
+        }
+        spotlightIndexer?.index(notes: remappedNotes, vaultName: configuration.rootURL.lastPathComponent, ingredients: map)
         return FolderNode(id: destRelative, name: leaf)
     }
 
@@ -263,6 +278,10 @@ public final class NoteStore: ObservableObject {
         let url = configuration.rootURL.appendingPathComponent(id, isDirectory: true)
         var resulting: NSURL?
         try fileManager.trashItem(at: url, resultingItemURL: &resulting)
+        let trashedIDs = notes.filter { note in
+            note.id == id || note.id.hasPrefix(id + "/") || note.folder == id || (note.folder?.hasPrefix(id + "/") ?? false)
+        }.map(\.id)
+        deindexSpotlight(ids: trashedIDs)
         notes.removeAll { note in
             note.id == id || note.id.hasPrefix(id + "/") || note.folder == id || (note.folder?.hasPrefix(id + "/") ?? false)
         }
@@ -281,6 +300,7 @@ public final class NoteStore: ObservableObject {
             try ensureFolderExists(folder)
         }
         flush()
+        let oldID = id
         let leaf = (note.id as NSString).lastPathComponent
         let destRelative = folder.map { "\($0)/\(leaf)" } ?? leaf
         if destRelative == note.id { return note }
@@ -306,6 +326,8 @@ public final class NoteStore: ObservableObject {
         note = try persistImmediately(note)
         upsert(note)
         refreshFolders()
+        deindexSpotlight(oldID)
+        donateSpotlight(note)
         return note
     }
 
@@ -347,6 +369,7 @@ public final class NoteStore: ObservableObject {
         do {
             let saved = try persistImmediately(note)
             upsert(saved)
+            donateSpotlight(saved)
         } catch {
             lastError = error.localizedDescription
         }
@@ -369,6 +392,7 @@ public final class NoteStore: ObservableObject {
         var resulting: NSURL?
         try fileManager.trashItem(at: note.fileURL, resultingItemURL: &resulting)
         notes.removeAll { $0.id == id }
+        deindexSpotlight(id)
     }
 
     public func flush() {
@@ -382,6 +406,7 @@ public final class NoteStore: ObservableObject {
             do {
                 let saved = try persistImmediately(note)
                 upsert(saved)
+                donateSpotlight(saved)
             } catch {
                 lastError = error.localizedDescription
             }
@@ -445,6 +470,7 @@ public final class NoteStore: ObservableObject {
             let id = NoteIdentity.id(for: url, vaultURL: configuration.rootURL)
             ingredientCache.removeValue(forKey: id)
             notes.removeAll { $0.id == id || $0.fileURL.standardizedFileURL == url }
+            deindexSpotlight(id)
             return
         }
         do {
@@ -454,6 +480,7 @@ public final class NoteStore: ObservableObject {
             }
             ingredientCache.removeValue(forKey: loaded.id)
             upsert(loaded)
+            donateSpotlight(loaded)
         } catch {
             lastError = error.localizedDescription
         }
@@ -486,6 +513,7 @@ public final class NoteStore: ObservableObject {
         do {
             let saved = try persistImmediately(note)
             upsert(saved)
+            donateSpotlight(saved)
         } catch {
             lastError = error.localizedDescription
         }
@@ -532,7 +560,40 @@ public final class NoteStore: ObservableObject {
         let note = try NoteIO.load(url: destination, vaultURL: configuration.rootURL, fileManager: fileManager)
         upsert(note)
         refreshFolders()
+        donateSpotlight(note)
         return note
+    }
+
+    private func donateSpotlight(_ note: Note) {
+        guard let indexer = spotlightIndexer else { return }
+        let ing = note.language == .cooklang ? ingredients(for: note) : []
+        indexer.index(
+            note: note,
+            vaultName: configuration.rootURL.lastPathComponent,
+            ingredients: ing
+        )
+    }
+
+    private func deindexSpotlight(_ id: String) {
+        spotlightIndexer?.deindex(id: id)
+    }
+
+    private func deindexSpotlight(ids: [String]) {
+        guard !ids.isEmpty else { return }
+        spotlightIndexer?.deindex(ids: ids)
+    }
+
+    private func reindexSpotlight() {
+        guard let indexer = spotlightIndexer else { return }
+        var map: [String: [String]] = [:]
+        for note in notes where note.language == .cooklang {
+            map[note.id] = ingredients(for: note)
+        }
+        indexer.reindexAll(
+            notes: notes,
+            vaultName: configuration.rootURL.lastPathComponent,
+            ingredients: map
+        )
     }
 
     private func uniqueRelativePath(forLeaf leaf: String, folder: String?) -> String {
