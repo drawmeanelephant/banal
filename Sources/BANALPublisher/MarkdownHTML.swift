@@ -54,7 +54,7 @@ public enum MarkdownHTML {
 
             if line.hasPrefix("> ") || line == ">" {
                 closeList()
-                html.append("<blockquote><p>\(inline(String(line.dropFirst(min(2, line.count))))) </p></blockquote>")
+                html.append("<blockquote><p>\(inline(String(line.dropFirst(min(2, line.count)))))</p></blockquote>")
                 index += 1
                 continue
             }
@@ -149,8 +149,12 @@ public enum MarkdownHTML {
                     continue
                 }
             }
-            result += escape(String(remaining.first!))
-            remaining = remaining.dropFirst()
+            if let first = remaining.first {
+                result += escape(String(first))
+                remaining = remaining.dropFirst()
+            } else {
+                break
+            }
         }
         return result
     }
