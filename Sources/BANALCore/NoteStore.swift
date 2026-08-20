@@ -564,6 +564,27 @@ public final class NoteStore: ObservableObject {
         return note
     }
 
+    /// Imports note files, folders, and assets from external URLs into the vault.
+    /// Disk is the truth; copies files without overwriting existing ones.
+    @discardableResult
+    public func importItems(from urls: [URL], targetFolder: String? = nil) throws -> ImportResult {
+        if let targetFolder {
+            try ensureFolderExists(targetFolder)
+        }
+        let result = try VaultImporter.importItems(
+            from: urls,
+            into: configuration,
+            targetFolder: targetFolder,
+            fileManager: fileManager
+        )
+        for note in result.importedNotes {
+            upsert(note)
+            donateSpotlight(note)
+        }
+        refreshFolders()
+        return result
+    }
+
     private func donateSpotlight(_ note: Note) {
         guard let indexer = spotlightIndexer else { return }
         let ing = note.language == .cooklang ? ingredients(for: note) : []

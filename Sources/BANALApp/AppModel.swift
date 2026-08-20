@@ -227,6 +227,39 @@ public final class AppModel: ObservableObject {
         }
     }
 
+    public func presentImportPanel() {
+        guard !needsVault else { return }
+        guard let urls = ImportPicker.run(), !urls.isEmpty else { return }
+        importItems(from: urls)
+    }
+
+    public func importItems(from urls: [URL]) {
+        guard !needsVault else { return }
+        flushEditor()
+        let targetFolder = selectedFolderPath
+        do {
+            let result = try store.importItems(from: urls, targetFolder: targetFolder)
+            if result.totalCount > 0 {
+                if let firstNote = result.importedNotes.first {
+                    if let targetFolder {
+                        filter = .folder(targetFolder)
+                    } else {
+                        filter = .all
+                    }
+                    select(firstNote.id)
+                    editorFocus.request()
+                }
+                statusMessage = result.summary
+                dismissStatusLater()
+            } else {
+                statusMessage = "No supported notes or assets found to import."
+                dismissStatusLater()
+            }
+        } catch {
+            statusMessage = error.localizedDescription
+        }
+    }
+
     public func select(_ id: String?) {
         if id == selectedID { return }
         persistEditor(to: selectedID)

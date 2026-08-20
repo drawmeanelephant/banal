@@ -1,10 +1,10 @@
 # Card G-3 — Import as copy
 
-**Milestone:** M11 · **Lane:** files · **Depends:** M8 done · **Status:** ready — files in folders, never a sync database
+**Milestone:** M11 · **Lane:** files · **Depends:** M8 done · **Status:** landed — files in folders, never a sync database
 
 ## Handoff
 
-- **Not started.** File → Import… does not exist. Users can copy files in Finder, but an in-app file/folder importer makes onboarding painless.
+- **Landed.** File → Import… (⌘I) presents NSOpenPanel for multi-file/folder selection, recursively copies notes (.md, .textile, .cook, .txt) and assets into the active vault, auto-renames collisions, refreshes the store, and selects imported notes.
 - **Not this card:** live cloud sync with Bear/Notion, scraping proprietary APIs.
 
 ## Owns

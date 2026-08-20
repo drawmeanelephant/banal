@@ -62,6 +62,7 @@ struct BanalApp: App {
         .windowResizability(.contentMinSize)
         .commands {
             EditCommands(model: model)
+            FileCommands(model: model)
 
             CommandGroup(replacing: .appInfo) {
                 Button("About BANAL") {
@@ -153,12 +154,7 @@ struct BanalApp: App {
                 .disabled(model.needsVault || model.selectedID == nil)
             }
 
-            CommandGroup(after: .importExport) {
-                Button("Share…") {
-                    model.shareSelectedNote()
-                }
-                .disabled(model.needsVault || model.selectedID == nil)
-            }
+
 
             CommandMenu("Find") {
                 Button("Find Notes") {
