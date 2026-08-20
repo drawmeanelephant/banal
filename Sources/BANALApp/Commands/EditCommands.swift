@@ -36,6 +36,18 @@ public struct EditCommands: Commands {
             }
             .disabled(!model.canInsertPhoto)
 
+            Button("Insert Contact…") {
+                model.insertContact()
+            }
+            .disabled(model.needsVault || model.selectedID == nil || model.viewMode != .edit)
+
+            Button("Insert File…") {
+                model.insertFile()
+            }
+            .disabled(model.needsVault || model.selectedID == nil || model.viewMode != .edit)
+
+            Divider()
+
             Button("Translate…") {
                 model.translateSelection()
             }

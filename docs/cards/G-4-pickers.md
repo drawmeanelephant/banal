@@ -1,10 +1,10 @@
 # Card G-4 — System pickers (Contacts & Files)
 
-**Milestone:** M11 · **Lane:** editor · **Depends:** M8 done · **Status:** ready — system pickers, not a CRM
+**Milestone:** M11 · **Lane:** editor · **Depends:** M8 done · **Status:** landed — system pickers, not a CRM
 
 ## Handoff
 
-- **Not started.** Edit → Insert Contact… and Edit → Insert File… are not present.
+- **Landed.** Edit → Insert Contact… and Edit → Insert File… integrated with native `CNContactPicker` and `NSOpenPanel`, copying files to `assets/` and inserting Markdown links preserving undo.
 - **Not this card:** contacts CRM sidebar, syncing Apple Contacts into frontmatter.
 
 ## Owns

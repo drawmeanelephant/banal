@@ -681,6 +681,66 @@ public final class AppModel: ObservableObject {
         applyEditorChanges()
     }
 
+    public var insertAtCaretHandler: ((String) -> Bool)?
+
+    public func insertTextAtCaret(_ text: String) {
+        if let handler = insertAtCaretHandler, handler(text) {
+            return
+        }
+        let range = selectedRange
+        let nsText = editorText as NSString
+        let safeLocation = min(range.location, nsText.length)
+        let safeLength = min(range.length, nsText.length - safeLocation)
+        let safeRange = NSRange(location: safeLocation, length: safeLength)
+        let newText = nsText.replacingCharacters(in: safeRange, with: text)
+        editorText = newText
+        selectedRange = NSRange(location: safeLocation + (text as NSString).length, length: 0)
+        selectedText = ""
+        applyEditorChanges()
+    }
+
+    public func insertContact(window: NSWindow? = nil, view: NSView? = nil) {
+        guard selectedNote != nil, viewMode == .edit, !needsVault else { return }
+        let targetWindow = window ?? NSApp.keyWindow ?? NSApp.mainWindow
+        let targetView = view ?? targetWindow?.firstResponder as? NSView ?? targetWindow?.contentView
+        guard let targetView else { return }
+
+        let rect: NSRect
+        if let textView = targetView as? NSTextView, let window = textView.window {
+            let sel = textView.selectedRange()
+            let screenRect = textView.firstRect(forCharacterRange: sel, actualRange: nil)
+            if screenRect.width > 0 && screenRect.height > 0 {
+                let windowRect = window.convertFromScreen(screenRect)
+                rect = textView.convert(windowRect, from: nil)
+            } else {
+                rect = textView.visibleRect
+            }
+        } else {
+            rect = targetView.bounds
+        }
+
+        ContactPickerPresenter.shared.present(relativeTo: rect, of: targetView) { [weak self] formatted in
+            Task { @MainActor [weak self] in
+                self?.insertTextAtCaret(formatted)
+            }
+        }
+    }
+
+    public func insertFile(window: NSWindow? = nil) {
+        guard selectedNote != nil, viewMode == .edit, !needsVault else { return }
+        let targetWindow = window ?? NSApp.keyWindow ?? NSApp.mainWindow
+        let title = selectedText.isEmpty ? nil : selectedText
+        FilePickerPresenter.present(
+            in: targetWindow,
+            vaultURL: store.configuration.rootURL,
+            linkTitle: title
+        ) { [weak self] link in
+            Task { @MainActor [weak self] in
+                self?.insertTextAtCaret(link)
+            }
+        }
+    }
+
     public func triggerNativeTranslation() {
         NSApp.sendAction(NSSelectorFromString("translate:"), to: nil, from: nil)
     }

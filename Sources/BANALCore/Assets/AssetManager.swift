@@ -1,6 +1,28 @@
 import Foundation
 import UniformTypeIdentifiers
 
+public struct AssetRecord: Equatable, Sendable {
+    public var originalFilename: String
+    public var storedFilename: String
+    public var relativePath: String
+    public var fileURL: URL
+    public var markdownLink: String {
+        "![\(originalFilename)](\(relativePath))"
+    }
+
+    public init(
+        originalFilename: String,
+        storedFilename: String,
+        relativePath: String,
+        fileURL: URL
+    ) {
+        self.originalFilename = originalFilename
+        self.storedFilename = storedFilename
+        self.relativePath = relativePath
+        self.fileURL = fileURL
+    }
+}
+
 public enum AssetError: LocalizedError, Equatable, Sendable {
     case unsupportedFileType(String)
     case fileNotFound(URL)
@@ -18,9 +40,11 @@ public enum AssetError: LocalizedError, Equatable, Sendable {
     }
 }
 
-/// Manages saving and copying image files into the vault's `assets/` directory.
-/// Hard constraint: image bytes are never altered (no resizing, compression, or metadata stripping).
+/// Manages saving and copying image and file assets into the vault's `assets/` directory.
+/// Hard constraint: file and image bytes are never altered (no resizing, compression, or metadata stripping).
 public enum AssetManager: Sendable {
+    public static let assetsDirectoryName = "assets"
+
     /// Supported image extensions (case-insensitive).
     public static let supportedExtensions: Set<String> = [
         "png",
@@ -46,6 +70,11 @@ public enum AssetManager: Sendable {
         .tiff,
         .image,
     ]
+
+    /// Returns the `<vaultRoot>/assets` directory URL.
+    public static func assetsDirectory(for vaultURL: URL) -> URL {
+        vaultURL.standardizedFileURL.appendingPathComponent(assetsDirectoryName, isDirectory: true)
+    }
 
     /// Checks whether the given URL points to a supported image file.
     public static func isSupportedImage(url: URL) -> Bool {
@@ -121,6 +150,89 @@ public enum AssetManager: Sendable {
         "![](assets/\(filename))"
     }
 
+    /// Formats a Markdown file link: `[displayName](assets/filename)`
+    public static func fileLink(name: String? = nil, relativePath: String) -> String {
+        let displayName: String
+        if let name, !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            displayName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        } else {
+            displayName = (relativePath as NSString).lastPathComponent
+        }
+        return "[\(displayName)](\(relativePath))"
+    }
+
+    /// Formats a Markdown image link: `![altText](assets/filename)`
+    public static func imageLink(alt: String = "", relativePath: String) -> String {
+        "![\(alt)](\(relativePath))"
+    }
+
+    /// Copies any file into `<vaultRoot>/assets/`, generating a unique filename on collision.
+    /// If the file is already inside `<vaultRoot>/assets/`, it returns the existing relative path without copying.
+    @discardableResult
+    public static func storeAsset(
+        from sourceURL: URL,
+        in vaultURL: URL,
+        fileManager: FileManager = .default
+    ) throws -> AssetRecord {
+        let source = sourceURL.standardizedFileURL
+        guard fileManager.fileExists(atPath: source.path) else {
+            throw AssetError.fileNotFound(source)
+        }
+
+        let assetsDir = assetsDirectory(for: vaultURL)
+        let assetsDirPath = assetsDir.path
+
+        // If source is already in assets directory:
+        if source.deletingLastPathComponent().path == assetsDirPath {
+            let filename = source.lastPathComponent
+            return AssetRecord(
+                originalFilename: filename,
+                storedFilename: filename,
+                relativePath: "\(assetsDirectoryName)/\(filename)",
+                fileURL: source
+            )
+        }
+
+        try fileManager.createDirectory(at: assetsDir, withIntermediateDirectories: true)
+
+        let originalFilename = source.lastPathComponent
+        let destinationFilename = uniqueFilename(for: originalFilename, in: assetsDir, fileManager: fileManager)
+        let destinationURL = assetsDir.appendingPathComponent(destinationFilename)
+
+        try fileManager.copyItem(at: source, to: destinationURL)
+
+        return AssetRecord(
+            originalFilename: originalFilename,
+            storedFilename: destinationFilename,
+            relativePath: "\(assetsDirectoryName)/\(destinationFilename)",
+            fileURL: destinationURL
+        )
+    }
+
+    /// Stores raw data into `<vaultRoot>/assets/`, generating a unique filename.
+    @discardableResult
+    public static func storeAsset(
+        data: Data,
+        originalFilename: String,
+        in vaultURL: URL,
+        fileManager: FileManager = .default
+    ) throws -> AssetRecord {
+        let assetsDir = assetsDirectory(for: vaultURL)
+        try fileManager.createDirectory(at: assetsDir, withIntermediateDirectories: true)
+
+        let destinationFilename = uniqueFilename(for: originalFilename, in: assetsDir, fileManager: fileManager)
+        let destinationURL = assetsDir.appendingPathComponent(destinationFilename)
+
+        try data.write(to: destinationURL, options: .atomic)
+
+        return AssetRecord(
+            originalFilename: originalFilename,
+            storedFilename: destinationFilename,
+            relativePath: "\(assetsDirectoryName)/\(destinationFilename)",
+            fileURL: destinationURL
+        )
+    }
+
     /// Imports an image file into `<vaultURL>/assets/<filename>` unchanged.
     /// Creates the `assets/` directory if missing, avoids collisions, and returns the relative Markdown tag.
     @discardableResult
@@ -136,7 +248,7 @@ public enum AssetManager: Sendable {
             throw AssetError.fileNotFound(sourceURL)
         }
 
-        let assetsURL = vaultURL.appendingPathComponent("assets", isDirectory: true)
+        let assetsURL = assetsDirectory(for: vaultURL)
         try fileManager.createDirectory(at: assetsURL, withIntermediateDirectories: true)
 
         let sourceStandardized = sourceURL.standardizedFileURL
@@ -165,7 +277,7 @@ public enum AssetManager: Sendable {
         vaultURL: URL,
         fileManager: FileManager = .default
     ) throws -> (filename: String, markdownLink: String) {
-        let assetsURL = vaultURL.appendingPathComponent("assets", isDirectory: true)
+        let assetsURL = assetsDirectory(for: vaultURL)
         try fileManager.createDirectory(at: assetsURL, withIntermediateDirectories: true)
 
         let sanitized = sanitizeFilename(originalFilename)
