@@ -14,7 +14,7 @@ struct EditorView: View {
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(Color(nsColor: .textBackgroundColor))
-                .accessibilityLabel("Create a note with ⌘N.")
+                .accessibilityLabel("No note selected. Create a note with ⌘N.")
         } else {
             VStack(spacing: 0) {
                 titleField
@@ -98,7 +98,8 @@ struct EditorView: View {
             .padding(.horizontal, EditorTypography.horizontalInset)
             .padding(.top, 36)
             .padding(.bottom, 6)
-            .accessibilityLabel("Title")
+            .accessibilityLabel("Note title")
+            .accessibilityHint("Edit note title")
             .onChange(of: model.editorTitle) { _, _ in
                 model.applyEditorChanges()
             }
@@ -109,6 +110,7 @@ struct EditorView: View {
             HStack(spacing: 6) {
                 if let note = model.selectedNote {
                     Text(note.updated, format: .relative(presentation: .named))
+                        .accessibilityLabel("Updated \(note.updated.formatted(.relative(presentation: .named)))")
                 }
                 if model.editorPublished {
                     Text("·")
@@ -116,12 +118,14 @@ struct EditorView: View {
                     Image(systemName: "globe")
                         .accessibilityHidden(true)
                     Text("Published")
+                        .accessibilityLabel("Published note")
                 }
                 if !visibleTags.isEmpty {
                     Text("·")
                         .accessibilityHidden(true)
                     Text(visibleTags)
                         .lineLimit(1)
+                        .accessibilityLabel("Tags: \(visibleTags)")
                 }
                 Spacer(minLength: 0)
             }
@@ -140,7 +144,8 @@ struct EditorView: View {
                 .controlSize(.small)
                 .frame(maxWidth: 140)
                 .labelsHidden()
-                .accessibilityLabel("Note view")
+                .accessibilityLabel("Note view mode")
+                .accessibilityHint("Switch between edit and read modes")
             }
             HelpLink(anchor: BanalHelp.writeAnchor, book: BanalHelp.bookName)
                 .help("Help with writing notes")

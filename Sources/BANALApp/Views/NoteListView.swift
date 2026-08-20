@@ -4,6 +4,7 @@ import SwiftUI
 
 struct NoteListView: View {
     @ObservedObject var model: AppModel
+    @Environment(\.colorSchemeContrast) private var contrast
     @FocusState private var searchFieldFocused: Bool
 
     var body: some View {
@@ -38,6 +39,13 @@ struct NoteListView: View {
         .background(NoteListFocusHelper(model: model))
         .navigationTitle(title)
         .navigationSplitViewColumnWidth(min: 240, ideal: 280, max: 360)
+        .overlay(alignment: .trailing) {
+            if contrast == .increased {
+                Rectangle()
+                    .fill(Color(nsColor: .separatorColor))
+                    .frame(width: 1)
+            }
+        }
         .onChange(of: model.searchFocusToken) { _, _ in
             searchFieldFocused = true
         }
@@ -58,6 +66,7 @@ struct NoteListView: View {
                 .textFieldStyle(.plain)
                 .focused($searchFieldFocused)
                 .accessibilityLabel("Search notes")
+                .accessibilityHint("Filter notes by title, body, tags, or ingredients")
                 .onSubmit { searchFieldFocused = false }
         }
         .padding(.horizontal, 12)
@@ -129,14 +138,18 @@ private struct NoteRow: View {
         .padding(.vertical, 1)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel)
+        .accessibilityHint("Select note to view or edit")
     }
 
     private var accessibilityLabel: String {
-        var parts = [note.displayTitle]
-        if note.language == .cooklang { parts.append("Recipe") }
-        if note.published { parts.append("Published") }
-        parts.append(note.updated.formatted(.relative(presentation: .named)))
-        return parts.joined(separator: ", ")
+        AccessibilityFormatting.noteRowDescription(
+            title: note.displayTitle,
+            folder: note.folder,
+            isRecipe: note.language == .cooklang,
+            isPublished: note.published,
+            updatedDate: note.updated,
+            snippet: note.snippet
+        )
     }
 }
 
