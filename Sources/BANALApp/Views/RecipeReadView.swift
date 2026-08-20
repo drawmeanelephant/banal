@@ -4,35 +4,41 @@ import SwiftUI
 
 struct RecipeReadView: View {
     @ObservedObject var model: AppModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                scalePicker
-                if let error = model.recipeError {
-                    Text(error)
-                        .font(bodyFont)
-                        .foregroundStyle(.secondary)
-                } else if let recipe = model.oliverRecipe {
-                    sauceIssues
-                    ingredientList(recipe)
-                    cookwareList(recipe)
-                    method(recipe)
+        GeometryReader { geo in
+            let mw = measure(availableWidth: geo.size.width)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    scalePicker
+                    if let error = model.recipeError {
+                        Text(error)
+                            .font(bodyFont)
+                            .foregroundStyle(.secondary)
+                    } else if let recipe = model.oliverRecipe {
+                        sauceIssues
+                        ingredientList(recipe)
+                        cookwareList(recipe)
+                        method(recipe)
+                    }
                 }
+                .padding(.horizontal, EditorTypography.horizontalInset)
+                .padding(.top, 4)
+                .padding(.bottom, 36)
+                .frame(maxWidth: mw)
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.horizontal, EditorTypography.horizontalInset)
-            .padding(.top, 4)
-            .padding(.bottom, 36)
-            .frame(maxWidth: measure)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(nsColor: .textBackgroundColor))
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Recipe")
         }
-        .background(Color(nsColor: .textBackgroundColor))
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Recipe")
     }
 
-    private var measure: CGFloat? {
-        model.preferences.limitLineLength ? EditorTypography.measureWidth : nil
+    private func measure(availableWidth: CGFloat) -> CGFloat? {
+        guard model.preferences.limitLineLength else { return nil }
+        let maxAllowed = availableWidth - EditorTypography.horizontalInset * 2
+        return min(EditorTypography.measureWidth, maxAllowed)
     }
 
     private var bodyFont: Font {
