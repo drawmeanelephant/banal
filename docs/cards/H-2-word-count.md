@@ -1,10 +1,10 @@
 # Card H-2 — Quiet word count
 
-**Milestone:** M12 · **Lane:** chrome · **Depends:** M7 Close landed · **Status:** consider — subtle word count in footer
+**Milestone:** M12 · **Lane:** chrome · **Depends:** M7 Close landed · **Status:** landed — subtle word count in footer
 
 ## Handoff
 
-- **Not started.** Status strip shows note count (e.g. "12 notes"). Word / character count is not shown.
+- **Landed.** Status strip quietly shows word and character count (e.g. "342 words · 1,840 characters") when editing a note, and reverts to vault note count (e.g. "12 notes") when no note is selected.
 - **Not this card:** reading-time estimates, typing goals, daily karma HUD.
 
 ## Owns

@@ -52,6 +52,10 @@ public final class AppModel: ObservableObject {
     public let noteListFocus = FocusToken()
     public let editorFocus = FocusToken()
     public let quickLook = FocusToken()
+    /// Quiet word and character count for the currently edited note buffer (H-2).
+    public var editorWordCountDescription: String {
+        WordCount.count(in: editorText).formattedDescription
+    }
     /// Last Oliver HTML for the open buffer. Published so the prose Read
     /// view (D-2) updates when the idle render lands; the editor itself
     /// ignores it (a render never changes the text).
