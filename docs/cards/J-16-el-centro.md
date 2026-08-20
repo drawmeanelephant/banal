@@ -4,7 +4,8 @@
 
 ## Handoff
 
-- `main` at `a24d4a0` (J-15 landed `c2d039e`). `swift test` 265 green, `make smoke` passed pre-Yuma. I-2 light sit still the human gate; El Centro is flat and hot — 5k notes must not stall the caret.
+- `main` at `b522866` (J-16 board cut `56170ae`). `swift test` 265 green, `make smoke` passed. I-2 light sit still the human gate; El Centro is flat and hot — 5k notes must not stall the caret.
+- Snacks landed on this branch: `Scripts/gen-5k-vault.sh` (El Centro 5k) + `hiutil` `BANAL.cshelpindex` (Help first-class) — `Makefile:45` already runs `hiutil -I corespotlight -Caf` into `$(HELP_BOOK_LOCALE)/BANAL.cshelpindex` on every `make app`; `Resources/BANAL.help/Contents/Resources/en.lproj/BANAL.cshelpindex` is **generated**, not checked in, so Help search stays live. `Scripts/gen-5k-vault.sh /tmp/banal-5k 5000` now writes `5000 notes, 10 folders` + `Empty Sit` for the `cold open <400ms` gate.
 - Current `NoteStore.open:158` + `FolderTree.build:66` is O(n) file enumeration; search `NoteStore.notes(matching:)` is in-memory `Set` filter; Whisper `0.4s` idle, Oliver `OliverDebounce`, Spotlight `Task.detached(.utility)` all off caret path already.
 
 ## Owns
