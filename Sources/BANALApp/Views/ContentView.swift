@@ -5,6 +5,7 @@ import SwiftUI
 struct ContentView: View {
     @ObservedObject var model: AppModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
         Group {
@@ -39,7 +40,13 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity)
                     .background(Color(nsColor: .windowBackgroundColor))
                     .overlay(alignment: .top) {
-                        Divider()
+                        if contrast == .increased {
+                            Rectangle()
+                                .fill(Color(nsColor: .separatorColor))
+                                .frame(height: 1)
+                        } else {
+                            Divider()
+                        }
                     }
                     .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                     .accessibilityLabel(status)

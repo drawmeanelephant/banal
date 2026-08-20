@@ -4,11 +4,15 @@ import SwiftUI
 
 struct SidebarView: View {
     @ObservedObject var model: AppModel
+    @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
         List(selection: $model.filter) {
             Label("All Notes", systemImage: "square.stack")
                 .tag(SidebarFilter.all)
+                .accessibilityLabel("All Notes")
+                .accessibilityValue(AccessibilityFormatting.noteCount(model.store.notes.count))
+                .accessibilityHint("Shows all notes in the vault")
                 .dropDestination(for: String.self) { ids, _ in
                     ids.forEach { model.dropNote($0, onto: nil) }
                     return true
@@ -16,12 +20,19 @@ struct SidebarView: View {
 
             Label("Published", systemImage: "globe")
                 .tag(SidebarFilter.published)
+                .accessibilityLabel("Published")
+                .accessibilityValue(AccessibilityFormatting.publishedNoteCount(model.store.notes.filter(\.published).count))
+                .accessibilityHint("Shows notes marked for publishing")
 
             if !model.store.folderTree.isEmpty {
                 Section {
                     OutlineGroup(model.store.folderTree, children: \.outlineChildren) { node in
+                        let count = model.store.notes.filter { $0.folder == node.id }.count
                         Label(node.name, systemImage: "folder")
                             .tag(SidebarFilter.folder(node.id))
+                            .accessibilityLabel(node.name)
+                            .accessibilityValue(AccessibilityFormatting.folderNoteCount(count))
+                            .accessibilityHint("Folder")
                             .dropDestination(for: String.self) { ids, _ in
                                 ids.forEach { model.dropNote($0, onto: node.id) }
                                 return true
@@ -50,6 +61,13 @@ struct SidebarView: View {
         .listStyle(.sidebar)
         .background(SidebarFocusHelper(model: model))
         .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 240)
+        .overlay(alignment: .trailing) {
+            if contrast == .increased {
+                Rectangle()
+                    .fill(Color(nsColor: .separatorColor))
+                    .frame(width: 1)
+            }
+        }
         .contextMenu {
             Button("New Folder") { model.beginNewFolder() }
         }

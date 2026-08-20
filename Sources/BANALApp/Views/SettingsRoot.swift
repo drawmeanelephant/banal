@@ -36,11 +36,17 @@ private struct GeneralSettingsPane: View {
                         .foregroundStyle(.secondary)
                         .font(.callout)
                 }
+                .accessibilityLabel("Notes folder location")
+                .accessibilityValue(model.store.configuration.rootURL.path)
                 HStack {
                     Button("Choose…") { chooseFolder() }
+                        .accessibilityLabel("Choose notes folder")
+                        .accessibilityHint("Select notes directory on disk")
                     Button("Reveal in Finder") { model.revealVault() }
+                        .accessibilityLabel("Reveal notes folder in Finder")
                 }
                 Toggle("Open this folder when BANAL launches", isOn: $model.preferences.openMostRecentOnLaunch)
+                    .accessibilityLabel("Open this folder when BANAL launches")
             }
             Section("Organization") {
                 Picker("Sort notes by", selection: $model.preferences.sort) {
@@ -48,12 +54,15 @@ private struct GeneralSettingsPane: View {
                         Text(sort.menuTitle).tag(sort)
                     }
                 }
+                .accessibilityLabel("Sort notes by")
                 Picker("New notes go in", selection: $model.preferences.newNoteLocation) {
                     ForEach(NewNoteLocation.allCases, id: \.self) { location in
                         Text(location.menuTitle).tag(location)
                     }
                 }
+                .accessibilityLabel("New notes default location")
                 Toggle("Watch for edits from other apps", isOn: $model.preferences.watchExternalEdits)
+                    .accessibilityLabel("Watch for edits from other apps")
             }
         }
         .formStyle(.grouped)
@@ -79,6 +88,8 @@ private struct EditorSettingsPane: View {
                 LabeledContent("Size") {
                     HStack(spacing: 10) {
                         Slider(value: $model.preferences.fontSize, in: 13...22, step: 1)
+                            .accessibilityLabel("Font size")
+                            .accessibilityValue("\(Int(model.preferences.fontSize.rounded())) points")
                         Text("\(Int(model.preferences.fontSize.rounded()))")
                             .monospacedDigit()
                             .foregroundStyle(.secondary)
@@ -90,11 +101,16 @@ private struct EditorSettingsPane: View {
                         Text(height.menuTitle).tag(height)
                     }
                 }
+                .accessibilityLabel("Line height")
                 Toggle("Limit line length", isOn: $model.preferences.limitLineLength)
+                    .accessibilityLabel("Limit line length")
+                    .accessibilityHint("Restricts editor text column width to optimal measure")
             }
             Section("Editing") {
                 Toggle("Check spelling", isOn: $model.preferences.spellCheck)
+                    .accessibilityLabel("Check spelling")
                 Toggle("Smart quotes", isOn: $model.preferences.smartQuotes)
+                    .accessibilityLabel("Smart quotes and dashes")
             }
         }
         .formStyle(.grouped)
@@ -114,9 +130,11 @@ private struct PublishSettingsPane: View {
         Form {
             Section {
                 TextField("Site title", text: siteTitle)
+                    .accessibilityLabel("Site title")
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("Base URL", text: siteBaseURL)
                         .textContentType(.URL)
+                        .accessibilityLabel("Site base URL")
                     if let message = PublishSettings.baseURLMessage(model.store.configuration.siteBaseURL) {
                         Text(message)
                             .font(.caption)
@@ -124,6 +142,7 @@ private struct PublishSettingsPane: View {
                     }
                 }
                 TextField("Author", text: siteAuthor)
+                    .accessibilityLabel("Site author")
             } header: {
                 Text("Site")
             } footer: {
@@ -170,6 +189,7 @@ private struct PublishSettingsPane: View {
             Section {
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("Cloudflare Pages project", text: projectName)
+                        .accessibilityLabel("Cloudflare Pages project name")
                     if let message = PublishSettings.projectNameMessage(model.store.configuration.cloudflareProjectName) {
                         Text(message)
                             .font(.caption)
@@ -178,6 +198,7 @@ private struct PublishSettingsPane: View {
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     TextField("Account ID", text: accountID)
+                        .accessibilityLabel("Cloudflare account ID")
                     if let message = PublishSettings.accountIDMessage(model.store.configuration.cloudflareAccountID ?? "") {
                         Text(message)
                             .font(.caption)
@@ -185,14 +206,19 @@ private struct PublishSettingsPane: View {
                     }
                 }
                 TextField("Custom domain", text: customDomain)
+                    .accessibilityLabel("Custom domain")
                 LabeledContent("API token (Keychain)") {
                     VStack(alignment: .leading, spacing: 6) {
                         SecureField(tokenSaved ? "Token saved in Keychain" : "Paste token", text: $tokenDraft)
+                            .accessibilityLabel("Cloudflare API token")
+                            .accessibilityHint("Secure token stored in macOS Keychain")
                         HStack {
                             Button("Save in Keychain") { saveToken() }
+                                .accessibilityLabel("Save API token in Keychain")
                                 .disabled(tokenDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                             if tokenSaved {
                                 Button("Remove", role: .destructive) { removeToken() }
+                                    .accessibilityLabel("Remove API token from Keychain")
                             }
                         }
                         Text(tokenSaved ? "Token saved in Keychain." : "Not connected — publishing stays on this Mac.")
@@ -209,14 +235,17 @@ private struct PublishSettingsPane: View {
                 Text(wranglerPreview)
                     .font(.system(.caption, design: .monospaced))
                     .textSelection(.enabled)
+                    .accessibilityLabel("Wrangler command: \(wranglerPreview)")
                 HStack {
                     Button("Copy command") {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(wranglerPreview, forType: .string)
                     }
+                    .accessibilityLabel("Copy wrangler deployment command")
                     Button("Deploy to Cloudflare") {
                         model.deployToCloudflare()
                     }
+                    .accessibilityLabel("Deploy to Cloudflare Pages")
                     .disabled(!model.canDeploy)
                     .help(model.canDeploy
                           ? "Deploy the last site to Cloudflare Pages."
@@ -259,10 +288,13 @@ private struct PublishSettingsPane: View {
 
             HStack {
                 Button("Choose…") { choose() }
+                    .accessibilityLabel("Choose \(title) binary")
                 Button("Reveal") { reveal() }
+                    .accessibilityLabel("Reveal \(title) binary in Finder")
                     .disabled(!compilerPathIsSet(path))
                 if compilerPathIsSet(path) {
                     Button("Clear") { clear() }
+                        .accessibilityLabel("Clear \(title) binary configuration")
                 }
             }
         }
