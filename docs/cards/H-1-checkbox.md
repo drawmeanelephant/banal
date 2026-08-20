@@ -1,10 +1,10 @@
 # Card H-1 — Source checkbox toggle
 
-**Milestone:** M12 · **Lane:** editor · **Depends:** M9 E-3 done · **Status:** consider — toggle `- [ ]` in source
+**Milestone:** M12 · **Lane:** editor · **Depends:** M9 E-3 done · **Status:** landed — toggle `- [ ]` in source
 
 ## Handoff
 
-- **Not started.** Checklists in notes are written `- [ ]` and `- [x]`. Clicking on them requires editing the text character by character.
+- **Landed.** Clicking within the bounding rect or character bounds of `- [ ]` or `- [x]` at the start of a line toggles the character between ` ` and `x` directly in the text view buffer with full `⌘Z` undo support.
 - **Not this card:** rendered interactive checklist widget, animated strike-throughs.
 
 ## Owns
