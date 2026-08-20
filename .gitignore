@@ -31,7 +31,7 @@ playground.xcworkspace
 
 .build/
 .swiftpm/
-.DS_Store
+**/.DS_Store
 dist/
 xcuserdata/
 *.xcuserstate
