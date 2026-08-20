@@ -1,10 +1,13 @@
 # Card F-3 — Spotlight indexing (`IndexedEntity`)
 
-**Milestone:** M10 · **Lane:** system · **Depends:** M7 Close landed · **Status:** ready — system search finds notes
+**Milestone:** M10 · **Lane:** system · **Depends:** M7 Close landed · **Status:** landed — system search finds notes
 
 ## Handoff
 
-- **Not started.** Spotlight finds notes on disk by raw file text if indexed by macOS, but does not know BANAL note titles, tags, or recipe metadata as structured search entities.
+- **Landed.** Spotlight indexes notes with `CSSearchableItem` and `NoteEntity` metadata (titles, snippets, tags, language extensions, Cooklang recipe ingredients).
+- Indexing is completely non-blocking via background tasks and fully disposable.
+- Clicking a Spotlight search result deep-links into BANAL, selecting the note and focusing the editor via `NSUserActivity` (`CSSearchableItemActionType`).
+- 184 unit tests pass in ~0.5s; `make smoke` passes 100%.
 - **Not this card:** a second local database, vector databases, RAG.
 
 ## Owns

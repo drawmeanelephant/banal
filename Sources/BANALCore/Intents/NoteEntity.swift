@@ -1,5 +1,7 @@
 import AppIntents
+import CoreSpotlight
 import Foundation
+import UniformTypeIdentifiers
 
 public struct NoteEntity: AppEntity, Identifiable, Sendable {
     public static let typeDisplayRepresentation: TypeDisplayRepresentation = "Note"
@@ -29,6 +31,16 @@ public struct NoteEntity: AppEntity, Identifiable, Sendable {
             title: "\(title)",
             subtitle: folder.map { "\($0)" } ?? ""
         )
+    }
+
+    public var attributeSet: CSSearchableItemAttributeSet {
+        let set = CSSearchableItemAttributeSet(contentType: .plainText)
+        set.title = title
+        if let folder {
+            set.containerTitle = folder
+        }
+        set.keywords = [language]
+        return set
     }
 }
 

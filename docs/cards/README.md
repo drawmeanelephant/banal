@@ -82,7 +82,7 @@ Stage after M8 is done (or beside D where noted).
 |------|-----------|------|------|
 | [F-1 Notarize](F-1-notarize.md) | M10 | app | landed — Developer ID + notarization pipeline & signed DMG |
 | [F-2 Intents](F-2-intents.md) | M10 | system | landed — Siri & Shortcuts: New Note, New Recipe, Take a Note |
-| [F-3 Spotlight](F-3-spotlight.md) | M10 | system | `CSSearchableItem` / `IndexedEntity` finds notes |
+| [F-3 Spotlight](F-3-spotlight.md) | M10 | system | landed — `CSSearchableItem` / `NoteEntity` finds notes + ingredients |
 | [F-4 Quick Look](F-4-quicklook.md) | M10 | system | Spacebar preview in Finder for `.md`/`.cook`/`.textile` |
 | [F-5 Print & Share](F-5-print-share.md) | M10 | system | File → Print, Share sheet, Services menu item |
 | [F-6 Translate](F-6-translate.md) | M10 | system | Edit → Translate… via system `TranslationSession` |

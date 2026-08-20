@@ -1,5 +1,6 @@
 import AppKit
 import BANALCore
+import CoreSpotlight
 import SwiftUI
 
 @main
@@ -27,7 +28,10 @@ struct BanalApp: App {
             needsVault = true
             missing = false
         }
-        let store = NoteStore(configuration: VaultConfiguration(rootURL: root))
+        let store = NoteStore(
+            configuration: VaultConfiguration(rootURL: root),
+            spotlightIndexer: NoteSpotlightIndexer.shared
+        )
         _model = StateObject(wrappedValue: AppModel(
             store: store,
             needsVault: needsVault,
@@ -45,6 +49,13 @@ struct BanalApp: App {
                 }
                 .onOpenURL { url in
                     model.openExternalNote(at: url)
+                }
+                .onContinueUserActivity(CSSearchableItemActionType) { userActivity in
+                    if let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String {
+                        model.filter = .all
+                        model.select(identifier)
+                        model.focusEditor()
+                    }
                 }
         }
         .defaultSize(width: 1100, height: 720)
@@ -244,6 +255,19 @@ final class BanalAppDelegate: NSObject, NSApplicationDelegate {
         for url in urls {
             model?.openExternalNote(at: url)
         }
+    }
+
+    func application(_ application: NSApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([NSUserActivityRestoring]) -> Void) -> Bool {
+        if userActivity.activityType == CSSearchableItemActionType,
+           let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String {
+            Task { @MainActor in
+                model?.filter = .all
+                model?.select(identifier)
+                model?.focusEditor()
+            }
+            return true
+        }
+        return false
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
