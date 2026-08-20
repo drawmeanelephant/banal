@@ -340,13 +340,44 @@ public final class AppModel: ObservableObject {
     }
 
     public func dropNote(_ noteID: String, onto folder: String?) {
+        let resolvedID: String
+        if let direct = store.note(id: noteID) {
+            resolvedID = direct.id
+        } else if let match = store.notes.first(where: {
+            $0.fileURL.path == noteID ||
+            $0.fileURL.standardizedFileURL.path == URL(fileURLWithPath: noteID).standardizedFileURL.path ||
+            $0.fileURL.absoluteString == noteID ||
+            $0.id == noteID
+        }) {
+            resolvedID = match.id
+        } else {
+            resolvedID = noteID
+        }
         do {
-            let moved = try store.moveNote(id: noteID, toFolder: folder)
-            if selectedID == noteID {
+            let moved = try store.moveNote(id: resolvedID, toFolder: folder)
+            if selectedID == resolvedID {
                 selectedID = moved.id
             }
         } catch {
             statusMessage = error.localizedDescription
+        }
+    }
+
+    public func dropNote(with url: URL, onto folder: String?) {
+        if let match = store.notes.first(where: {
+            $0.fileURL.standardizedFileURL == url.standardizedFileURL ||
+            $0.fileURL.path == url.path
+        }) {
+            dropNote(match.id, onto: folder)
+        } else {
+            let vaultPath = store.configuration.rootURL.standardizedFileURL.path
+            let itemPath = url.standardizedFileURL.path
+            if itemPath.hasPrefix(vaultPath) {
+                let relative = String(itemPath.dropFirst(vaultPath.count)).trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+                dropNote(relative, onto: folder)
+            } else {
+                dropNote(url.path, onto: folder)
+            }
         }
     }
 

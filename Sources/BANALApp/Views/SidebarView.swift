@@ -13,8 +13,8 @@ struct SidebarView: View {
                 .accessibilityLabel("All Notes")
                 .accessibilityValue(AccessibilityFormatting.noteCount(model.store.notes.count))
                 .accessibilityHint("Shows all notes in the vault")
-                .dropDestination(for: String.self) { ids, _ in
-                    ids.forEach { model.dropNote($0, onto: nil) }
+                .dropDestination(for: URL.self) { urls, _ in
+                    urls.forEach { model.dropNote(with: $0, onto: nil) }
                     return true
                 }
 
@@ -33,8 +33,8 @@ struct SidebarView: View {
                             .accessibilityLabel(node.name)
                             .accessibilityValue(AccessibilityFormatting.folderNoteCount(count))
                             .accessibilityHint("Folder")
-                            .dropDestination(for: String.self) { ids, _ in
-                                ids.forEach { model.dropNote($0, onto: node.id) }
+                            .dropDestination(for: URL.self) { urls, _ in
+                                urls.forEach { model.dropNote(with: $0, onto: node.id) }
                                 return true
                             }
                             .contextMenu {
