@@ -1,3 +1,7 @@
+#if canImport(Translation)
+import Translation
+#endif
+import BANALCore
 import SwiftUI
 
 struct EditorView: View {
@@ -46,6 +50,15 @@ struct EditorView: View {
                         onBacktab: { [weak model] in model?.focusNoteList() },
                         onWritingToolsActiveChange: { [weak model] active in
                             model?.isWritingToolsActive = active
+                        },
+                        onSelectionChange: { [weak model] selected, range in
+                            model?.selectedText = selected
+                            model?.selectedRange = range
+                        },
+                        onTranslate: { [weak model] text, range in
+                            model?.selectedText = text
+                            model?.selectedRange = range
+                            model?.translateSelection()
                         }
                     )
                     .onChange(of: model.editorText) { _, _ in
@@ -56,6 +69,7 @@ struct EditorView: View {
                 }
             }
             .background(Color(nsColor: .textBackgroundColor))
+            .modifier(TranslationPresentationModifier(model: model))
             .onChange(of: model.viewMode) { _, newMode in
                 // The gate: hit Edit and the caret is back in the Markdown.
                 // Defer past the SwiftUI commit so the fresh editor exists
@@ -139,5 +153,28 @@ struct EditorView: View {
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
             .joined(separator: ", ")
+    }
+}
+
+
+struct TranslationPresentationModifier: ViewModifier {
+    @ObservedObject var model: AppModel
+
+    func body(content: Content) -> some View {
+        #if canImport(Translation)
+        if #available(macOS 15.0, *) {
+            content
+                .translationPresentation(
+                    isPresented: $model.isTranslationPresented,
+                    text: model.translationText
+                ) { translated in
+                    model.replaceSelectedText(with: translated)
+                }
+        } else {
+            content
+        }
+        #else
+        content
+        #endif
     }
 }

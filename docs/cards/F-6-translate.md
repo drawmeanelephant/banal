@@ -1,11 +1,14 @@
 # Card F-6 — Translation session
 
-**Milestone:** M10 · **Lane:** system · **Depends:** M7 Close landed · **Status:** ready — on-device translation sheet
+**Milestone:** M10 · **Lane:** system · **Depends:** M7 Close landed · **Status:** landed — Edit → Translate… via macOS system Translation sheet and responder chain
 
 ## Handoff
 
-- **Not started.** Edit → Translate… is not exposed in menus or context menus.
-- **Not this card:** multi-language CMS, automatic full-vault translation, third-party translation APIs.
+- **Landed.** Edit → Translate… menu item added under Edit menu (`EditCommands.swift`). Active when text is selected in the active editor.
+- On macOS 15+, presents native `TranslationPresentation` system translation sheet with replacement callback support.
+- On macOS 14, provides standard `NSTextView` contextual menu behavior and responder chain translation fallback.
+- Guarded with `#available(macOS 15.0, *)`. Core state and range replacement logic implemented and unit-tested in `BANALCore`.
+- Zero third-party cloud translation tokens, zero API keys, no translation indicators or flags added to chrome.
 
 ## Owns
 
