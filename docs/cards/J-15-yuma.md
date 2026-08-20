@@ -1,6 +1,6 @@
 # Card J-15 — Yuma — write & crash safety (Drive triage)
 
-**Milestone:** M15 · **Lane:** core · **Status:** board · **Branch:** `fix/j15-yuma` · **Parent:** #112 · **Subissues:** #129 J-15a, #130 J-15b, #131 J-15c
+**Milestone:** M15 · **Lane:** core · **Status:** landed — `c2d039e` (#132) · **Branch:** `fix/j15-yuma` · **Parent:** #112 · **Subissues:** #129 J-15a, #130 J-15b, #131 J-15c — closed
 
 ## Handoff
 
