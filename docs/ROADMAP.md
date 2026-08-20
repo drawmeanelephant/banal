@@ -64,42 +64,42 @@ meal plan. Risotto sit is C-1.
 The silhouette exists. Sit it and hand it over.
 
 - C-0 Board reset (docs) — landed
-- C-1 Sit the window — cooking; GUI still open
+- C-1 Sit the window — cooking; code-backed sit landed, GUI 30s type/⌘Z + light+dark 720/1100/1400 + VoiceOver still open — now rolled into I-2 friend sit (free-tier, ad-hoc)
 - C-2 Honesty in Settings and menus — landed
-- C-3 Hand it to someone (signed `.app`, sandbox) — landed, ad-hoc; not notarized
+- C-3 Hand it to someone (signed `.app`, sandbox) — landed, ad-hoc (`-`) + free-team `Apple Development: tbuddy@gmail.com (ZQT4XUHVT5)` works — not `Developer ID Application`, not notarized (paid step deferred)
 
 If the sit hates the caret or publish feels like onboarding, that
 bug outranks every D card.
 
-## M8 — Fluency — current board
+## M8 — Fluency — landed (code), visual gates pending
 
 Look simple. Be fluent. Language budget, not chrome.
 
-- D-0 Fluency board (docs)
-- D-1 Whisper the source (hints, not a theme)
-- D-2 Read a paragraph (Markdown/Textile; source stays king)
-- D-3 Walk the sauce (`@./sauces/…` in Read)
-- D-4 Find the saffron (⌘F matches Oliver ingredient names)
+- D-0 Fluency board (docs) — landed
+- D-1 Whisper the source (hints, not a theme) — landed, 0.4s idle `WhisperScan` temporary attributes, Writing-Tools-safe; mini-sit pending friend I-2
+- D-2 Read a paragraph (Markdown/Textile; source stays king) — landed, `ProseReadView` native page on B-1 type; visual gate pending friend I-2
+- D-3 Walk the sauce (`@./sauces/…` in Read) — landed
+- D-4 Find the saffron (⌘F matches Oliver ingredient names) — landed
 
-Do not pick D-1 until C-1 has been sat. Save a scaled recipe copy
+Do not pick new D until I-2 closes. Save a scaled recipe copy
 is not on this board until a cook asks. Stylesheets and
 tags-as-a-place are not M8.
 
 ## Beyond M8 — implement or consider
 
 Detail and refuse-reasons live in [`HORIZON.md`](HORIZON.md).
-M7–M12 are landed; M20 is cut as Board I.
+M7–M12 are landed; M20 free-tier is done, paid notarize is deferred.
 **Consider** rows stay named until a human asks.
 
 | Milestone | Verdict | One line |
 |-----------|---------|----------|
-| [M7 Close leftovers](#m7--close--leftovers) | **Landed** | Sit the window. Notarize is later. |
-| [M8 Fluency](#m8--fluency--current-board) | **Landed** | Whisper, prose Read, sauce, find. |
+| [M7 Close leftovers](#m7--close--leftovers) | **Landed** | Sit rolled into I-2 (ad-hoc). |
+| [M8 Fluency](#m8--fluency--current-board) | **Landed** | Whisper, prose Read, sauce, find — gates pending friend. |
 | [M9 Type in the page](#m9--type-in-the-page--implement) | **Landed** | Source stays source. Paste and lists get Mac manners. |
-| [M10 System](#m10--system--implement) | **Landed** | Siri, Spotlight, Print, Translate, Writing Tools stay system. |
+| [M10 System](#m10--system--implement) | **Landed** | Siri, Spotlight, Print, Translate; `F-1` pipeline no-ops without paid ID. |
 | [M11 Files](#m11--files--implement) | **Landed** | Images, copy-as, import, pickers. Disk is still truth. |
 | [M12 Consider](#m12--consider--not-a-board) | **Landed** | Typewriter, tags filter, quiet count, checkbox click. |
-| [M20 California](#later-towns-not-a-board) | **Board I** | Notarized + stapled 1.0, one release sit, 1.0 copy. |
+| [M20 California](#later-towns-not-a-board) | **Free-tier I-1 deferred · I-3 landed** | Ad-hoc `.app` ships (right-click Open); notarize/staple needs paid `Developer ID Application`. Friend sit (I-2) still open. |
 
 Zero-lock-in (human-readable `.md` / `.textile` / `.cook` on
 disk) is not a future milestone. It is M1. If we ever need an
@@ -192,19 +192,23 @@ mission amendment — it does not sneak into M1–M12.
 
 ## Later towns (not a board)
 
-Named in [`HOPE-CHEST.md`](HOPE-CHEST.md). Do not cut cards
-from here until Tucson is behind us.
+Named in [`HOPE-CHEST.md`](HOPE-CHEST.md). Tucson is behind us;
+California free-tier is passed, paid is ahead.
 
 | Milestone | Town | Verdict |
 |-----------|------|---------|
-| M13–M19 | the drive | Blank on purpose. I-2 sit bugs fill them. |
-| **M20** | California | **1.0** — notarized `.app` a stranger can keep. Still three columns. |
-| **M50** | Japan | Vacation luxury (Enrich Markup, one stylesheet, scaled recipe if asked). After M20 only. |
+| M13–M19 | the drive | **Active triage · blank until friend sit.** I-2 (ad-hoc, friend light+dark 720/1100/1400 + VoiceOver) files one-card bugs here. Do not pre-build. |
+| **M20 free** | California (free-tier) | **Done** — ad-hoc `dist/BANAL.app` (`-` or `Apple Development ZQT4XUHVT5`) ships via right-click Open; I-3 copy landed `dac8c14`. |
+| **M20 paid** | California (paid) | **Deferred** — needs paid Apple Developer Program → `Developer ID Application` + `notarytool` creds → `make release` + `spctl` `Notarized`. |
+| **M50** | Japan | **Gated** — vacation luxury (Enrich Markup, one stylesheet, scaled recipe if asked). After paid I-1 + I-2 only. |
 | **M99** | Home | The folder outlives us. Stop adding towns. |
 
 Board I — California is cut in [`cards/README.md`](cards/README.md):
-I-1 notarized+stapled release, I-2 whole-window sit, I-3 1.0 copy.
-M13–M19 stay blank except for what I-2's sit finds.
+I-1 (free deferred, paid pending), I-2 (friend sit open), I-3 (landed). M13–M19
+stay blank except for what I-2's sit finds — cut one card at a time.
+
+Next board after free-tier is not Japan. It is the M13–M19 drive —
+one sit bug per card, then paid notarize, then Japan.
 
 ## The quiet test
 

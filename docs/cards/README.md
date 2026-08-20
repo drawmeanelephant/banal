@@ -16,24 +16,22 @@ tear it up.
 ## Session
 
 Tucson is drawn: E (M9) and F (M10) are landed, G (M11) is landed,
-H (M12) is landed (issues #37–40). The next board is
-**I — California** (M20): a notarized+stapled 1.0 release, one
-whole-window sit on the signed build, and a 1.0 copy pass. Pick one
-I card, in order — I-1 before I-2 before I-3. C-1's GUI sit and the
-D-1/D-2 visual gates roll up into I-2; do not re-sit them separately.
+H (M12) is landed (issues #37–40). **California free-tier** (M20):
+I-1 is **deferred** (no paid `Developer ID Application` — only free team `ZQT4XUHVT5` / ad-hoc; `Scripts/notarize.sh` no-ops), I-3 is **landed** (`dac8c14` PR #108), I-2 whole-window sit rolls up C-1 + D-1/D-2 + F-8 gates on the **ad-hoc** build (you light sit now, friend full light+dark 720/1100/1400 + VoiceOver later). Pick I-2 now; I-1 notarize is the paid next. M13–M19 sit bugs are the only Board J until I-2 closes.
 
 Each card’s **Handoff** block is the note for the next person.
 
 | Card | Status |
 |------|--------|
-| I-1 | board — notarized + stapled 1.0 release |
-| I-2 | board — whole-window release sit (closes C-1, D-1/D-2, F-8) |
-| I-3 | board — 1.0 copy pass |
-| C-1 | cooking — script + code-backed sit; GUI pass still open |
-| D-1 | cooking — whisper implemented + unit-tested; card mini-sit open |
-| D-2 | cooking — prose Read implemented + built; card mini-sit open |
+| I-1 | **deferred — free tier** — pipeline landed `F-1` (`make release`/`Scripts/notarize.sh`), no paid `Developer ID Application` on this Mac; ad-hoc `-` / `Apple Development ZQT4XUHVT5` ships via right-click Open |
+| I-2 | **board — whole-window release sit** (closes C-1, D-1/D-2, F-8) — on ad-hoc build; local light sit may run now, friend full sit gate |
+| I-3 | **landed** — 1.0 copy `dac8c14` Help/About/empties/`CHANGELOG.md` |
+| C-1 | **rolled into I-2** — script + code-backed sit landed; GUI 30s type/⌘Z + 720/1100/1400 still open |
+| D-1 | **landed code, gate pending** — whisper `WhisperScan` 0.4s idle, pending I-2 friend visual |
+| D-2 | **landed code, gate pending** — `ProseReadView` native page, pending I-2 friend visual |
 | D-3 | landed — recipe references inlined in Read |
 | D-4 | landed — ⌘F matches ingredient names + inlined sauces |
+| M13–M19 | **blank active triage** — cut one card per sit bug found by I-2 |
 
 ## Board — Fluency
 
@@ -112,17 +110,19 @@ Landed (issues #37–40). The four maybes became cards.
 | [H-3 Tags filter](H-3-tags-filter.md) | M12 | list | landed — Tags section in sidebar as secondary filter |
 | [H-4 New window](H-4-new-window.md) | M12 | chrome | landed — File → New Window on the same notes folder |
 
-### Board I — California (M20)
+### Board I — California (M20) — free-tier vs paid
 
 The drive. Cut strictly from the M20 checklist in
-[`../HOPE-CHEST.md`](../HOPE-CHEST.md). Sit bugs found by I-2 are
-the only thing allowed to fill M13–M19. Pick in order.
+[`../HOPE-CHEST.md`](../HOPE-CHEST.md). Free-tier ships ad-hoc (right-click Open); paid adds notarize. Sit bugs found by I-2 are
+the only thing allowed to fill M13–M19. Pick I-2 now; I-1 paid re-opens after friend sit + Program.
 
 | Card | Milestone | Lane | Gate |
 |------|-----------|------|------|
-| [I-1 Release](I-1-release.md) | M20 | app | Developer ID, notarized + stapled; a stranger double-clicks |
-| [I-2 Release sit](I-2-release-sit.md) | M20 | chrome | One human, one afternoon, the signed build |
-| [I-3 Copy](I-3-copy.md) | M20 | copy | Help, About, empty states read like a person |
+| [I-1 Release](I-1-release.md) | M20 free → paid | app | **Free deferred** — `F-1` pipeline done, `make app` ad-hoc/`ZQT4XUHVT5` ships; **Paid gate** = `Developer ID Application` + notarized + stapled DMG, stranger double-clicks no warning |
+| [I-2 Release sit](I-2-release-sit.md) | M20 | chrome | One human, one afternoon, the **ad-hoc** build (you light + friend full 720/1100/1400 + VoiceOver); closes C-1/D-1/D-2/F-8 |
+| [I-3 Copy](I-3-copy.md) | M20 | copy | **Landed** `dac8c14` — Help single page + About + empties `Sources/BANALApp/Views/NoteListView.swift:100`; friend re-read is I-2 |
+
+**Next after free-tier:** M13–M19 drive — one sit-bug card at a time, then paid I-1 notarize when `Developer ID Application` available, then Japan (M50) `HOPE-CHEST.md:112`.
 
 ## Do not start
 
