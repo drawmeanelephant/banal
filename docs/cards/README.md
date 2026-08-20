@@ -31,7 +31,7 @@ Each card’s **Handoff** block is the note for the next person.
 | D-2 | **landed code, gate pending** — `ProseReadView` native page, pending I-2 friend visual |
 | D-3 | landed — recipe references inlined in Read |
 | D-4 | landed — ⌘F matches ingredient names + inlined sauces |
-| M13–M19 | **active triage — Drive** — J-13 Casa Grande (`fix/j13-casa-grande` #110 → #117-#120) landed, J-14 Gila Bend (`fix/j14-gila-bend` #111 → #123-#126) landed `686d972`, J-15 Yuma (`fix/j15-yuma` #112 → #129 #130 #131) landed `c2d039e`, J-16 El Centro (`fix/j16-el-centro` #113 → #134 #135 #136) board; M17–M19 stay blank until I-2 files that class |
+| M13–M19 | **active triage — Drive** — J-13 Casa Grande (`fix/j13-casa-grande` #110 → #117-#120) landed, J-14 Gila Bend (`fix/j14-gila-bend` #111 → #123-#126) landed `686d972`, J-15 Yuma (`fix/j15-yuma` #112 → #129 #130 #131) landed `c2d039e`, J-16 El Centro (`fix/j16-el-centro` #113 → #134 #135 #136) board + snack `4378a6a`, J-17 Niland (`fix/j17-niland` #114 → #139 #140 #141) board; M18–M19 stay blank until I-2 files that class |
 
 ### Board J — The Drive: Casa Grande → Quartzsite (M13–M19) — stability triage
 
@@ -43,8 +43,7 @@ I-8 shithole towns, not macOS names. One sit bug = one card in the town whose th
 | [J-14 Gila Bend](J-14-gila-bend.md) | M14 | core | **landed** — external truth (FSEvents dirty/clean, F-9) — coalesce/no DB/empty folders + dirty-keep/clean-reload + watch-off + F-9 guard. Subissues #123 #124 #125 #126 · `fix/j14-gila-bend` `686d972` · `docs/TESTING-WINDOW.md:4` |
 | [J-15 Yuma](J-15-yuma.md) | M15 | core | **landed** — write & crash safety (atomic 0.4s, caret/undo per-note, kill -9, config) — `fix/j15-yuma` `c2d039e` · `docs/TESTING-WINDOW.md:112` |
 | [J-16 El Centro](J-16-el-centro.md) | M16 | app | **board** — latency & large vault (5k, ⌘F, Spotlight disposable) — `fix/j16-el-centro` #113 · `docs/TESTING-WINDOW.md:112` |
-| M16 El Centro | M16 | app | **blank** — latency & large vault — cut only if I-2 files |
-| M17 Niland | M17 | chrome | **blank** — a11y & keyboard — cut only if I-2 files |
+| [J-17 Niland](J-17-niland.md) | M17 | chrome | **board** — a11y & keyboard (VoiceOver, ⌘1/⌘2/⌘3, Reduce Motion/Contrast) — `fix/j17-niland` #114 · `docs/TESTING-WINDOW.md:199` |
 | M18 Desert Center | M18 | system | **blank** — UTType/Quick Look/Print — cut only if I-2 files |
 | M19 Quartzsite | M19 | chrome | **blank** — copy/help & final sit — cut only if I-2 files |
 
