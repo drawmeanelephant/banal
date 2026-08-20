@@ -22,6 +22,7 @@
 - New note lands in the selected folder (or Inbox / root, per Settings); New Note Here always uses that folder
 - Drag a note onto a folder (or All Notes) to move the file
 - Settings (`⌘,`): General, Editor, Publish. Publish can Choose… / Reveal Boris and Oliver; empty is fine. BANAL → About BANAL.
+- Help: Help → BANAL Help (⌘?) opens a bundled Apple Help Book in the system Help Viewer. It keeps one concise landing page covering writing, folders, finding, reading, publishing, and the file-first model, with indexed section anchors.
 - Publish pane stores site + Cloudflare IDs and optional Boris/Oliver paths in `.banal/config.json`; API token in Keychain
 - Publish fields validate inline (http/s base URL, Cloudflare-safe project name; account ID warns)
 - Editor: SF Pro, measure cap, line height, spell check / smart quotes

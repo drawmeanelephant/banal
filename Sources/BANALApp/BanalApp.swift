@@ -69,6 +69,13 @@ struct BanalApp: App {
                 }
             }
 
+            CommandGroup(replacing: .help) {
+                Button("BANAL Help") {
+                    BanalHelp.show()
+                }
+                .keyboardShortcut("?", modifiers: .command)
+            }
+
             CommandGroup(replacing: .newItem) {
                 Button("New Note") {
                     model.createNote()
@@ -226,6 +233,17 @@ enum BanalAbout {
                 ]
             ),
         ])
+    }
+}
+
+enum BanalHelp {
+    private static let bookName = "dev.drawmeanelephant.banal.help"
+
+    @MainActor
+    static func show() {
+        let helpManager = NSHelpManager.shared
+        _ = helpManager.registerBooks(in: .main)
+        helpManager.openHelpAnchor("write", inBook: bookName)
     }
 }
 

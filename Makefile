@@ -6,6 +6,10 @@ APP = $(DIST)/BANAL.app
 DMG = $(DIST)/BANAL-$(VERSION).dmg
 SIGN_IDENTITY ?= -
 ENTITLEMENTS = Supporting/BANAL.entitlements
+HELP_BOOK = Resources/BANAL.help
+HELP_BOOK_DEST = $(APP)/Contents/Resources/BANAL.help
+HELP_BOOK_LOCALE = $(HELP_BOOK_DEST)/Contents/Resources/en.lproj
+HIUTIL ?= hiutil
 
 ifeq ($(SIGN_IDENTITY),-)
 CODESIGN_FLAGS = --timestamp=none
@@ -33,10 +37,13 @@ app:
 	cp .build/release/BANAL "$(APP)/Contents/MacOS/BANAL"
 	chmod +x "$(APP)/Contents/MacOS/BANAL"
 	cp Resources/AppIcon.icns "$(APP)/Contents/Resources/AppIcon.icns"
+	cp -R "$(HELP_BOOK)" "$(APP)/Contents/Resources/"
 	cp Supporting/Info.plist "$(APP)/Contents/Info.plist"
 	/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $(VERSION)" "$(APP)/Contents/Info.plist"
 	/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $(VERSION)" "$(APP)/Contents/Info.plist"
 	printf 'APPL????' > "$(APP)/Contents/PkgInfo"
+	@command -v "$(HIUTIL)" >/dev/null || { echo "hiutil is required to build the Apple Help Book." >&2; exit 1; }
+	"$(HIUTIL)" -I corespotlight -Caf "$(HELP_BOOK_LOCALE)/BANAL.cshelpindex" -g -s en -l en_US "$(HELP_BOOK_LOCALE)"
 	codesign --force --sign "$(SIGN_IDENTITY)" --entitlements "$(ENTITLEMENTS)" $(CODESIGN_FLAGS) "$(APP)"
 	@echo "Built $(APP) (version $(VERSION))."
 	@echo "Signed with identity '$(SIGN_IDENTITY)'."
