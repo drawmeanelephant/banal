@@ -1,13 +1,13 @@
 # Card J-13 — Casa Grande — bookmark & first-run (Drive triage)
 
-**Milestone:** M13 · **Lane:** core+app · **Status:** board — bookmark & first-run, triaged from I-2 sit · **Branch:** `fix/j13-casa-grande` · **Parent:** #110 · **Subissues:** #117 #118 #119 #120
+**Milestone:** M13 · **Lane:** core+app · **Status:** in progress — J-13a-c verified, J-13d shipped · **Branch:** `fix/j13d-reveal` (from `fix/j13-casa-grande` landed `3cc22cb`) · **Parent:** #110 · **Subissues:** #117 #118 #119 #120
 
 ## Handoff
 
-- **Not started** as code — `VaultBookmark` / `NotesFolderAccess` / `BanalApp` / `NoteStore.rootMissing` exists but J-13a-d split the sit into slices. Parent #110 gate: stale bookmark → `This notes folder is missing.` + old path, two buttons, no recreate, no crash.
-- Subissues cut: #117 bookmark stale/move/rename/reboot (`VaultBookmark.swift:8`), #118 first-run vs missing-at-launch never mkdir (`ContentView.swift:49`, `VaultBookmark.swift:139`), #119 vanish-while-open → missing picker (`NoteStore.swift:417`, `AppModel.swift:144`), #120 Settings Reveal after Finder rename (`SettingsRoot.swift:45`, `AppModel.swift:900`).
-- Stash of intent lives in `chore/i1-free-tier` docs edits (ROADMAP/HOPE-CHEST naming Casa Grande→Quartzsite) — not yet on `main`; J-13 is the first named exit off the blank drive (`ROADMAP.md:211`).
-- Next step after this card: close J-13a-d gates via `docs/TESTING-NOTES-FOLDER.md:1` script (steps 1–6), `swift test` `VaultBookmarkTests`/`NotesFolderAccessTests`, and `make app` + `make smoke` on ad-hoc build. Do not pull M14–M19 work into this branch.
+- **J-13a-c verified green** without new code: bookmark lifecycle, first-run vs missing, and vanish-while-open all pass existing `VaultBookmarkTests`/`NotesFolderAccessTests` + `docs/TESTING-NOTES-FOLDER.md:1` manual script (no silent mkdir, file-not-folder is missing, watch-off still catches vanish). Only hardening added is corrupted-bookmark fallback tests (#117).
+- **J-13d shipped this branch** (`Sources/BANALApp/AppModel.swift:900`): `revealVault()` now prefers `VaultBookmark.restore()` live resolution over stored `store.configuration.rootURL` snapshot so a Finder rename-while-quit re-resolves via bookmark inode data; fallback to stored URL only for `firstRun` (nil). Gate: quit → Finder rename `BANAL-sit-vault→BANAL-renamed` → launch no picker, Settings Location shows new path, `Reveal in Finder` selects renamed folder (`TESTING-NOTES-FOLDER.md:146`).
+- Parent #110 gate still: stale bookmark → `This notes folder is missing.` + old path, two buttons, no recreate, no crash — untouched.
+- M14–M19 stay blank until I-2 files that class (`ROADMAP.md:211`); do not pull Gila Bend/Yuma etc into this branch.
 
 ## Owns
 

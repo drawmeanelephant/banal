@@ -898,7 +898,13 @@ public final class AppModel: ObservableObject {
     }
 
     public func revealVault() {
-        NSWorkspace.shared.activateFileViewerSelecting([store.configuration.rootURL])
+        // J-13d: prefer live bookmark resolution after Finder rename-while-quit.
+        // `store.configuration.rootURL` is the snapshot from launch; a rename
+        // while quit re-resolves via bookmark data to the new inode path.
+        // `VaultBookmark.restore()` re-resolves (or honors BANAL_VAULT) and
+        // falls back to the stored URL only for firstRun (nil).
+        let live = VaultBookmark.restore() ?? store.configuration.rootURL
+        NSWorkspace.shared.activateFileViewerSelecting([live])
     }
 
     private func reconcileFilter() {
