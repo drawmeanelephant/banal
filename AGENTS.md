@@ -74,10 +74,11 @@ That is the app. Features that do not fit this table need a written exception in
 
 ## Git
 
-- Do not commit or push to `main` unless the user explicitly says to.
+- Never directly commit or push to `main`. Work on a branch and open a PR.
+- You may create branches, push them to `origin`, and open PRs with `gh` without asking each time. This is the expected delivery path.
 - One concern per branch. Prefixes: `feat/`, `fix/`, `docs/`, `ui/`, `chore/`.
 - Do not commit `.build/`, `.swiftpm/`, DerivedData, or vault contents from your machine.
-- Do not rewrite published history.
+- Do not rewrite published history (no force-push to `main` or to a PR after review) unless the user explicitly requests it.
 
 ## Quick “should I?”
 
