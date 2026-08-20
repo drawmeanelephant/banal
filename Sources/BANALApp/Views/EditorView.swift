@@ -60,6 +60,15 @@ struct EditorView: View {
                             model?.selectedText = text
                             model?.selectedRange = range
                             model?.translateSelection()
+                        },
+                        onAttachInsertHandler: { [weak model] handler in
+                            model?.insertAtCaretHandler = handler
+                        },
+                        onInsertContact: { [weak model] in
+                            model?.insertContact()
+                        },
+                        onInsertFile: { [weak model] in
+                            model?.insertFile()
                         }
                     )
                     .onChange(of: model.editorText) { _, _ in

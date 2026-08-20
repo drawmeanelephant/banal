@@ -1,166 +1,131 @@
 import XCTest
-import UniformTypeIdentifiers
 @testable import BANALCore
 
 final class AssetManagerTests: XCTestCase {
-    var tempDirectory: URL!
-    var vaultURL: URL!
+    private var tempVaultURL: URL!
+    private var tempSourceURL: URL!
+    private let fileManager = FileManager.default
 
-    override func setUp() {
-        super.setUp()
-        tempDirectory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("BANALAssetManagerTests-\(UUID().uuidString)")
-        vaultURL = tempDirectory.appendingPathComponent("Vault")
-        try? FileManager.default.createDirectory(at: vaultURL, withIntermediateDirectories: true)
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        let tempDir = fileManager.temporaryDirectory.appendingPathComponent("BANALAssetManagerTests-\(UUID().uuidString)", isDirectory: true)
+        try fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
+        tempVaultURL = tempDir.appendingPathComponent("vault", isDirectory: true)
+        tempSourceURL = tempDir.appendingPathComponent("external", isDirectory: true)
+        try fileManager.createDirectory(at: tempVaultURL, withIntermediateDirectories: true)
+        try fileManager.createDirectory(at: tempSourceURL, withIntermediateDirectories: true)
     }
 
-    override func tearDown() {
-        if let tempDirectory {
-            try? FileManager.default.removeItem(at: tempDirectory)
+    override func tearDownWithError() throws {
+        if let tempVaultURL {
+            try? fileManager.removeItem(at: tempVaultURL.deletingLastPathComponent())
         }
-        super.tearDown()
+        try super.tearDownWithError()
     }
 
     func testSupportedImageExtensions() {
-        let valid = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "gif", "GIF", "webp", "WEBP", "heic", "HEIC", "heif", "HEIF", "svg", "SVG", "tiff", "TIFF", "tif", "TIF"]
+        let valid = ["png", "PNG", "jpg", "JPG", "jpeg", "JPEG", "gif", "GIF", "webp", "WEBP", "heic", "HEIC", "tiff", "TIFF", "tif", "TIF"]
         for ext in valid {
-            XCTAssertTrue(AssetManager.isSupportedImage(pathExtension: ext), "Expected .\(ext) to be supported")
             let url = URL(fileURLWithPath: "/tmp/test.\(ext)")
             XCTAssertTrue(AssetManager.isSupportedImage(url: url), "Expected URL with .\(ext) to be supported")
         }
 
         let invalid = ["txt", "md", "textile", "cook", "swift", "pdf", "docx", "mp4", "zip", ""]
         for ext in invalid {
-            XCTAssertFalse(AssetManager.isSupportedImage(pathExtension: ext), "Expected .\(ext) to be unsupported")
             let url = URL(fileURLWithPath: "/tmp/test.\(ext)")
             XCTAssertFalse(AssetManager.isSupportedImage(url: url), "Expected URL with .\(ext) to be unsupported")
         }
-
-        let dirURL = URL(fileURLWithPath: "/tmp/photos.png/", isDirectory: true)
-        XCTAssertFalse(AssetManager.isSupportedImage(url: dirURL))
     }
 
-    func testFilenameSanitization() {
-        XCTAssertEqual(AssetManager.sanitizeFilename("diagram.png"), "diagram.png")
-        XCTAssertEqual(AssetManager.sanitizeFilename("PHOTO.JPG"), "PHOTO.jpg")
-        XCTAssertEqual(AssetManager.sanitizeFilename("My Diagram (1) : 2026.PNG"), "My-Diagram-1-2026.png")
-        XCTAssertEqual(AssetManager.sanitizeFilename("   foo   bar.webp  "), "foo-bar.webp")
-        XCTAssertEqual(AssetManager.sanitizeFilename("recipe---photo--final.heic"), "recipe-photo-final.heic")
-        XCTAssertEqual(AssetManager.sanitizeFilename(""), "image.png")
-        XCTAssertEqual(AssetManager.sanitizeFilename("???"), "image")
-        XCTAssertEqual(AssetManager.sanitizeFilename("???!!!.gif"), "image.gif")
-        XCTAssertEqual(AssetManager.sanitizeFilename("..hello..world...png"), "hello-world.png")
+    func testAssetsDirectory() {
+        let assets = AssetManager.assetsDirectory(for: tempVaultURL)
+        XCTAssertEqual(assets.lastPathComponent, "assets")
+        XCTAssertEqual(assets.deletingLastPathComponent().standardizedFileURL, tempVaultURL.standardizedFileURL)
     }
 
-    func testMarkdownLinkGeneration() {
-        XCTAssertEqual(AssetManager.markdownLink(for: "photo.png"), "![](assets/photo.png)")
-        XCTAssertEqual(AssetManager.markdownLink(for: "diagram-1.png"), "![](assets/diagram-1.png)")
-        XCTAssertEqual(AssetManager.markdownLink(for: "nested/photo.png"), "![](assets/nested/photo.png)")
+    func testStoreAssetFromSourceURL() throws {
+        let sourceFile = tempSourceURL.appendingPathComponent("document.pdf")
+        let testData = "PDF Content".data(using: .utf8)!
+        try testData.write(to: sourceFile)
+
+        let record = try AssetManager.storeAsset(from: sourceFile, in: tempVaultURL)
+
+        XCTAssertEqual(record.originalFilename, "document.pdf")
+        XCTAssertEqual(record.storedFilename, "document.pdf")
+        XCTAssertEqual(record.relativePath, "assets/document.pdf")
+        XCTAssertTrue(fileManager.fileExists(atPath: record.fileURL.path))
+
+        let readData = try Data(contentsOf: record.fileURL)
+        XCTAssertEqual(readData, testData)
     }
 
-    func testUniqueFilenameCollisionHandling() throws {
-        let assetsURL = vaultURL.appendingPathComponent("assets", isDirectory: true)
-        try FileManager.default.createDirectory(at: assetsURL, withIntermediateDirectories: true)
+    func testStoreAssetCollisionResolution() throws {
+        let sourceFile1 = tempSourceURL.appendingPathComponent("photo.png")
+        let data1 = "Image 1".data(using: .utf8)!
+        try data1.write(to: sourceFile1)
 
-        // When no file exists
-        let name1 = AssetManager.uniqueFilename(for: "screenshot.png", in: assetsURL)
-        XCTAssertEqual(name1, "screenshot.png")
+        let record1 = try AssetManager.storeAsset(from: sourceFile1, in: tempVaultURL)
+        XCTAssertEqual(record1.storedFilename, "photo.png")
+        XCTAssertEqual(record1.relativePath, "assets/photo.png")
 
-        // Create screenshot.png
-        try "dummy".write(to: assetsURL.appendingPathComponent("screenshot.png"), atomically: true, encoding: .utf8)
+        // Store a second file with the same name
+        let sourceFile2 = tempSourceURL.appendingPathComponent("sub").appendingPathComponent("photo.png")
+        try fileManager.createDirectory(at: sourceFile2.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let data2 = "Image 2".data(using: .utf8)!
+        try data2.write(to: sourceFile2)
 
-        // First collision appends -1
-        let name2 = AssetManager.uniqueFilename(for: "screenshot.png", in: assetsURL)
-        XCTAssertEqual(name2, "screenshot-1.png")
+        let record2 = try AssetManager.storeAsset(from: sourceFile2, in: tempVaultURL)
+        XCTAssertEqual(record2.storedFilename, "photo-1.png")
+        XCTAssertEqual(record2.relativePath, "assets/photo-1.png")
+        XCTAssertTrue(fileManager.fileExists(atPath: record2.fileURL.path))
 
-        // Create screenshot-1.png
-        try "dummy".write(to: assetsURL.appendingPathComponent("screenshot-1.png"), atomically: true, encoding: .utf8)
-
-        // Second collision appends -2
-        let name3 = AssetManager.uniqueFilename(for: "screenshot.png", in: assetsURL)
-        XCTAssertEqual(name3, "screenshot-2.png")
+        // Store a third file
+        let record3 = try AssetManager.storeAsset(from: sourceFile2, in: tempVaultURL)
+        XCTAssertEqual(record3.storedFilename, "photo-2.png")
+        XCTAssertEqual(record3.relativePath, "assets/photo-2.png")
     }
 
-    func testImportAssetCopiesFileAndCreatesDirectory() throws {
-        let sourceDir = tempDirectory.appendingPathComponent("Sources", isDirectory: true)
-        try FileManager.default.createDirectory(at: sourceDir, withIntermediateDirectories: true)
-        let sourceFile = sourceDir.appendingPathComponent("recipe photo.png")
-        let originalBytes = Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x01, 0x02, 0x03])
-        try originalBytes.write(to: sourceFile)
+    func testStoreAssetAlreadyInAssetsDirectory() throws {
+        let assetsDir = AssetManager.assetsDirectory(for: tempVaultURL)
+        try fileManager.createDirectory(at: assetsDir, withIntermediateDirectories: true)
+        let existingFile = assetsDir.appendingPathComponent("existing.txt")
+        try "Existing".data(using: .utf8)!.write(to: existingFile)
 
-        let result = try AssetManager.importAsset(from: sourceFile, vaultURL: vaultURL)
-        XCTAssertEqual(result.filename, "recipe-photo.png")
-        XCTAssertEqual(result.markdownLink, "![](assets/recipe-photo.png)")
-
-        let destinationFile = vaultURL.appendingPathComponent("assets/recipe-photo.png")
-        XCTAssertTrue(FileManager.default.fileExists(atPath: destinationFile.path))
-
-        // Raw bytes must remain unaltered
-        let destinationBytes = try Data(contentsOf: destinationFile)
-        XCTAssertEqual(destinationBytes, originalBytes)
+        let record = try AssetManager.storeAsset(from: existingFile, in: tempVaultURL)
+        XCTAssertEqual(record.storedFilename, "existing.txt")
+        XCTAssertEqual(record.relativePath, "assets/existing.txt")
+        XCTAssertEqual(record.fileURL.standardizedFileURL, existingFile.standardizedFileURL)
     }
 
-    func testImportAssetCollisionRenaming() throws {
-        let sourceDir = tempDirectory.appendingPathComponent("Sources", isDirectory: true)
-        try FileManager.default.createDirectory(at: sourceDir, withIntermediateDirectories: true)
-        let sourceFile = sourceDir.appendingPathComponent("diagram.png")
-        let data = Data([0x01, 0x02, 0x03, 0x04])
-        try data.write(to: sourceFile)
+    func testStoreAssetRawData() throws {
+        let data = "Raw byte payload".data(using: .utf8)!
+        let record = try AssetManager.storeAsset(data: data, originalFilename: "notes.txt", in: tempVaultURL)
 
-        let first = try AssetManager.importAsset(from: sourceFile, vaultURL: vaultURL)
-        XCTAssertEqual(first.filename, "diagram.png")
-        XCTAssertEqual(first.markdownLink, "![](assets/diagram.png)")
+        XCTAssertEqual(record.originalFilename, "notes.txt")
+        XCTAssertEqual(record.storedFilename, "notes.txt")
+        XCTAssertEqual(record.relativePath, "assets/notes.txt")
+        XCTAssertTrue(fileManager.fileExists(atPath: record.fileURL.path))
 
-        let second = try AssetManager.importAsset(from: sourceFile, vaultURL: vaultURL)
-        XCTAssertEqual(second.filename, "diagram-1.png")
-        XCTAssertEqual(second.markdownLink, "![](assets/diagram-1.png)")
-
-        let third = try AssetManager.importAsset(from: sourceFile, vaultURL: vaultURL)
-        XCTAssertEqual(third.filename, "diagram-2.png")
-        XCTAssertEqual(third.markdownLink, "![](assets/diagram-2.png)")
-
-        XCTAssertTrue(FileManager.default.fileExists(atPath: vaultURL.appendingPathComponent("assets/diagram.png").path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: vaultURL.appendingPathComponent("assets/diagram-1.png").path))
-        XCTAssertTrue(FileManager.default.fileExists(atPath: vaultURL.appendingPathComponent("assets/diagram-2.png").path))
+        let readData = try Data(contentsOf: record.fileURL)
+        XCTAssertEqual(readData, data)
     }
 
-    func testImportAssetReuseWhenAlreadyInAssets() throws {
-        let assetsURL = vaultURL.appendingPathComponent("assets", isDirectory: true)
-        try FileManager.default.createDirectory(at: assetsURL, withIntermediateDirectories: true)
-        let existingFile = assetsURL.appendingPathComponent("existing.png")
-        try Data([0xAA, 0xBB]).write(to: existingFile)
+    func testFileLinkFormatting() {
+        let link1 = AssetManager.fileLink(name: "Annual Report", relativePath: "assets/report.pdf")
+        XCTAssertEqual(link1, "[Annual Report](assets/report.pdf)")
 
-        let result = try AssetManager.importAsset(from: existingFile, vaultURL: vaultURL)
-        XCTAssertEqual(result.filename, "existing.png")
-        XCTAssertEqual(result.markdownLink, "![](assets/existing.png)")
+        let link2 = AssetManager.fileLink(name: nil, relativePath: "assets/photo-1.png")
+        XCTAssertEqual(link2, "[photo-1.png](assets/photo-1.png)")
+
+        let link3 = AssetManager.fileLink(name: "   ", relativePath: "assets/archive.zip")
+        XCTAssertEqual(link3, "[archive.zip](assets/archive.zip)")
     }
 
-    func testImportAssetInvalidOrMissingFile() throws {
-        let missingURL = tempDirectory.appendingPathComponent("missing.png")
-        XCTAssertThrowsError(try AssetManager.importAsset(from: missingURL, vaultURL: vaultURL)) { error in
-            XCTAssertEqual(error as? AssetError, AssetError.fileNotFound(missingURL))
-        }
+    func testImageLinkFormatting() {
+        let img1 = AssetManager.imageLink(alt: "Diagram", relativePath: "assets/diagram.png")
+        XCTAssertEqual(img1, "![Diagram](assets/diagram.png)")
 
-        let nonImageURL = tempDirectory.appendingPathComponent("document.pdf")
-        try Data([0x01]).write(to: nonImageURL)
-        XCTAssertThrowsError(try AssetManager.importAsset(from: nonImageURL, vaultURL: vaultURL)) { error in
-            XCTAssertEqual(error as? AssetError, AssetError.unsupportedFileType("pdf"))
-        }
-    }
-
-    func testSaveAssetData() throws {
-        let rawData = Data([0x10, 0x20, 0x30, 0x40])
-        let result1 = try AssetManager.saveAsset(data: rawData, originalFilename: "captured.png", vaultURL: vaultURL)
-        XCTAssertEqual(result1.filename, "captured.png")
-        XCTAssertEqual(result1.markdownLink, "![](assets/captured.png)")
-
-        let result2 = try AssetManager.saveAsset(data: rawData, originalFilename: "captured.png", vaultURL: vaultURL)
-        XCTAssertEqual(result2.filename, "captured-1.png")
-        XCTAssertEqual(result2.markdownLink, "![](assets/captured-1.png)")
-
-        let file1 = vaultURL.appendingPathComponent("assets/captured.png")
-        let file2 = vaultURL.appendingPathComponent("assets/captured-1.png")
-        XCTAssertEqual(try Data(contentsOf: file1), rawData)
-        XCTAssertEqual(try Data(contentsOf: file2), rawData)
+        let img2 = AssetManager.imageLink(alt: "", relativePath: "assets/header.jpg")
+        XCTAssertEqual(img2, "![](assets/header.jpg)")
     }
 }

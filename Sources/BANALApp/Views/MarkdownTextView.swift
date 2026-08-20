@@ -50,6 +50,9 @@ struct MarkdownTextView: NSViewRepresentable {
     var onWritingToolsActiveChange: ((Bool) -> Void)?
     var onSelectionChange: ((String, NSRange) -> Void)?
     var onTranslate: ((String, NSRange) -> Void)?
+    var onAttachInsertHandler: ((@escaping (String) -> Bool) -> Void)?
+    var onInsertContact: (() -> Void)?
+    var onInsertFile: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -90,6 +93,13 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.onTab = onTab
         textView.onBacktab = onBacktab
         textView.onTranslate = onTranslate
+        textView.onInsertContact = onInsertContact
+        textView.onInsertFile = onInsertFile
+        onAttachInsertHandler?({ [weak editorTextView = textView] text in
+            guard let editorTextView else { return false }
+            editorTextView.insertTextAtCaret(text)
+            return true
+        })
         apply(style, to: textView)
         context.coordinator.lastStyle = style
         context.coordinator.lastDocumentID = documentID
@@ -113,17 +123,22 @@ struct MarkdownTextView: NSViewRepresentable {
     }
 
     func updateNSView(_ scroll: NSScrollView, context: Context) {
-        guard let textView = scroll.documentView as? NSTextView else { return }
+        guard let textView = scroll.documentView as? EditorTextView else { return }
         context.coordinator.onWritingToolsActiveChange = onWritingToolsActiveChange
         context.coordinator.onSelectionChange = onSelectionChange
         context.coordinator.onTranslate = onTranslate
-        if let editorTextView = textView as? EditorTextView {
-            editorTextView.vaultURL = vaultURL
-            editorTextView.onEscape = onEscape
-            editorTextView.onTab = onTab
-            editorTextView.onBacktab = onBacktab
-            editorTextView.onTranslate = onTranslate
-        }
+        textView.vaultURL = vaultURL
+        textView.onEscape = onEscape
+        textView.onTab = onTab
+        textView.onBacktab = onBacktab
+        textView.onTranslate = onTranslate
+        textView.onInsertContact = onInsertContact
+        textView.onInsertFile = onInsertFile
+        onAttachInsertHandler?({ [weak editorTextView = textView] text in
+            guard let editorTextView else { return false }
+            editorTextView.insertTextAtCaret(text)
+            return true
+        })
         if #available(macOS 15.0, *), textView.isWritingToolsActive {
             return
         }
@@ -337,7 +352,43 @@ final class EditorTextView: NSTextView {
     var onTab: (() -> Void)?
     var onBacktab: (() -> Void)?
     var onTranslate: ((String, NSRange) -> Void)?
+    var onInsertContact: (() -> Void)?
+    var onInsertFile: (() -> Void)?
     var style: EditorStyle?
+
+    func insertTextAtCaret(_ text: String) {
+        let range = selectedRange()
+        let effectiveRange = (range.location == NSNotFound) ? NSRange(location: (string as NSString).length, length: 0) : range
+        if shouldChangeText(in: effectiveRange, replacementString: text) {
+            replaceCharacters(in: effectiveRange, with: text)
+            didChangeText()
+            let newLocation = effectiveRange.location + (text as NSString).length
+            setSelectedRange(NSRange(location: newLocation, length: 0))
+            scrollRangeToVisible(NSRange(location: newLocation, length: 0))
+        }
+    }
+
+    @objc func insertContactAction(_ sender: Any?) {
+        onInsertContact?()
+    }
+
+    @objc func insertFileAction(_ sender: Any?) {
+        onInsertFile?()
+    }
+
+    override func menu(for event: NSEvent) -> NSMenu? {
+        let menu = super.menu(for: event)
+        guard isEditable else { return menu }
+        menu?.addItem(NSMenuItem.separator())
+        let contactItem = NSMenuItem(title: "Insert Contact…", action: #selector(insertContactAction(_:)), keyEquivalent: "")
+        contactItem.target = self
+        menu?.addItem(contactItem)
+
+        let fileItem = NSMenuItem(title: "Insert File…", action: #selector(insertFileAction(_:)), keyEquivalent: "")
+        fileItem.target = self
+        menu?.addItem(fileItem)
+        return menu
+    }
 
     func updatePunctuationDiscipline(for range: NSRange? = nil) {
         let targetRange = range ?? selectedRange()
