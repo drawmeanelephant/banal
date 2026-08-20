@@ -199,8 +199,24 @@ public enum VaultBootstrap {
 
     public static func save(_ configuration: VaultConfiguration, fileManager: FileManager = .default) throws {
         try fileManager.createDirectory(at: configuration.metadataURL, withIntermediateDirectories: true)
-        let data = try JSONEncoder.pretty.encode(VaultConfigFile(from: configuration))
-        try data.write(to: configuration.configURL, options: .atomic)
+        let file = VaultConfigFile(from: configuration)
+        let encoded = try JSONEncoder.pretty.encode(file)
+        // Yuma: preserve unknown keys that may exist in an existing config.json on disk.
+        // Decode both sides as JSON dictionaries, merge old unknowns where new has no value, then re-serialize.
+        if let existingData = fileManager.contents(atPath: configuration.configURL.path),
+           let existingObj = try? JSONSerialization.jsonObject(with: existingData) as? [String: Any],
+           let newObj = try? JSONSerialization.jsonObject(with: encoded) as? [String: Any] {
+            var merged = newObj
+            for (k, v) in existingObj where merged[k] == nil {
+                merged[k] = v
+            }
+            let mergedData = try JSONSerialization.data(withJSONObject: merged, options: [.prettyPrinted, .sortedKeys])
+            var out = mergedData
+            if out.last != 10 { out.append(10) }
+            try out.write(to: configuration.configURL, options: .atomic)
+            return
+        }
+        try encoded.write(to: configuration.configURL, options: .atomic)
     }
 }
 
