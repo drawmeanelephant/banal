@@ -142,6 +142,9 @@ struct EditorView: View {
                 .labelsHidden()
                 .accessibilityLabel("Note view")
             }
+            HelpLink(anchor: BanalHelp.writeAnchor, book: BanalHelp.bookName)
+                .help("Help with writing notes")
+                .accessibilityLabel("Help with writing notes")
         }
         .padding(.horizontal, EditorTypography.horizontalInset)
         .padding(.bottom, 8)

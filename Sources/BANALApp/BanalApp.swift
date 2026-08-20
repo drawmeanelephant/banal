@@ -237,13 +237,15 @@ enum BanalAbout {
 }
 
 enum BanalHelp {
-    private static let bookName = "dev.drawmeanelephant.banal.help"
+    static let bookName: NSHelpManager.BookName = "dev.drawmeanelephant.banal.help"
+    static let writeAnchor: NSHelpManager.AnchorName = "write"
+    static let readPublishAnchor: NSHelpManager.AnchorName = "read-publish"
 
     @MainActor
     static func show() {
         let helpManager = NSHelpManager.shared
         _ = helpManager.registerBooks(in: .main)
-        helpManager.openHelpAnchor("write", inBook: bookName)
+        helpManager.openHelpAnchor(writeAnchor, inBook: bookName)
     }
 }
 

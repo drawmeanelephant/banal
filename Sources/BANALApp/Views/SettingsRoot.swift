@@ -201,7 +201,13 @@ private struct PublishSettingsPane: View {
                     }
                 }
             } header: {
-                Text("Cloudflare Pages")
+                HStack {
+                    Text("Cloudflare Pages")
+                    Spacer()
+                    HelpLink(anchor: BanalHelp.readPublishAnchor, book: BanalHelp.bookName)
+                        .help("Help with publishing")
+                        .accessibilityLabel("Help with publishing")
+                }
             } footer: {
                 Text("Names and IDs travel with the notes folder. The token stays in Keychain.")
             }
