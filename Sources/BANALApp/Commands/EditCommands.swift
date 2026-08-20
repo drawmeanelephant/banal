@@ -31,6 +31,11 @@ public struct EditCommands: Commands {
 
             Divider()
 
+            Button("Insert Photo…") {
+                model.insertPhoto()
+            }
+            .disabled(!model.canInsertPhoto)
+
             Button("Translate…") {
                 model.translateSelection()
             }

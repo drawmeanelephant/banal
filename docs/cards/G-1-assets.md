@@ -1,10 +1,10 @@
 # Card G-1 — Images land in `assets/`
 
-**Milestone:** M11 · **Lane:** files · **Depends:** M8 done · **Status:** ready — drop photos into markdown notes
+**Milestone:** M11 · **Lane:** files · **Depends:** M8 done · **Status:** landed — drop photos into markdown notes
 
 ## Handoff
 
-- **Not started.** Dragging an image onto `MarkdownTextView` inserts a file path or raw data URL without copying the file to the notes folder.
+- **Landed.** Dropping or pasting image files onto `MarkdownTextView` or choosing Edit → Insert Photo… imports the raw image file directly into `<vault>/assets/`, avoids collisions with `-1`, `-2`, etc. suffixing, and inserts relative Markdown tag `![](assets/<filename>)` at the drop point/caret with `⌘Z` undo intact.
 - **Not this card:** image editing, hover zoom, attachment database, cloud media hosting.
 
 ## Owns

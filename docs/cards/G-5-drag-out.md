@@ -1,11 +1,13 @@
 # Card G-5 — Drag note out to system
 
-**Milestone:** M11 · **Lane:** list · **Depends:** M8 done · **Status:** ready — notes travel like files
+**Milestone:** M11 · **Lane:** list · **Depends:** M8 done · **Status:** landed — notes travel like files
 
 ## Handoff
 
-- **Not started.** Dragging a note row from the list supports dragging onto folders within the app, but dragging out to Finder, Mail, or Messages does not export the file URL.
-- **Not this card:** internal note moving (already supported via B-4).
+- **Landed.** Dragging a note row from the list provides `NSItemProvider` configured with `.fileURL` pointing to the note on disk and `public.utf8-plain-text` formatted note body/text via `NoteDragProvider`.
+- Finder copies the real `.md`, `.cook`, or `.textile` file directly.
+- Mail and Messages attach the file or insert plain text.
+- Internal folder drag-to-move in `SidebarView` is maintained.
 
 ## Owns
 

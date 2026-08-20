@@ -19,7 +19,9 @@ struct NoteListView: View {
                         .tag(note.id)
                         .listRowInsets(EdgeInsets(top: 8, leading: 14, bottom: 8, trailing: 14))
                         .listRowSeparatorTint(Color(nsColor: .separatorColor))
-                        .draggable(note.id)
+                        .onDrag {
+                            NoteDragProvider.itemProvider(for: note)
+                        }
                         .contextMenu {
                             Button(note.published ? "Unpublish" : "Publish") {
                                 model.select(note.id)
