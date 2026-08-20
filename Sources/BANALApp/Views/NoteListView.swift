@@ -1,5 +1,6 @@
 import AppKit
 import BANALCore
+import Quartz
 import SwiftUI
 
 struct NoteListView: View {
@@ -179,7 +180,7 @@ private struct NoteListFocusHelper: NSViewRepresentable {
     }
 
     @MainActor
-    final class Coordinator: NSObject {
+    final class Coordinator: NSObject, @preconcurrency QLPreviewPanelDataSource, QLPreviewPanelDelegate {
         weak var model: AppModel?
         weak var tableView: NSTableView?
         private var eventMonitor: Any?
@@ -231,9 +232,29 @@ private struct NoteListFocusHelper: NSViewRepresentable {
         }
 
         func toggleQuickLook() {
-            guard let note = model?.selectedNote else { return }
-            NSWorkspace.shared.open(note.fileURL)
+            guard let panel = QLPreviewPanel.shared() else { return }
+            if panel.isVisible {
+                panel.close()
+            } else {
+                panel.dataSource = self
+                panel.delegate = self
+                panel.reloadData()
+                panel.makeKeyAndOrderFront(nil)
+            }
         }
+
+        // MARK: - QLPreviewPanelDataSource
+
+        func numberOfPreviewItems(in panel: QLPreviewPanel!) -> Int {
+            1
+        }
+
+        func previewPanel(_ panel: QLPreviewPanel!, previewItemAt index: Int) -> QLPreviewItem! {
+            guard let note = model?.selectedNote else { return nil as QLPreviewItem? }
+            return NotePreviewItem(note: note)
+        }
+
+        // MARK: - QLPreviewPanelDelegate
 
         private func installMonitor() {
             guard eventMonitor == nil else { return }
