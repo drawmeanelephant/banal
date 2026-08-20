@@ -1,10 +1,10 @@
 # Card H-3 — Tags as secondary filter
 
-**Milestone:** M12 · **Lane:** list · **Depends:** M8 done · **Status:** consider — tags filter, not a notebook structure
+**Milestone:** M12 · **Lane:** list · **Depends:** M8 done · **Status:** landed — tags filter, not a notebook structure
 
 ## Handoff
 
-- **Not started.** Tags exist in note frontmatter / metadata row, but cannot be filtered from the sidebar.
+- **Landed.** Sidebar displays a quiet "Tags" section below the folder hierarchy. Clicking a tag filters the note list to matching notes; clicking again deselects it and restores the note list.
 - **Not this card:** nested tag hierarchies, tag management databases, replacing folders with tags.
 
 ## Owns
