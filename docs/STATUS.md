@@ -1,7 +1,7 @@
 # Status
 
-**Phase:** Tucson done (E·F·G·H landed) · California board cut  
-**Bar:** The whole window is drawn — folders · list · page, three languages, recipe Read, publish as Export, Mac furniture, files that file themselves. What is left is the 1.0 pass: a notarized+stapled release, one whole-window sit, and 1.0 copy. Board I: [`cards/README.md`](cards/README.md).
+**Phase:** Tucson done (E·F·G·H landed) · California board cut — free-tier release path  
+**Bar:** The whole window is drawn — folders · list · page, three languages, recipe Read, publish as Export, Mac furniture, files that file themselves. What is left is the 1.0 pass: one whole-window sit and 1.0 copy; notarized+stapled I-1 is deferred (no paid Apple Developer Program — ad-hoc or Apple Development ZQT4XUHVT5 only, `Scripts/notarize.sh` no-ops). Board I: [`cards/README.md`](cards/README.md).
 
 ## What works today
 
@@ -55,7 +55,7 @@
 | --- | --- | --- |
 | Whole-window sit | [C-1](cards/C-1-sit.md) | Script: [`TESTING-WINDOW.md`](TESTING-WINDOW.md). Code-backed sit landed (nested publish nav, status grammar, caret id on move). Sit prep is done and CI-green: every brief row was audited against the code, this machine’s Oliver/Boris were probed (Read is the one-sentence path; publish uses builtin), and `make smoke` boots the signed app against a scratch vault on GitHub Actions. **GUI not sat in this environment** — 30s type / ⌘Z, light+dark 720/1100/1400, and VoiceOver stay open until a human runs the window. Outranks every D card. |
 | Oliver / Boris paths, About, first-run copy | [C-2](cards/C-2-honesty.md) | Landed. Settings → Publish Choose… / Reveal. About BANAL. |
-| Signed `.app` / sandbox | [C-3](cards/C-3-hand-it.md) | Landed — ad-hoc signed `dist/BANAL.app` via `make app`, sandbox on, app icon, bookmarks start/stop. No Developer ID on this machine; not notarized. GUI sit of the signed app still wants a human. |
+| Signed `.app` / sandbox | [C-3](cards/C-3-hand-it.md) | Landed — ad-hoc signed `dist/BANAL.app` via `make app` (also works `SIGN_IDENTITY="Apple Development: tbuddy@gmail.com (ZQT4XUHVT5)"` on this free team — not Developer ID), sandbox on, app icon, bookmarks start/stop. Not notarized (no paid `Developer ID Application`). GUI sit of the ad-hoc app still wants a human (friend deferred). |
 
 ## Next (Fluency)
 
@@ -76,9 +76,9 @@ Board I is cut — [`cards/README.md`](cards/README.md). Tucson
 
 | Gap | Card | Notes |
 | --- | --- | --- |
-| Notarized + stapled 1.0 | [I-1](cards/I-1-release.md) | issue #75 — F-1 built the pipeline; no real Developer ID build yet on this machine. |
-| Whole-window release sit | [I-2](cards/I-2-release-sit.md) | issue #76 — rolls up C-1 GUI + D-1/D-2 visual gates + F-8 GUI gate on the signed build. Sit bugs fill M13–M19. |
-| 1.0 copy | [I-3](cards/I-3-copy.md) | issue #77 — Help, About, empty states read aloud; release notes; version 1.0. |
+| Notarized + stapled 1.0 | [I-1](cards/I-1-release.md) | issue #75 — **Deferred — free tier.** F-1 pipeline done (`make release`, `Scripts/notarize.sh` with graceful no-op). No paid Apple Developer Program on this machine; only Apple Development `ZQT4XUHVT5` (free team) — not a `Developer ID Application`. `make app` ad-hoc (`-`) is the free-tier artifact; `make app SIGN_IDENTITY="Apple Development: tbuddy@gmail.com (ZQT4XUHVT5)"` is optional dev-signed. Friend install is drag → right-click Open (Gatekeeper). Notarize/staple need `Developer ID Application` + `notarytool` creds — keep as next paid step. |
+| Whole-window release sit | [I-2](cards/I-2-release-sit.md) | issue #76 — rolls up C-1 GUI + D-1/D-2 visual gates + F-8 GUI gate on the ad-hoc build. Local light sit may run now; friend full sit (light+dark 720/1100/1400 + VoiceOver) deferred to friend. Sit bugs fill M13–M19. |
+| 1.0 copy | [I-3](cards/I-3-copy.md) | issue #77 — **Landed.** `dac8c14` + #108: Help single page `Resources/BANAL.help` with indexed anchors, About `BANAL is a beautiful, boring, local Mac notes app…` `Sources/BANALApp/BanalApp.swift:121`, empties `No notes match.`/`No notes in this folder.`/`Nothing published.` in `Sources/BANALApp/Views/NoteListView.swift:100`, `CHANGELOG.md` 1.0 notes. Read-aloud gate now satisfied for free tier; friend re-read is I-2. |
 
 ## Known gaps in the scaffold
 
