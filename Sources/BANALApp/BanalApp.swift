@@ -120,7 +120,7 @@ struct WindowRootView: View {
 
 enum BanalAbout {
     static let applicationName = "BANAL"
-    static let version = "0.1.0"
+    static let version = "1.0"
     static let mission = "BANAL is a beautiful, boring, local Mac notes app whose files are allowed to be excellent."
 
     @MainActor

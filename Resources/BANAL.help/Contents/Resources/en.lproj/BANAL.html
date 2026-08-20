@@ -20,37 +20,74 @@
             <a href="#file-notes">File your notes</a>
             <a href="#find">Find your way</a>
             <a href="#read-publish">Read or publish</a>
+            <a href="#keyboard">Keyboard shortcuts</a>
             <a href="#files">Your files are the source of truth</a>
         </nav>
 
         <a name="write" id="write"></a>
         <section id="write">
             <h2>Write</h2>
-            <p>Choose File → New Note (<kbd>⌘N</kbd>), then start typing. BANAL keeps the source in the editor and saves the note as a regular file on disk.</p>
+            <p>File → New Note (<kbd>⌘N</kbd>), then start typing. BANAL saves the note as a regular file on disk — Markdown, Textile, or Cooklang. File → New Textile and File → New Recipe create the other languages.</p>
         </section>
 
         <a name="file-notes" id="file-notes"></a>
         <section id="file-notes">
             <h2>File your notes</h2>
-            <p>Folders in the sidebar are real folders in your notes folder. Use File → New Folder (<kbd>⇧⌘N</kbd>), or drag a note onto a folder. Move to Trash (<kbd>⌘⌫</kbd>) uses the Finder trash.</p>
+            <p>Folders in the sidebar are real folders on disk. File → New Folder (<kbd>⇧⌘N</kbd>), or drag a note onto a folder to move it. Move to Trash (<kbd>⌘⌫</kbd>) sends the file to the Finder trash.</p>
         </section>
 
         <a name="find" id="find"></a>
         <section id="find">
             <h2>Find your way</h2>
-            <p>Find notes with <kbd>⌘F</kbd>. Find in the current note with <kbd>⇧⌘F</kbd>. <kbd>⌘1</kbd>, <kbd>⌘2</kbd>, and <kbd>⌘3</kbd> focus the folders, note list, and editor.</p>
+            <p>Find Notes (<kbd>⌘F</kbd>) searches titles, bodies, tags, and recipe ingredients. Find in Note (<kbd>⇧⌘F</kbd>) searches the open note. Click a folder in the sidebar to narrow the list.</p>
         </section>
 
         <a name="read-publish" id="read-publish"></a>
         <section id="read-publish">
             <h2>Read or publish</h2>
-            <p>Use View → Read Note for a quiet reading view. To publish, mark notes Published and choose File → Publish Site… (<kbd>⇧⌘P</kbd>). Publishing is optional; writing works without Oliver, Boris, or Cloudflare.</p>
+            <p>Every note has Edit and Read. Use View → Read Note (<kbd>⌘]</kbd>) for a quiet reading view — recipes show ingredients, cookware, and steps. Publishing is optional: mark notes Published and choose File → Publish Site (<kbd>⇧⌘P</kbd>). Writing works without Oliver, Boris, or Cloudflare.</p>
+        </section>
+
+        <a name="keyboard" id="keyboard"></a>
+        <section id="keyboard">
+            <h2>Keyboard shortcuts</h2>
+            <dl>
+                <dt><kbd>⌘N</kbd></dt>
+                <dd>New Note</dd>
+
+                <dt><kbd>⇧⌘N</kbd></dt>
+                <dd>New Folder</dd>
+
+                <dt><kbd>⌘F</kbd></dt>
+                <dd>Find Notes</dd>
+
+                <dt><kbd>⇧⌘F</kbd></dt>
+                <dd>Find in Note</dd>
+
+                <dt><kbd>⌘[</kbd> / <kbd>⌘]</kbd></dt>
+                <dd>Edit Note / Read Note</dd>
+
+                <dt><kbd>⌘1</kbd> <kbd>⌘2</kbd> <kbd>⌘3</kbd></dt>
+                <dd>Focus Sidebar / Note List / Editor</dd>
+
+                <dt><kbd>⇧⌘P</kbd></dt>
+                <dd>Publish Site</dd>
+
+                <dt><kbd>⌘⌫</kbd></dt>
+                <dd>Move to Trash</dd>
+
+                <dt><kbd>⌘Y</kbd></dt>
+                <dd>Quick Look</dd>
+
+                <dt><kbd>⌘P</kbd></dt>
+                <dd>Print</dd>
+            </dl>
         </section>
 
         <a name="files" id="files"></a>
         <section id="files">
             <h2>Your files are the source of truth</h2>
-            <p>Markdown, Textile, and Cooklang notes stay in the folder you chose. You can open and edit them in Finder or another text editor, and BANAL will notice changes.</p>
+            <p>Markdown, Textile, and Cooklang notes live in the folder you chose. Open them in Finder or any text editor — BANAL notices changes and updates the list.</p>
         </section>
     </main>
 </body>
