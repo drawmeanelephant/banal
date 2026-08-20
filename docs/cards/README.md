@@ -108,7 +108,7 @@ Named, not scheduled. Cut a card only if a sit asks.
 | [H-1 Checkbox](H-1-checkbox.md) | M12 | editor | landed — Click `- [ ]` in source to toggle `- [x]` |
 | [H-2 Word count](H-2-word-count.md) | M12 | chrome | landed — Quiet word / character count in existing status strip |
 | [H-3 Tags filter](H-3-tags-filter.md) | M12 | list | landed — Tags section in sidebar as secondary filter |
-| [H-4 New window](H-4-new-window.md) | M12 | chrome | File → New Window on the same notes folder |
+| [H-4 New window](H-4-new-window.md) | M12 | chrome | landed — File → New Window on the same notes folder |
 
 ## Do not start
 

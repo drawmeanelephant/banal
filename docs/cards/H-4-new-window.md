@@ -1,10 +1,10 @@
 # Card H-4 — New window on same folder
 
-**Milestone:** M12 · **Lane:** chrome · **Depends:** M7 Close landed · **Status:** consider — second window on notes folder
+**Milestone:** M12 · **Lane:** chrome · **Depends:** M7 Close landed · **Status:** landed — second window on notes folder
 
 ## Handoff
 
-- **Not started.** BANAL currently supports a single primary window. File → New Window is disabled or not present.
+- **Landed.** BANAL supports multiple windows on the same active notes folder (`File → New Window` / `⌥⌘N`). Each window has independent local UI state (selection, search, view mode) while observing the shared `NoteStore`.
 - **Not this card:** multi-vault workspaces, tabbed IDE windows.
 
 ## Owns

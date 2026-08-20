@@ -5,7 +5,8 @@ import SwiftUI
 
 @main
 struct BanalApp: App {
-    @StateObject private var model: AppModel
+    @StateObject private var sharedStore: NoteStore
+    @StateObject private var primaryModel: AppModel
     @NSApplicationDelegateAdaptor(BanalAppDelegate.self) private var appDelegate
 
     init() {
@@ -32,37 +33,32 @@ struct BanalApp: App {
             configuration: VaultConfiguration(rootURL: root),
             spotlightIndexer: NoteSpotlightIndexer.shared
         )
-        _model = StateObject(wrappedValue: AppModel(
+        let prefs = AppPreferencesStore.load()
+        let model = AppModel(
             store: store,
             needsVault: needsVault,
             missingNotesFolder: missing,
-            preferences: AppPreferencesStore.load()
-        ))
+            preferences: prefs
+        )
+        _sharedStore = StateObject(wrappedValue: store)
+        _primaryModel = StateObject(wrappedValue: model)
     }
 
     var body: some Scene {
-        WindowGroup {
-            ContentView(model: model)
-                .onAppear {
-                    appDelegate.model = model
-                    appDelegate.flushPendingOpens()
-                }
-                .onOpenURL { url in
-                    model.openExternalNote(at: url)
-                }
-                .onContinueUserActivity(CSSearchableItemActionType) { userActivity in
-                    if let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String {
-                        model.filter = .all
-                        model.select(identifier)
-                        model.focusEditor()
-                    }
-                }
+        WindowGroup(id: "main-window") {
+            WindowRootView(
+                sharedStore: sharedStore,
+                fallbackModel: primaryModel,
+                appDelegate: appDelegate
+            )
         }
         .defaultSize(width: 1100, height: 720)
         .windowResizability(.contentMinSize)
         .commands {
-            EditCommands(model: model)
-            FileCommands(model: model)
+            FileCommands(model: primaryModel)
+            EditCommands(model: primaryModel)
+            FindCommands(model: primaryModel)
+            ViewCommands(model: primaryModel)
 
             CommandGroup(replacing: .appInfo) {
                 Button("About BANAL") {
@@ -76,150 +72,49 @@ struct BanalApp: App {
                 }
                 .keyboardShortcut("?", modifiers: .command)
             }
-
-            CommandGroup(replacing: .newItem) {
-                Button("New Note") {
-                    model.createNote()
-                }
-                .keyboardShortcut("n", modifiers: .command)
-                .disabled(model.needsVault)
-
-                Button("New Folder") {
-                    model.beginNewFolder()
-                }
-                .keyboardShortcut("n", modifiers: [.command, .shift])
-                .disabled(model.needsVault)
-
-                Button("New Textile") {
-                    model.createNote(language: .textile)
-                }
-                .disabled(model.needsVault)
-
-                Button("New Recipe") {
-                    model.createNote(language: .cooklang)
-                }
-                .disabled(model.needsVault)
-
-                Button("Move to Trash") {
-                    if model.selectedID != nil {
-                        model.trashSelected()
-                    } else if model.selectedFolderPath != nil {
-                        model.trashSelectedFolder()
-                    }
-                }
-                .keyboardShortcut(.delete, modifiers: .command)
-                .disabled(model.needsVault || (model.selectedID == nil && model.selectedFolderPath == nil))
-
-                Divider()
-
-                Button("Open Notes Folder…") {
-                    chooseVault()
-                }
-
-                Button("Reveal in Finder") {
-                    model.revealSelected()
-                }
-                .disabled(model.needsVault || (model.selectedID == nil && model.selectedFolderPath == nil))
-
-                Button("Reveal Notes Folder in Finder") {
-                    model.revealVault()
-                }
-                .disabled(model.needsVault && model.missingNotesFolder)
-            }
-
-            CommandGroup(after: .newItem) {
-                Button(model.editorPublished ? "Unpublish" : "Publish") {
-                    model.togglePublished()
-                }
-                .keyboardShortcut("u", modifiers: [.command, .shift])
-                .disabled(model.needsVault || model.selectedID == nil)
-
-                Button("Publish Site…") {
-                    model.publishSite()
-                }
-                .keyboardShortcut("p", modifiers: [.command, .shift])
-                .disabled(model.needsVault)
-
-                Button("Deploy to Cloudflare") {
-                    model.deployToCloudflare()
-                }
-                .disabled(model.needsVault || !model.canDeploy)
-            }
-
-            CommandGroup(replacing: .printItem) {
-                Button("Print…") {
-                    model.printSelectedNote()
-                }
-                .keyboardShortcut("p", modifiers: .command)
-                .disabled(model.needsVault || model.selectedID == nil)
-            }
-
-
-
-            CommandMenu("Find") {
-                Button("Find Notes") {
-                    model.focusSearch()
-                }
-                .keyboardShortcut("f", modifiers: .command)
-                .disabled(model.needsVault)
-
-                Button("Find in Note") {
-                    model.findInNote()
-                }
-                .keyboardShortcut("f", modifiers: [.command, .shift])
-                .disabled(model.needsVault || model.selectedID == nil)
-            }
-
-            CommandGroup(after: .toolbar) {
-                Button("Focus Sidebar") {
-                    model.focusSidebar()
-                }
-                .keyboardShortcut("1", modifiers: .command)
-                .disabled(model.needsVault)
-
-                Button("Focus Note List") {
-                    model.focusNoteList()
-                }
-                .keyboardShortcut("2", modifiers: .command)
-                .disabled(model.needsVault)
-
-                Button("Focus Editor") {
-                    model.focusEditor()
-                }
-                .keyboardShortcut("3", modifiers: .command)
-                .disabled(model.needsVault || model.selectedID == nil)
-
-                Divider()
-
-                Button("Edit Note") {
-                    model.setViewMode(.edit)
-                }
-                .disabled(model.selectedID == nil)
-
-                Button("Read Note") {
-                    model.setViewMode(.read)
-                }
-                .disabled(model.selectedID == nil)
-
-                Divider()
-
-                Button("Quick Look Note") {
-                    model.toggleQuickLook()
-                }
-                .keyboardShortcut("y", modifiers: .command)
-                .disabled(model.selectedID == nil)
-            }
         }
 
         Settings {
-            SettingsRoot(model: model)
+            SettingsRoot(model: primaryModel)
         }
     }
+}
 
-    private func chooseVault() {
-        if let url = NotesFolderPicker.run() {
-            model.openVault(url)
-        }
+struct WindowRootView: View {
+    @ObservedObject var sharedStore: NoteStore
+    var fallbackModel: AppModel
+    var appDelegate: BanalAppDelegate
+    @StateObject private var model: AppModel
+
+    init(sharedStore: NoteStore, fallbackModel: AppModel, appDelegate: BanalAppDelegate) {
+        self.sharedStore = sharedStore
+        self.fallbackModel = fallbackModel
+        self.appDelegate = appDelegate
+        _model = StateObject(wrappedValue: AppModel(
+            store: sharedStore,
+            needsVault: fallbackModel.needsVault,
+            missingNotesFolder: fallbackModel.missingNotesFolder,
+            preferences: fallbackModel.preferences
+        ))
+    }
+
+    var body: some View {
+        ContentView(model: model)
+            .focusedObject(model)
+            .onAppear {
+                appDelegate.model = model
+                appDelegate.flushPendingOpens()
+            }
+            .onOpenURL { url in
+                model.openExternalNote(at: url)
+            }
+            .onContinueUserActivity(CSSearchableItemActionType) { userActivity in
+                if let identifier = userActivity.userInfo?[CSSearchableItemActivityIdentifier] as? String {
+                    model.filter = .all
+                    model.select(identifier)
+                    model.focusEditor()
+                }
+            }
     }
 }
 
