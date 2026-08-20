@@ -14,7 +14,9 @@ public struct FindCommands: Commands {
     }
 
     public var body: some Commands {
-        CommandMenu("Find") {
+        // Move Find Notes and Find in Note into the Edit menu via
+        // CommandGroup so we don't duplicate the system Find menu.
+        CommandGroup(replacing: .textEditing) {
             Button("Find Notes") {
                 model.focusSearch()
             }

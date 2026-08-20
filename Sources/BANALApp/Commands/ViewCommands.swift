@@ -38,11 +38,13 @@ public struct ViewCommands: Commands {
             Button("Edit Note") {
                 model.setViewMode(.edit)
             }
+            .keyboardShortcut("[", modifiers: .command)
             .disabled(model.selectedID == nil)
 
             Button("Read Note") {
                 model.setViewMode(.read)
             }
+            .keyboardShortcut("]", modifiers: .command)
             .disabled(model.selectedID == nil)
 
             Divider()
