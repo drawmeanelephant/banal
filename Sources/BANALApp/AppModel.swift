@@ -39,6 +39,14 @@ public final class AppModel: ObservableObject {
     @Published public private(set) var editorSessionID = UUID()
     /// Whether macOS 15+ Apple Intelligence Writing Tools is currently active.
     @Published public var isWritingToolsActive: Bool = false
+    /// Currently selected text in the active editor buffer.
+    @Published public var selectedText: String = ""
+    /// Currently selected range in the active editor buffer.
+    @Published public var selectedRange: NSRange = NSRange(location: 0, length: 0)
+    /// Controls system translation sheet presentation (macOS 15+).
+    @Published public var isTranslationPresented: Bool = false
+    /// Text to present in the translation sheet.
+    @Published public var translationText: String = ""
 
     public let sidebarFocus = FocusToken()
     public let noteListFocus = FocusToken()
@@ -554,6 +562,36 @@ public final class AppModel: ObservableObject {
         }
     }
 
+    public var canTranslate: Bool {
+        guard selectedNote != nil, viewMode == .edit else { return false }
+        return TranslationState.isValidTranslationText(selectedText)
+    }
+
+    public func translateSelection() {
+        guard canTranslate else { return }
+        translationText = selectedText
+        if #available(macOS 15.0, *) {
+            isTranslationPresented = true
+        } else {
+            triggerNativeTranslation()
+        }
+    }
+
+    public func replaceSelectedText(with replacement: String) {
+        guard let (newBody, newRange) = TranslationState.replaceSelectedText(
+            in: editorText,
+            range: selectedRange,
+            with: replacement
+        ) else { return }
+        editorText = newBody
+        selectedRange = newRange
+        selectedText = ""
+        applyEditorChanges()
+    }
+
+    public func triggerNativeTranslation() {
+        NSApp.sendAction(NSSelectorFromString("translate:"), to: nil, from: nil)
+    }
     public func dismissStatusLater() {
         let message = statusMessage
         Task { @MainActor in
@@ -682,6 +720,10 @@ public final class AppModel: ObservableObject {
             cancelRecipeAsk()
             clearRecipe()
         }
+        if mode != .edit {
+            selectedText = ""
+            isTranslationPresented = false
+        }
     }
 
     public func setRecipeScale(_ scale: RecipeScale) {
@@ -707,6 +749,10 @@ public final class AppModel: ObservableObject {
         editorDirty = false
         warnedDiskFingerprint = ""
         recipeScale = .one
+        selectedText = ""
+        selectedRange = NSRange(location: 0, length: 0)
+        isTranslationPresented = false
+        translationText = ""
         suppressEditorSync = false
         viewMode = sessionViewMode
         if viewMode == .read, note?.language == .cooklang {

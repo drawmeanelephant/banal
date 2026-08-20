@@ -47,6 +47,8 @@ struct MarkdownTextView: NSViewRepresentable {
     var onTab: (() -> Void)?
     var onBacktab: (() -> Void)?
     var onWritingToolsActiveChange: ((Bool) -> Void)?
+    var onSelectionChange: ((String, NSRange) -> Void)?
+    var onTranslate: ((String, NSRange) -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -83,11 +85,14 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.onEscape = onEscape
         textView.onTab = onTab
         textView.onBacktab = onBacktab
+        textView.onTranslate = onTranslate
         apply(style, to: textView)
         context.coordinator.lastStyle = style
         context.coordinator.lastDocumentID = documentID
         context.coordinator.language = language
         context.coordinator.onWritingToolsActiveChange = onWritingToolsActiveChange
+        context.coordinator.onSelectionChange = onSelectionChange
+        context.coordinator.onTranslate = onTranslate
         context.coordinator.applyWhisper()
 
         scroll.documentView = textView
@@ -106,10 +111,13 @@ struct MarkdownTextView: NSViewRepresentable {
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         guard let textView = scroll.documentView as? NSTextView else { return }
         context.coordinator.onWritingToolsActiveChange = onWritingToolsActiveChange
+        context.coordinator.onSelectionChange = onSelectionChange
+        context.coordinator.onTranslate = onTranslate
         if let editorTextView = textView as? EditorTextView {
             editorTextView.onEscape = onEscape
             editorTextView.onTab = onTab
             editorTextView.onBacktab = onBacktab
+            editorTextView.onTranslate = onTranslate
         }
         if #available(macOS 15.0, *), textView.isWritingToolsActive {
             return
@@ -204,6 +212,8 @@ struct MarkdownTextView: NSViewRepresentable {
         var applyingProgrammaticText = false
         var language: NoteLanguage = .markdown
         var onWritingToolsActiveChange: ((Bool) -> Void)?
+        var onSelectionChange: ((String, NSRange) -> Void)?
+        var onTranslate: ((String, NSRange) -> Void)?
         private var whisperGeneration = 0
 
         init(text: Binding<String>) {
@@ -222,6 +232,9 @@ struct MarkdownTextView: NSViewRepresentable {
         func textViewDidChangeSelection(_ notification: Notification) {
             guard let editorTextView = textView as? EditorTextView else { return }
             editorTextView.updatePunctuationDiscipline()
+            let range = editorTextView.selectedRange()
+            let text = TranslationState.extractSelectedText(from: editorTextView.string, range: range) ?? ""
+            onSelectionChange?(text, range)
         }
 
         #if compiler(>=6.0)
@@ -317,6 +330,7 @@ final class EditorTextView: NSTextView {
     var onEscape: (() -> Void)?
     var onTab: (() -> Void)?
     var onBacktab: (() -> Void)?
+    var onTranslate: ((String, NSRange) -> Void)?
     var style: EditorStyle?
 
     func updatePunctuationDiscipline(for range: NSRange? = nil) {
@@ -343,6 +357,20 @@ final class EditorTextView: NSTextView {
         super.setSelectedRanges(ranges, affinity: affinity, stillSelecting: stillSelecting)
         if let first = ranges.first?.rangeValue {
             updatePunctuationDiscipline(for: first)
+        }
+    }
+
+    @objc func translate(_ sender: Any?) {
+        let range = selectedRange()
+        if range.location != NSNotFound && range.length > 0 {
+            let selected = (string as NSString).substring(with: range)
+            if let onTranslate {
+                onTranslate(selected, range)
+                return
+            }
+        }
+        if super.responds(to: NSSelectorFromString("translate:")) {
+            super.perform(NSSelectorFromString("translate:"), with: sender)
         }
     }
 
