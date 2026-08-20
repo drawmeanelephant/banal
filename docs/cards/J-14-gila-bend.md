@@ -1,12 +1,12 @@
 # Card J-14 — Gila Bend — external truth (Drive triage)
 
-**Milestone:** M14 · **Lane:** core · **Status:** board · **Branch:** `fix/j14-gila-bend` · **Parent:** #111 · **Subissues:** #123 J-14a, #124 J-14b, #125 J-14c, #126 J-14d
+**Milestone:** M14 · **Lane:** core · **Status:** landed — `686d972` (#127) · **Branch:** `fix/j14-gila-bend` · **Parent:** #111 · **Subissues:** #123 J-14a, #124 J-14b, #125 J-14c, #126 J-14d — closed
 
 ## Handoff
 
-- Board is blank until I-2 files this class (`docs/ROADMAP.md:211`). This card owns the gas station that has to work: `FSEvents` + `NSFilePresenter` vs disk.
-- Current `swift test` 265 green but coverage is store-level only; `TESTING-WINDOW.md:140-148` §4 (dirty Vim keeps buffer / clean Vim reloads / watch-off still sees vanish) has never been sat against the coalesced monitor.
-- `fix/j13-casa-grande` landed `3cc22cb` + `fix/j13d-reveal` `eb2abfd`; do not re-touch `VaultBookmark`/`NotesFolderAccess` here except to read `watchesExternalEdits`.
+- **Landed `686d972` (#127) — all 4 slices verified green.** `fix/j14-gila-bend` → `main`. Subissues #123-#126 closed, parent #111 closed. `swift test` 265 green pre-merge, same on `main` post-merge.
+- **What shipped:** `NoteStore.update:351` now includes `extras` in F-9 guard; `NoteStore.reloadAll:169` evicts `ingredientCache`/`recentlyWritten` for vanished ids; `AppModel.reconcileExternalSelection:506` `bufferMatches` now includes parsed `tags` + `loadedExtras` (was title/body/published only); `loadedExtras` tracked via `loadEditor:972`/`persistEditor:498`. See `Sources/BANALApp/AppModel.swift:506` + `Sources/BANALCore/NoteStore.swift:169`.
+- Board was blank until I-2 files this class (`docs/ROADMAP.md:211`). This card owned the gas station: `FSEvents` + `NSFilePresenter` vs disk — now proven.
 
 ## Owns
 
