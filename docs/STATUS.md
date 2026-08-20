@@ -1,6 +1,6 @@
 # Status
 
-**Phase:** Tucson done (E·F·G landed, H in flight) · California board cut  
+**Phase:** Tucson done (E·F·G·H landed) · California board cut  
 **Bar:** The whole window is drawn — folders · list · page, three languages, recipe Read, publish as Export, Mac furniture, files that file themselves. What is left is the 1.0 pass: a notarized+stapled release, one whole-window sit, and 1.0 copy. Board I: [`cards/README.md`](cards/README.md).
 
 ## What works today
@@ -72,7 +72,7 @@ Pulled forward from M10 by a real bug report: [F-8 File associations](cards/F-8-
 ## Next (California)
 
 Board I is cut — [`cards/README.md`](cards/README.md). Tucson
-(E·F·G) is landed; H (M12) is in flight (issues #37–40).
+(E·F·G·H) is landed (issues #37–40 closed).
 
 | Gap | Card | Notes |
 | --- | --- | --- |

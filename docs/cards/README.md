@@ -16,7 +16,7 @@ tear it up.
 ## Session
 
 Tucson is drawn: E (M9) and F (M10) are landed, G (M11) is landed,
-H (M12) is in flight (issues #37–40). The next board is
+H (M12) is landed (issues #37–40). The next board is
 **I — California** (M20): a notarized+stapled 1.0 release, one
 whole-window sit on the signed build, and a 1.0 copy pass. Pick one
 I card, in order — I-1 before I-2 before I-3. C-1's GUI sit and the
@@ -103,7 +103,7 @@ Stage after M8 is done (or beside D where noted).
 
 ### Board H — Consider (M12)
 
-Cut (issues #37–40) and in flight — one branch per card.
+Landed (issues #37–40). The four maybes became cards.
 
 | Card | Milestone | Lane | Gate |
 |------|-----------|------|------|

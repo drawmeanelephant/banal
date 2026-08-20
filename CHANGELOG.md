@@ -32,7 +32,7 @@
 
 ### Changed
 
-- California board cut (I-1/I-2/I-3): Tucson (E·F·G) is landed and H (M12) is in flight; the road to 1.0 is a notarized+stapled release, one whole-window sit, and a 1.0 copy pass. See [`docs/cards/README.md`](docs/cards/README.md).
+- California board cut (I-1/I-2/I-3): Tucson (E·F·G·H) is landed; the road to 1.0 is a notarized+stapled release, one whole-window sit, and a 1.0 copy pass. See [`docs/cards/README.md`](docs/cards/README.md).
 - Fluency (D-0): Close is archive. Next *feature* work is whispered source, prose Read, sauce walks, and ingredient search — after the C-1 sit, and without a new column. See [`docs/cards/README.md`](docs/cards/README.md).
 - Horizon: looking-forward notes for furniture, system pickers, and import-as-files. Not a board. [`docs/HORIZON.md`](docs/HORIZON.md).
 - Platform cut (macOS 15–27 SDK): sit Writing Tools and dictation; later App Intents + Spotlight entities and the system Translate sheet. SwiftData, Inspector, canvas, Genmoji stay refused.

@@ -88,7 +88,7 @@ tags-as-a-place are not M8.
 ## Beyond M8 — implement or consider
 
 Detail and refuse-reasons live in [`HORIZON.md`](HORIZON.md).
-M7–M11 are landed; M12 is in flight; M20 is cut as Board I.
+M7–M12 are landed; M20 is cut as Board I.
 **Consider** rows stay named until a human asks.
 
 | Milestone | Verdict | One line |
@@ -98,7 +98,7 @@ M7–M11 are landed; M12 is in flight; M20 is cut as Board I.
 | [M9 Type in the page](#m9--type-in-the-page--implement) | **Landed** | Source stays source. Paste and lists get Mac manners. |
 | [M10 System](#m10--system--implement) | **Landed** | Siri, Spotlight, Print, Translate, Writing Tools stay system. |
 | [M11 Files](#m11--files--implement) | **Landed** | Images, copy-as, import, pickers. Disk is still truth. |
-| [M12 Consider](#m12--consider--not-a-board) | **In flight** | Typewriter, tags filter, quiet count, checkbox click. |
+| [M12 Consider](#m12--consider--not-a-board) | **Landed** | Typewriter, tags filter, quiet count, checkbox click. |
 | [M20 California](#later-towns-not-a-board) | **Board I** | Notarized + stapled 1.0, one release sit, 1.0 copy. |
 
 Zero-lock-in (human-readable `.md` / `.textile` / `.cook` on
@@ -157,7 +157,7 @@ editor. `#available`; do not raise the macOS 14 floor.
 
 Not M11: image snap-resize, full-bleed, hover zoom, a media library.
 
-## M12 — Consider — in flight
+## M12 — Consider — landed
 
 Named, mostly unscheduled. Four became H cards (issues #37–40):
 checkbox, word count, tags filter, new window. The rest stay names
