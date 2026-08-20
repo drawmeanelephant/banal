@@ -166,6 +166,33 @@ final class VaultBookmarkTests: XCTestCase {
         XCTAssertNil(defaults.data(forKey: CompilerBookmark.defaultsKey("oliver")))
     }
 
+    func testCorruptedBookmarkFallsBackToPathKey() throws {
+        let url = try makeFolder()
+        defer { try? FileManager.default.removeItem(at: url) }
+        VaultBookmark.save(url, defaults: defaults, environment: [:])
+        // Corrupt bookmark data deterministically — restore must not crash and must fall back to path.
+        defaults.set(Data([0x00, 0xFF, 0x01, 0x02]), forKey: VaultBookmark.bookmarkKey)
+        let restored = try XCTUnwrap(VaultBookmark.restore(defaults: defaults, environment: [:]))
+        XCTAssertEqual(normalized(restored), normalized(url))
+        let access = NotesFolderAccess.resolveRemembered(defaults: defaults, environment: [:])
+        guard case .ready(let ready) = access else {
+            return XCTFail("expected ready after corrupted bookmark fallback, got \(access)")
+        }
+        XCTAssertEqual(normalized(ready), normalized(url))
+    }
+
+    func testCorruptedBookmarkWithMissingPathIsMissing() {
+        let path = "/tmp/banal-does-not-exist-\(UUID().uuidString)"
+        defaults.set(path, forKey: VaultBookmark.pathKey)
+        defaults.set(Data([0xDE, 0xAD, 0xBE, 0xEF]), forKey: VaultBookmark.bookmarkKey)
+        let restored = VaultBookmark.restore(defaults: defaults, environment: [:])
+        XCTAssertNotNil(restored)
+        let access = NotesFolderAccess.resolveRemembered(defaults: defaults, environment: [:])
+        guard case .missing = access else {
+            return XCTFail("expected missing when corrupted bookmark + dead path, got \(String(describing: access))")
+        }
+    }
+
     private func makeFolder() throws -> URL {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent(
             "banal-bookmark-\(UUID().uuidString)",
