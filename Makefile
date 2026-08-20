@@ -1,6 +1,6 @@
 SWIFT ?= swift
 BASH ?= /bin/bash
-VERSION ?= 0.1.0
+VERSION ?= $(shell grep 'MARKETING_VERSION' Project.yml | sed 's/.*"\(.*\)"/\1/')
 DIST ?= dist
 APP = $(DIST)/BANAL.app
 DMG = $(DIST)/BANAL-$(VERSION).dmg
@@ -42,8 +42,11 @@ app:
 	/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $(VERSION)" "$(APP)/Contents/Info.plist"
 	/usr/libexec/PlistBuddy -c "Set :CFBundleVersion $(VERSION)" "$(APP)/Contents/Info.plist"
 	printf 'APPL????' > "$(APP)/Contents/PkgInfo"
-	@command -v "$(HIUTIL)" >/dev/null || { echo "hiutil is required to build the Apple Help Book." >&2; exit 1; }
-	"$(HIUTIL)" -I corespotlight -Caf "$(HELP_BOOK_LOCALE)/BANAL.cshelpindex" -g -s en -l en_US "$(HELP_BOOK_LOCALE)"
+	@if command -v "$(HIUTIL)" >/dev/null 2>&1; then \
+		"$(HIUTIL)" -I corespotlight -Caf "$(HELP_BOOK_LOCALE)/BANAL.cshelpindex" -g -s en -l en_US "$(HELP_BOOK_LOCALE)"; \
+	else \
+		echo "warning: hiutil not found — Help Book index not built."; \
+	fi
 	codesign --force --sign "$(SIGN_IDENTITY)" --entitlements "$(ENTITLEMENTS)" $(CODESIGN_FLAGS) "$(APP)"
 	@echo "Built $(APP) (version $(VERSION))."
 	@echo "Signed with identity '$(SIGN_IDENTITY)'."
