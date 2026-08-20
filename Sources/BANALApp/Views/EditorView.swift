@@ -6,95 +6,101 @@ import SwiftUI
 
 struct EditorView: View {
     @ObservedObject var model: AppModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        if model.selectedNote == nil {
-            Text("Create a note with ⌘N.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(nsColor: .textBackgroundColor))
-                .accessibilityLabel("No note selected. Create a note with ⌘N.")
-        } else {
-            VStack(spacing: 0) {
-                titleField
-                    .frame(maxWidth: measure)
-                    .frame(maxWidth: .infinity)
-                metadataRow
-                    .frame(maxWidth: measure)
-                    .frame(maxWidth: .infinity)
-                if model.showsViewSwitcher, model.viewMode == .read {
-                    Group {
-                        if model.selectedNote?.language == .cooklang {
-                            RecipeReadView(model: model)
-                        } else {
-                            ProseReadView(
-                                html: model.lastOliverRender?.html,
-                                needsOliver: !model.oliverCanRender,
-                                style: EditorStyle(from: model.preferences)
-                            )
-                        }
-                    }
-                    .frame(maxWidth: measure)
+        GeometryReader { geo in
+            let mw = measure(availableWidth: geo.size.width)
+            if model.selectedNote == nil {
+                Text("Create a note with ⌘N.")
+                    .font(.body)
+                    .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                } else {
-                    MarkdownTextView(
-                        text: $model.editorText,
-                        documentID: model.editorSessionID.uuidString,
-                        language: model.selectedNote?.language ?? .markdown,
-                        findToken: model.findInNoteToken,
-                        focusToken: model.editorFocus,
-                        style: EditorStyle(from: model.preferences),
-                        vaultURL: model.store.configuration.rootURL,
-                        onEscape: { [weak model] in model?.focusNoteList() },
-                        onTab: { [weak model] in model?.focusSidebar() },
-                        onBacktab: { [weak model] in model?.focusNoteList() },
-                        onWritingToolsActiveChange: { [weak model] active in
-                            model?.isWritingToolsActive = active
-                        },
-                        onSelectionChange: { [weak model] selected, range in
-                            model?.selectedText = selected
-                            model?.selectedRange = range
-                        },
-                        onTranslate: { [weak model] text, range in
-                            model?.selectedText = text
-                            model?.selectedRange = range
-                            model?.translateSelection()
-                        },
-                        onAttachInsertHandler: { [weak model] handler in
-                            model?.insertAtCaretHandler = handler
-                        },
-                        onInsertContact: { [weak model] in
-                            model?.insertContact()
-                        },
-                        onInsertFile: { [weak model] in
-                            model?.insertFile()
+                    .background(Color(nsColor: .textBackgroundColor))
+                    .accessibilityLabel("No note selected. Create a note with ⌘N.")
+            } else {
+                VStack(spacing: 0) {
+                    titleField
+                        .frame(maxWidth: mw)
+                        .frame(maxWidth: .infinity)
+                    metadataRow
+                        .frame(maxWidth: mw)
+                        .frame(maxWidth: .infinity)
+                    if model.showsViewSwitcher, model.viewMode == .read {
+                        Group {
+                            if model.selectedNote?.language == .cooklang {
+                                RecipeReadView(model: model)
+                            } else {
+                                ProseReadView(
+                                    html: model.lastOliverRender?.html,
+                                    needsOliver: !model.oliverCanRender,
+                                    style: EditorStyle(from: model.preferences)
+                                )
+                            }
                         }
-                    )
-                    .onChange(of: model.editorText) { _, _ in
-                        model.applyEditorChanges()
+                        .frame(maxWidth: mw)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    } else {
+                        MarkdownTextView(
+                            text: $model.editorText,
+                            documentID: model.editorSessionID.uuidString,
+                            language: model.selectedNote?.language ?? .markdown,
+                            findToken: model.findInNoteToken,
+                            focusToken: model.editorFocus,
+                            style: EditorStyle(from: model.preferences),
+                            vaultURL: model.store.configuration.rootURL,
+                            onEscape: { [weak model] in model?.focusNoteList() },
+                            onTab: { [weak model] in model?.focusSidebar() },
+                            onBacktab: { [weak model] in model?.focusNoteList() },
+                            onWritingToolsActiveChange: { [weak model] active in
+                                model?.isWritingToolsActive = active
+                            },
+                            onSelectionChange: { [weak model] selected, range in
+                                model?.selectedText = selected
+                                model?.selectedRange = range
+                            },
+                            onTranslate: { [weak model] text, range in
+                                model?.selectedText = text
+                                model?.selectedRange = range
+                                model?.translateSelection()
+                            },
+                            onAttachInsertHandler: { [weak model] handler in
+                                model?.insertAtCaretHandler = handler
+                            },
+                            onInsertContact: { [weak model] in
+                                model?.insertContact()
+                            },
+                            onInsertFile: { [weak model] in
+                                model?.insertFile()
+                            }
+                        )
+                        .onChange(of: model.editorText) { _, _ in
+                            model.applyEditorChanges()
+                        }
+                        .frame(maxWidth: mw)
+                        .frame(maxWidth: .infinity)
                     }
-                    .frame(maxWidth: measure)
-                    .frame(maxWidth: .infinity)
                 }
-            }
-            .background(Color(nsColor: .textBackgroundColor))
-            .modifier(TranslationPresentationModifier(model: model))
-            .onChange(of: model.viewMode) { _, newMode in
-                // The gate: hit Edit and the caret is back in the Markdown.
-                // Defer past the SwiftUI commit so the fresh editor exists
-                // and its focus handler is installed before we ask.
-                if newMode == .edit {
-                    DispatchQueue.main.async {
-                        model.editorFocus.request()
+                .background(Color(nsColor: .textBackgroundColor))
+                .modifier(TranslationPresentationModifier(model: model))
+                .onChange(of: model.viewMode) { _, newMode in
+                    // The gate: hit Edit and the caret is back in the Markdown.
+                    // Defer past the SwiftUI commit so the fresh editor exists
+                    // and its focus handler is installed before we ask.
+                    if newMode == .edit {
+                        DispatchQueue.main.async {
+                            model.editorFocus.request()
+                        }
                     }
                 }
             }
         }
     }
 
-    private var measure: CGFloat? {
-        model.preferences.limitLineLength ? EditorTypography.measureWidth : nil
+    private func measure(availableWidth: CGFloat) -> CGFloat? {
+        guard model.preferences.limitLineLength else { return nil }
+        let maxAllowed = availableWidth - EditorTypography.horizontalInset * 2
+        return min(EditorTypography.measureWidth, maxAllowed)
     }
 
     private var titleField: some View {
