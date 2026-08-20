@@ -559,6 +559,12 @@ public final class NoteStore: ObservableObject {
         try fileManager.copyItem(at: source, to: destination)
         let note = try NoteIO.load(url: destination, vaultURL: configuration.rootURL, fileManager: fileManager)
         upsert(note)
+        // Invalidate ingredient cache when importing .cook files — a
+        // newly-imported sauce may be @-referenced by existing recipes
+        // whose cached ingredients are now stale (Utah #92).
+        if note.language == .cooklang {
+            ingredientCache.removeAll()
+        }
         refreshFolders()
         donateSpotlight(note)
         return note
@@ -577,9 +583,17 @@ public final class NoteStore: ObservableObject {
             targetFolder: targetFolder,
             fileManager: fileManager
         )
+        var importedCooklang = false
         for note in result.importedNotes {
             upsert(note)
+            if note.language == .cooklang { importedCooklang = true }
             donateSpotlight(note)
+        }
+        // Invalidate ingredient cache when importing .cook files — a
+        // newly-imported sauce may be @-referenced by existing recipes
+        // whose cached ingredients are now stale (Utah #92).
+        if importedCooklang {
+            ingredientCache.removeAll()
         }
         refreshFolders()
         return result

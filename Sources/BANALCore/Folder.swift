@@ -39,10 +39,10 @@ public enum FolderName {
     public static func uniqueSibling(base: String, existing: Set<String>) -> String {
         if !existing.contains(base) { return base }
         var n = 2
-        while existing.contains("\(base) \(n)") {
+        while existing.contains("\(base)-\(n)") {
             n += 1
         }
-        return "\(base) \(n)"
+        return "\(base)-\(n)"
     }
 }
 
