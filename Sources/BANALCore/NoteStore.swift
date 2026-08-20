@@ -175,6 +175,7 @@ public final class NoteStore: ObservableObject {
     @discardableResult
     public func createNote(
         title: String = "Untitled",
+        body: String? = nil,
         folder: String? = nil,
         language: NoteLanguage = .markdown,
         now: Date = Date()
@@ -184,11 +185,17 @@ public final class NoteStore: ObservableObject {
         }
         let relative = uniqueRelativePath(from: title, now: now, folder: folder, language: language)
         let url = configuration.rootURL.appendingPathComponent(relative)
+        let initialBody: String
+        if let body {
+            initialBody = body
+        } else {
+            initialBody = language == .cooklang ? CooklangStub.body : "\n"
+        }
         var note = Note(
             id: relative,
             fileURL: url,
             title: title,
-            body: language == .cooklang ? CooklangStub.body : "\n",
+            body: initialBody,
             created: now,
             updated: now,
             tags: [],

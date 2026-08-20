@@ -1,10 +1,10 @@
 # Card F-2 — App Intents and Siri
 
-**Milestone:** M10 · **Lane:** system · **Depends:** M7 Close landed · **Status:** ready — Siri & Shortcuts furniture
+**Milestone:** M10 · **Lane:** system · **Depends:** M7 Close landed · **Status:** landed — Siri & Shortcuts furniture
 
 ## Handoff
 
-- **Not started.** BANAL does not declare App Intents. System Shortcuts and Siri cannot create or search notes.
+- **Landed.** BANAL implements App Intents (`NewNoteIntent`, `NewRecipeIntent`, `TakeNoteIntent`, `SearchNotesIntent`, `OpenNotesFolderIntent`, `PublishSiteIntent`) and `BANALShortcutsProvider` for Siri and Shortcuts automation. Real `.md` and `.cook` files are written directly into the vault.
 - **Not this card:** microphone UI (system dictation works directly in the editor), listening pane.
 
 ## Owns
