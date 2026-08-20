@@ -61,6 +61,8 @@ struct BanalApp: App {
         .defaultSize(width: 1100, height: 720)
         .windowResizability(.contentMinSize)
         .commands {
+            EditCommands(model: model)
+
             CommandGroup(replacing: .appInfo) {
                 Button("About BANAL") {
                     BanalAbout.show()
