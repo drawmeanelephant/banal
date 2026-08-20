@@ -562,6 +562,34 @@ public final class AppModel: ObservableObject {
         }
     }
 
+    public var canCopyAs: Bool {
+        selectedNote != nil
+    }
+
+    public var copyAsSourceText: String {
+        if !selectedText.isEmpty {
+            return selectedText
+        }
+        if viewMode == .edit {
+            return editorText
+        }
+        return selectedNote?.body ?? ""
+    }
+
+    public func copyAs(_ format: CopyAsFormat) {
+        guard let note = selectedNote else { return }
+        let source = copyAsSourceText
+        guard !source.isEmpty else { return }
+        let language = note.language
+        CopyAsConverter.copy(
+            source,
+            format: format,
+            language: language,
+            title: note.displayTitle,
+            directory: note.fileURL.deletingLastPathComponent()
+        )
+    }
+
     public var canTranslate: Bool {
         guard selectedNote != nil, viewMode == .edit else { return false }
         return TranslationState.isValidTranslationText(selectedText)

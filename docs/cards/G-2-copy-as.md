@@ -1,16 +1,19 @@
 # Card G-2 — Copy As formats
 
-**Milestone:** M11 · **Lane:** editor · **Depends:** M8 done · **Status:** ready — Copy As Markdown, RTF, HTML
+**Milestone:** M11 · **Lane:** editor · **Depends:** M8 done · **Status:** landed — Copy As Markdown, RTF, HTML
 
 ## Handoff
 
-- **Not started.** Edit → Copy copies raw editor text. Edit → Copy As is not present in menus.
-- **Not this card:** export wizard, PDF generator.
+- **Landed.** Edit → Copy As submenu is integrated with Copy as Markdown (`⌥⇧⌘C`), Copy as Rich Text (`⌥⌘C`), and Copy as HTML.
+- Selection vs full note conversion is handled seamlessly.
+- Pure in-memory synchronous conversion via `CopyAsConverter` in `BANALCore`.
+- Standard `⌘C` (Copy) is untouched.
+- Unit tested in `CopyAsTests.swift`.
 
 ## Owns
 
 - `Sources/BANALApp/Commands/EditCommands.swift` (Edit → Copy As submenu)
-- `Sources/BANALPublisher/OliverClient.swift` / plain text converters for RTF/HTML rendering to pasteboard
+- `Sources/BANALCore/CopyAs/` (`CopyAsConverter.swift`, `CopyAsFormat.swift`, `CopyAsPayload.swift`)
 
 ## Do not touch
 
@@ -26,7 +29,7 @@ When taking notes or sharing an essay into an email, Keynote, or Slack, users ne
 1. Add Edit → Copy As submenu:
    - **Copy as Markdown** (`⌥⇧⌘C`): copies raw plain text markdown (or converts selection).
    - **Copy as Rich Text** (`⌥⌘C`): renders markdown selection to formatted `public.rtf` on pasteboard.
-   - **Copy as HTML**: uses Oliver to render clean HTML snippet to pasteboard.
+   - **Copy as HTML**: renders clean HTML markup to `public.html` + `public.utf8-plain-text` on pasteboard.
 2. If text is selected, convert only selection; if no text is selected, convert entire note.
 3. Keep conversion fast and synchronous from memory.
 
