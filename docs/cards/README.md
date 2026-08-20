@@ -15,23 +15,25 @@ tear it up.
 
 ## Session
 
-Branch `docs/d0-board` (D-0). Next session is a human window sit
-([`TESTING-WINDOW.md`](../TESTING-WINDOW.md)), including the signed
-`.app` from C-3, or D-1 after that sit. **Do not start D-1 from
-compile.**
+Tucson is drawn: E (M9) and F (M10) are landed, G (M11) is landed,
+H (M12) is in flight (issues #37–40). The next board is
+**I — California** (M20): a notarized+stapled 1.0 release, one
+whole-window sit on the signed build, and a 1.0 copy pass. Pick one
+I card, in order — I-1 before I-2 before I-3. C-1's GUI sit and the
+D-1/D-2 visual gates roll up into I-2; do not re-sit them separately.
 
 Each card’s **Handoff** block is the note for the next person.
 
 | Card | Status |
 |------|--------|
-| D-0 | landed — C Close archived; this README is the D board |
+| I-1 | board — notarized + stapled 1.0 release |
+| I-2 | board — whole-window release sit (closes C-1, D-1/D-2, F-8) |
+| I-3 | board — 1.0 copy pass |
+| C-1 | cooking — script + code-backed sit; GUI pass still open |
 | D-1 | cooking — whisper implemented + unit-tested; card mini-sit open |
 | D-2 | cooking — prose Read implemented + built; card mini-sit open |
 | D-3 | landed — recipe references inlined in Read |
 | D-4 | landed — ⌘F matches ingredient names + inlined sauces |
-| C-1 | cooking — script + code-backed sit; GUI pass still open |
-| C-2 | landed — Oliver/Boris paths, About, speakable copy |
-| C-3 | landed — ad-hoc signed `.app` + sandbox |
 
 ## Board — Fluency
 
@@ -101,7 +103,7 @@ Stage after M8 is done (or beside D where noted).
 
 ### Board H — Consider (M12)
 
-Named, not scheduled. Cut a card only if a sit asks.
+Cut (issues #37–40) and in flight — one branch per card.
 
 | Card | Milestone | Lane | Gate |
 |------|-----------|------|------|
@@ -110,13 +112,25 @@ Named, not scheduled. Cut a card only if a sit asks.
 | [H-3 Tags filter](H-3-tags-filter.md) | M12 | list | landed — Tags section in sidebar as secondary filter |
 | [H-4 New window](H-4-new-window.md) | M12 | chrome | landed — File → New Window on the same notes folder |
 
+### Board I — California (M20)
+
+The drive. Cut strictly from the M20 checklist in
+[`../HOPE-CHEST.md`](../HOPE-CHEST.md). Sit bugs found by I-2 are
+the only thing allowed to fill M13–M19. Pick in order.
+
+| Card | Milestone | Lane | Gate |
+|------|-----------|------|------|
+| [I-1 Release](I-1-release.md) | M20 | app | Developer ID, notarized + stapled; a stranger double-clicks |
+| [I-2 Release sit](I-2-release-sit.md) | M20 | chrome | One human, one afternoon, the signed build |
+| [I-3 Copy](I-3-copy.md) | M20 | copy | Help, About, empty states read like a person |
+
 ## Do not start
 
 Save a scaled recipe copy is named on [B-X](B-X-refuse.md). It is
 not a D card until a cook asks. Stylesheets, tags-as-a-place, and
 All Recipes are not this board. Looking forward is
 [`../HORIZON.md`](../HORIZON.md), [`../ROADMAP.md`](../ROADMAP.md)
-M9–M12, and [`../HOPE-CHEST.md`](../HOPE-CHEST.md) (M99) — not a
+M9–M20, and [`../HOPE-CHEST.md`](../HOPE-CHEST.md) (M99) — not a
 pick list. If we fall asleep, the hope chest is the navigator.
 
 Never from a card:
