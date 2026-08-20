@@ -2,29 +2,26 @@ import AppIntents
 import XCTest
 @testable import BANALCore
 
-@MainActor
 final class IntentTests: XCTestCase {
-    private var tempVaultURL: URL!
-
-    override func setUp() async throws {
-        try await super.setUp()
-        tempVaultURL = FileManager.default.temporaryDirectory.appendingPathComponent(
+    @MainActor
+    private func makeVault() throws -> URL {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(
             "banal-intent-tests-\(UUID().uuidString)",
             isDirectory: true
         )
-        try FileManager.default.createDirectory(at: tempVaultURL, withIntermediateDirectories: true)
-        IntentVaultResolver.setTestVaultURL(tempVaultURL)
+        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        IntentVaultResolver.setTestVaultURL(url)
+        return url
     }
 
-    override func tearDown() async throws {
-        IntentVaultResolver.setTestVaultURL(nil)
-        if let tempVaultURL {
-            try? FileManager.default.removeItem(at: tempVaultURL)
-        }
-        try await super.tearDown()
-    }
-
+    @MainActor
     func testNewNoteIntentCreatesMarkdownFile() async throws {
+        let vaultURL = try makeVault()
+        defer {
+            IntentVaultResolver.setTestVaultURL(nil)
+            try? FileManager.default.removeItem(at: vaultURL)
+        }
+
         let intent = NewNoteIntent(title: "Meeting Notes", body: "Discuss roadmap\n- Item 1\n- Item 2", folder: nil)
         let result = try await intent.perform()
         XCTAssertEqual(result.value?.title, "Meeting Notes")
@@ -41,7 +38,14 @@ final class IntentTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testNewRecipeIntentCreatesCookFile() async throws {
+        let vaultURL = try makeVault()
+        defer {
+            IntentVaultResolver.setTestVaultURL(nil)
+            try? FileManager.default.removeItem(at: vaultURL)
+        }
+
         let recipeBody = "Add @olive oil{2%tbsp} to pan.\nAdd @garlic{2%cloves}.\n"
         let intent = NewRecipeIntent(title: "Garlic Confit", body: recipeBody, folder: "Recipes")
         let result = try await intent.perform()
@@ -64,7 +68,14 @@ final class IntentTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testTakeNoteIntentWritesInboxNote() async throws {
+        let vaultURL = try makeVault()
+        defer {
+            IntentVaultResolver.setTestVaultURL(nil)
+            try? FileManager.default.removeItem(at: vaultURL)
+        }
+
         let intent = TakeNoteIntent(text: "Remember to buy milk on the way home")
         let result = try await intent.perform()
         XCTAssertEqual(result.value?.folder, "Inbox")
@@ -79,7 +90,14 @@ final class IntentTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testSearchNotesIntentReturnsMatches() async throws {
+        let vaultURL = try makeVault()
+        defer {
+            IntentVaultResolver.setTestVaultURL(nil)
+            try? FileManager.default.removeItem(at: vaultURL)
+        }
+
         let store = try IntentVaultResolver.loadStore()
         try store.createNote(title: "Grocery List", body: "Apples, Bananas, Oranges", folder: "Inbox", language: .markdown)
         try store.createNote(title: "Risotto", body: "Add @saffron{1%pinch} and @rice{300%g}.", folder: "Recipes", language: .cooklang)
@@ -100,7 +118,14 @@ final class IntentTests: XCTestCase {
         XCTAssertEqual(noneResults.value?.count, 0)
     }
 
+    @MainActor
     func testOpenNotesFolderIntentResolves() async throws {
+        let vaultURL = try makeVault()
+        defer {
+            IntentVaultResolver.setTestVaultURL(nil)
+            try? FileManager.default.removeItem(at: vaultURL)
+        }
+
         let intent = OpenNotesFolderIntent()
         let result = try await intent.perform()
         XCTAssertNotNil(result)
