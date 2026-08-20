@@ -40,6 +40,19 @@ struct StatusStripView: View {
         if let status = model.statusMessage {
             return status
         }
+        // When a filter is active, show the filtered count so the list
+        // and the strip agree on the visible set (Utah #88).
+        if model.filter != .all {
+            let count = model.visibleNotes.count
+            if count == 0 {
+                return "No notes"
+            } else if count == 1 {
+                return "1 note"
+            } else {
+                return "\(count.formatted()) notes"
+            }
+        }
+        // No filter — word count when editing, total count when idle.
         if model.selectedNote != nil {
             return model.editorWordCountDescription
         }
