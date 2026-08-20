@@ -63,6 +63,7 @@ public final class AppModel: ObservableObject {
     private var suppressEditorSync = false
     private var editorDirty = false
     private var loadedFingerprint = ""
+    private var loadedExtras: [FrontmatterExtra] = []
     private var warnedDiskFingerprint = ""
     /// Which selection and session the open buffer was loaded for. A write
     /// (F-9) must match both: an `onChange` echo from a previous load must
@@ -497,6 +498,7 @@ public final class AppModel: ObservableObject {
         store.update(note, debounce: false)
         if let saved = store.note(id: id) {
             loadedFingerprint = saved.contentFingerprint
+            loadedExtras = saved.extras
             editorDirty = false
         }
     }
@@ -504,7 +506,17 @@ public final class AppModel: ObservableObject {
     private func reconcileExternalSelection() {
         guard !suppressEditorSync, let id = selectedID else { return }
         let disk = store.note(id: id)
-        let bufferMatches = disk.map { $0.title == editorTitle && $0.body == editorText && $0.published == editorPublished } ?? false
+        let tagList = editorTags
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        let bufferMatches = disk.map {
+            $0.title == editorTitle
+                && $0.body == editorText
+                && $0.tags == tagList
+                && $0.published == editorPublished
+                && $0.extras == loadedExtras
+        } ?? false
         switch ExternalEdit.action(
             selectedStillOnDisk: disk != nil,
             dirty: editorDirty,
@@ -517,7 +529,10 @@ public final class AppModel: ObservableObject {
             if bufferMatches {
                 editorDirty = false
             }
-            if let disk { loadedFingerprint = disk.contentFingerprint }
+            if let disk {
+                loadedFingerprint = disk.contentFingerprint
+                loadedExtras = disk.extras
+            }
         case .reload:
             loadEditor(from: disk)
         case .keepBuffer:
@@ -957,6 +972,7 @@ public final class AppModel: ObservableObject {
         editorTags = note?.tags.joined(separator: ", ") ?? ""
         editorPublished = note?.published ?? false
         loadedFingerprint = note?.contentFingerprint ?? ""
+        loadedExtras = note?.extras ?? []
         editorDirty = false
         warnedDiskFingerprint = ""
         recipeScale = .one
