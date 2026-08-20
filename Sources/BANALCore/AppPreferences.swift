@@ -6,7 +6,6 @@ public struct AppPreferences: Equatable, Sendable {
     public var newNoteLocation: NewNoteLocation
     public var watchExternalEdits: Bool
     public var fontSize: Double
-    public var useSerif: Bool
     public var lineHeight: LineHeightSetting
     public var limitLineLength: Bool
     public var spellCheck: Bool
@@ -18,7 +17,6 @@ public struct AppPreferences: Equatable, Sendable {
         newNoteLocation: NewNoteLocation = .selectedFolder,
         watchExternalEdits: Bool = true,
         fontSize: Double = 16,
-        useSerif: Bool = false,
         lineHeight: LineHeightSetting = .normal,
         limitLineLength: Bool = true,
         spellCheck: Bool = true,
@@ -29,7 +27,6 @@ public struct AppPreferences: Equatable, Sendable {
         self.newNoteLocation = newNoteLocation
         self.watchExternalEdits = watchExternalEdits
         self.fontSize = fontSize
-        self.useSerif = useSerif
         self.lineHeight = lineHeight
         self.limitLineLength = limitLineLength
         self.spellCheck = spellCheck
@@ -70,7 +67,6 @@ public enum AppPreferencesStore {
         var newNoteLocation: NewNoteLocation
         var watchExternalEdits: Bool
         var fontSize: Double
-        var useSerif: Bool
         var lineHeight: LineHeightSetting
         var limitLineLength: Bool
         var spellCheck: Bool
@@ -82,7 +78,6 @@ public enum AppPreferencesStore {
             newNoteLocation = prefs.newNoteLocation
             watchExternalEdits = prefs.watchExternalEdits
             fontSize = prefs.fontSize
-            useSerif = prefs.useSerif
             lineHeight = prefs.lineHeight
             limitLineLength = prefs.limitLineLength
             spellCheck = prefs.spellCheck
@@ -96,7 +91,6 @@ public enum AppPreferencesStore {
                 newNoteLocation: newNoteLocation,
                 watchExternalEdits: watchExternalEdits,
                 fontSize: fontSize,
-                useSerif: useSerif,
                 lineHeight: lineHeight,
                 limitLineLength: limitLineLength,
                 spellCheck: spellCheck,

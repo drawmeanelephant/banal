@@ -170,13 +170,12 @@ final class FolderStoreTests: XCTestCase {
 
     func testPreferencesRoundTripAndNewNoteLocation() {
         let defaults = UserDefaults(suiteName: "banal.tests.\(UUID().uuidString)")!
-        var prefs = AppPreferences(sort: .title, newNoteLocation: .inbox, fontSize: 18, useSerif: false)
+        var prefs = AppPreferences(sort: .title, newNoteLocation: .inbox, fontSize: 18)
         AppPreferencesStore.save(prefs, defaults: defaults)
         let loaded = AppPreferencesStore.load(defaults: defaults)
         XCTAssertEqual(loaded.sort, .title)
         XCTAssertEqual(loaded.newNoteLocation, .inbox)
         XCTAssertEqual(loaded.fontSize, 18)
-        XCTAssertFalse(loaded.useSerif)
         XCTAssertEqual(prefs.folderForNewNote(selected: .all), "Inbox")
         XCTAssertEqual(prefs.folderForNewNote(selected: .folder("Essays")), "Inbox")
         prefs.newNoteLocation = .selectedFolder
@@ -186,7 +185,6 @@ final class FolderStoreTests: XCTestCase {
 
     func testDefaultTypePreferencesAndLineHeight() {
         let defaults = AppPreferences.default
-        XCTAssertFalse(defaults.useSerif)
         XCTAssertEqual(defaults.fontSize, 16)
         XCTAssertEqual(defaults.lineHeight, .normal)
         XCTAssertTrue(defaults.limitLineLength)
