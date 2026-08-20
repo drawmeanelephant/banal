@@ -1,0 +1,89 @@
+html {
+    color-scheme: light dark;
+}
+
+body {
+    margin: 0;
+    color: CanvasText;
+    background: Canvas;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.help-page {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 34px 38px 48px;
+}
+
+h1,
+h2,
+p {
+    margin-top: 0;
+}
+
+h1 {
+    margin-bottom: 6px;
+    font-size: 30px;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+h2 {
+    margin-bottom: 5px;
+    font-size: 18px;
+    line-height: 1.25;
+}
+
+.lede {
+    margin-bottom: 28px;
+    color: GrayText;
+    font-size: 17px;
+}
+
+.contents {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px 16px;
+    margin-bottom: 30px;
+    padding: 13px 16px;
+    border: 1px solid ButtonBorder;
+    border-radius: 8px;
+}
+
+.contents a {
+    color: LinkText;
+    text-decoration: none;
+}
+
+.contents a:hover,
+.contents a:focus {
+    text-decoration: underline;
+}
+
+section {
+    margin-top: 25px;
+    padding-top: 22px;
+    border-top: 1px solid ButtonBorder;
+}
+
+section p {
+    margin-bottom: 0;
+    color: GrayText;
+}
+
+kbd {
+    padding: 1px 4px;
+    border: 1px solid ButtonBorder;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 0.9em;
+}
+
+@media (prefers-contrast: more) {
+    .contents,
+    section {
+        border-color: CanvasText;
+    }
+}

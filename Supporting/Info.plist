@@ -6,6 +6,12 @@
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
 	<string>BANAL</string>
+	<key>CFAppleHelpAnchor</key>
+	<string>BANAL</string>
+	<key>CFBundleHelpBookFolder</key>
+	<string>BANAL.help</string>
+	<key>CFBundleHelpBookName</key>
+	<string>dev.drawmeanelephant.banal.help</string>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>

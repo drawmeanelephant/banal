@@ -25,12 +25,17 @@ targets:
       - path: Sources/BANALCore
       - path: Sources/BANALPublisher
       - path: Resources/Assets.xcassets
+    resources:
+      - path: Resources/BANAL.help
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.drawmeanelephant.banal
         PRODUCT_NAME: BANAL
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_CFBundleDisplayName: BANAL
+        INFOPLIST_KEY_CFAppleHelpAnchor: BANAL
+        INFOPLIST_KEY_CFBundleHelpBookFolder: BANAL.help
+        INFOPLIST_KEY_CFBundleHelpBookName: dev.drawmeanelephant.banal.help
         INFOPLIST_KEY_CFBundleIconName: AppIcon
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
         INFOPLIST_KEY_NSHumanReadableCopyright: "© 2026 draw me an elephant"
@@ -40,6 +45,17 @@ targets:
         ENABLE_APP_SANDBOX: YES
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "-"
+    postBuildScripts:
+      - name: Build Apple Help Book index
+        basedOnDependencyAnalysis: false
+        script: |
+          set -euo pipefail
+          help_book_locale="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/BANAL.help/Contents/Resources/en.lproj"
+          if ! command -v hiutil >/dev/null 2>&1; then
+            echo "error: hiutil is required to build the Apple Help Book index."
+            exit 1
+          fi
+          hiutil -I corespotlight -Caf "${help_book_locale}/BANAL.cshelpindex" -g -s en -l en_US "${help_book_locale}"
     entitlements:
       path: Supporting/BANAL.entitlements
   BANALCoreTests:

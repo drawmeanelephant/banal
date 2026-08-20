@@ -147,6 +147,9 @@ struct EditorView: View {
                 .accessibilityLabel("Note view mode")
                 .accessibilityHint("Switch between edit and read modes")
             }
+            HelpLink(anchor: BanalHelp.writeAnchor, book: BanalHelp.bookName)
+                .help("Help with writing notes")
+                .accessibilityLabel("Help with writing notes")
         }
         .padding(.horizontal, EditorTypography.horizontalInset)
         .padding(.bottom, 8)
