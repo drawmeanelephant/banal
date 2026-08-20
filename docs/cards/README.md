@@ -86,7 +86,7 @@ Stage after M8 is done (or beside D where noted).
 | [F-4 Quick Look](F-4-quicklook.md) | M10 | system | landed — `NotePreviewGenerator` RTF for `.md`/`.cook`/`.textile`; Spacebar in note list opens `QLPreviewPanel` |
 | [F-5 Print & Share](F-5-print-share.md) | M10 | system | landed — File → Print (⌘P), Share sheet, Services menu item |
 | [F-6 Translate](F-6-translate.md) | M10 | system | landed — Edit → Translate… via system Translation session (`TranslationPresentation` / `NSTextView`) |
-| [F-7 System sit](F-7-system-sit.md) | M10 | chrome | VoiceOver, Reduce Motion, Increase Contrast audit |
+| [F-7 System sit](F-7-system-sit.md) | M10 | chrome | landed — VoiceOver, Reduce Motion, Increase Contrast audit |
 | [F-8 File associations](F-8-file-associations.md) | M10 | system | Open With / double-click `.md`, `.textile`, `.cook` in Finder |
 
 ### Board G — Files (M11)

@@ -5,6 +5,7 @@
 
 ## What works today
 
+- System furniture and accessibility audit (F-7, issue #31): VoiceOver coverage across Sidebar (folder tree and note count announcements), Note List (rich spoken metadata including folder paths, recipe badges, published badges, relative timestamps, and previews), Editor (title, tags, view switcher, and NSTextView .textArea role), Recipe Read (clean ingredient, cookware, and numbered step announcements), Settings (explicit accessibility labels and hints across General, Editor, and Publish panes), and Vault Picker. System Manners support: `@Environment(\.accessibilityReduceMotion)` suppresses sliding transitions; `@Environment(\.colorSchemeContrast)` renders crisp 1pt separator borders. System test brief: [`TESTING-SYSTEM.md`](TESTING-SYSTEM.md). Card: [`F-7-system-sit.md`](cards/F-7-system-sit.md).
 - Three columns: sidebar ~200pt, list ~280pt, editor takes the rest. Sidebar may collapse; 720×520 still shows list + editor
 - List rows: title, two-line snippet, relative date, globe if published
 - Editor: title + one quiet metadata row (date, published, tags). Body is a page

@@ -1,10 +1,10 @@
 # Card F-7 — System furniture sit
 
-**Milestone:** M10 · **Lane:** chrome · **Depends:** F-1 through F-6 · **Status:** ready — accessibility & system manners audit
+**Milestone:** M10 · **Lane:** chrome · **Depends:** F-1 through F-6 · **Status:** landed — accessibility & system manners audit
 
 ## Handoff
 
-- **Not started.** Follow-up audit to C-1 testing window for macOS system furniture.
+- **Landed.** Full VoiceOver accessibility pass across sidebar, note list, editor, recipe read, settings, and picker views. Reduce Motion and Increase Contrast support implemented and verified. Testing brief documented in `docs/TESTING-SYSTEM.md`.
 - **Not this card:** adding new features or views.
 
 ## Owns

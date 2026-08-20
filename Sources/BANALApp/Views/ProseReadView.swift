@@ -43,7 +43,9 @@ struct ProseReadView: NSViewRepresentable {
         textView.textContainer?.lineFragmentPadding = 0
         textView.minSize = NSSize(width: 0, height: 0)
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-        textView.setAccessibilityLabel("Note")
+        textView.setAccessibilityLabel("Note prose read view")
+        textView.setAccessibilityRole(.textArea)
+        textView.setAccessibilityHelp("Rendered note preview")
 
         scroll.documentView = textView
         context.coordinator.textView = textView

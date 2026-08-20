@@ -1,3 +1,4 @@
+import BANALCore
 import BANALPublisher
 import SwiftUI
 
@@ -65,7 +66,8 @@ struct RecipeReadView: View {
         .pickerStyle(.segmented)
         .controlSize(.small)
         .frame(maxWidth: 220)
-        .accessibilityLabel("Scale")
+        .accessibilityLabel("Recipe scale")
+        .accessibilityHint("Adjust ingredient quantities")
     }
 
     @ViewBuilder
@@ -118,6 +120,8 @@ struct RecipeReadView: View {
                         Text(name)
                             .font(.headline)
                             .padding(.top, 8)
+                            .accessibilityLabel(AccessibilityFormatting.recipeSection(name))
+                            .accessibilityAddTraits(.isHeader)
                     case .step(let number, let text):
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             Text("\(number).")
@@ -126,12 +130,15 @@ struct RecipeReadView: View {
                             Text(text)
                         }
                         .font(bodyFont)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel(AccessibilityFormatting.recipeStep(number: number, text: text))
                     case .note(let text):
                         Text(text)
                             .italic()
                             .foregroundStyle(.secondary)
                             .padding(.leading, 32)
                             .font(bodyFont)
+                            .accessibilityLabel(AccessibilityFormatting.recipeNote(text))
                     }
                 }
             }

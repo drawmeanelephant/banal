@@ -81,7 +81,9 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.string = text
         textView.minSize = NSSize(width: 0, height: 0)
         textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
-        textView.setAccessibilityLabel("Note")
+        textView.setAccessibilityLabel("Note body editor")
+        textView.setAccessibilityRole(.textArea)
+        textView.setAccessibilityHelp("Main text editor for note content")
         textView.onEscape = onEscape
         textView.onTab = onTab
         textView.onBacktab = onBacktab
