@@ -58,16 +58,16 @@ eat **after** we can fly. Do not fly from the driveway.
 
 ## Immediate miles (do not skip)
 
-If the navigator has to pick *one* next turn:
+Tucson is behind us; California is next. If the navigator has to
+pick *one* next turn:
 
-1. **Sit the window** ([C-1](cards/C-1-sit.md),
-   [`TESTING-WINDOW.md`](TESTING-WINDOW.md)). Including
-   dictation and Writing Tools if this Mac has them.
-2. **Fluency** ([D-1](cards/D-1-whisper.md) through
-   [D-4](cards/D-4-find.md)). Whisper first. Source stays king.
+1. **Release** ([I-1](cards/I-1-release.md)) — a Developer ID,
+   notarized + stapled `.app` a stranger can keep.
+2. **Sit the signed build** ([I-2](cards/I-2-release-sit.md)) —
+   the one human pass that closes C-1, D-1/D-2, and F-8.
 
 If the sit hates the caret or publish feels like onboarding,
-that bug is the whole map. We do not drive to Tucson with a
+that bug is the whole map. We do not reach California with a
 broken windshield.
 
 ## Tucson — before California (M9–M12)
@@ -213,8 +213,8 @@ How a future idea earns a place is
 
 ## How to use this chest
 
-- **Asleep / new session:** sit C-1, then D, then Tucson.
-  Do not open Japan.
+- **Asleep / new session:** Board I — release, then sit, then
+  copy. Do not open Japan.
 - **Planning:** cut a board from the next *town*, not from M99.
 - **Tempted:** read the Louisiana list out loud. If you are
   defending the idea, it is already a detour.

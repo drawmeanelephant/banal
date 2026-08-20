@@ -88,19 +88,18 @@ tags-as-a-place are not M8.
 ## Beyond M8 — implement or consider
 
 Detail and refuse-reasons live in [`HORIZON.md`](HORIZON.md).
-These milestones are **not a board**. Cut cards from an
-**Implement** row only after C-1 is sat and M8 is done (or the
-row says it may run beside D). **Consider** rows stay named
-until a human asks.
+M7–M12 are landed; M20 is cut as Board I.
+**Consider** rows stay named until a human asks.
 
 | Milestone | Verdict | One line |
 |-----------|---------|----------|
-| [M7 Close leftovers](#m7--close--leftovers) | **Implement now** | Sit the window. Notarize is later. |
-| [M8 Fluency](#m8--fluency--current-board) | **Implement next** | Whisper, prose Read, sauce, find. |
-| [M9 Type in the page](#m9--type-in-the-page--implement) | **Implement** | Source stays source. Paste and lists get Mac manners. |
-| [M10 System](#m10--system--implement) | **Implement** | Siri, Spotlight, Print, Translate, Writing Tools stay system. |
-| [M11 Files](#m11--files--implement) | **Implement** | Images, copy-as, import, pickers. Disk is still truth. |
-| [M12 Consider](#m12--consider--not-a-board) | **Consider** | Typewriter, tags filter, quiet count, checkbox click. |
+| [M7 Close leftovers](#m7--close--leftovers) | **Landed** | Sit the window. Notarize is later. |
+| [M8 Fluency](#m8--fluency--current-board) | **Landed** | Whisper, prose Read, sauce, find. |
+| [M9 Type in the page](#m9--type-in-the-page--implement) | **Landed** | Source stays source. Paste and lists get Mac manners. |
+| [M10 System](#m10--system--implement) | **Landed** | Siri, Spotlight, Print, Translate, Writing Tools stay system. |
+| [M11 Files](#m11--files--implement) | **Landed** | Images, copy-as, import, pickers. Disk is still truth. |
+| [M12 Consider](#m12--consider--not-a-board) | **Landed** | Typewriter, tags filter, quiet count, checkbox click. |
+| [M20 California](#later-towns-not-a-board) | **Board I** | Notarized + stapled 1.0, one release sit, 1.0 copy. |
 
 Zero-lock-in (human-readable `.md` / `.textile` / `.cook` on
 disk) is not a future milestone. It is M1. If we ever need an
@@ -147,7 +146,7 @@ editor. `#available`; do not raise the macOS 14 floor.
 - Edit → Translate… (`TranslationSession` system sheet)
 - Furniture sit (VoiceOver, contrast, keyboard) after the above
 
-## M11 — Files — implement
+## M11 — Files — landed
 
 - Drop / Insert Photo → `assets/` + a relative link
 - Copy As: Markdown / RTF / HTML (Oliver for HTML)
@@ -158,9 +157,11 @@ editor. `#available`; do not raise the macOS 14 floor.
 
 Not M11: image snap-resize, full-bleed, hover zoom, a media library.
 
-## M12 — Consider — not a board
+## M12 — Consider — landed
 
-Named. Not scheduled. Cut a card only if a sit asks.
+Named, mostly unscheduled. Four became H cards (issues #37–40):
+checkbox, word count, tags filter, new window. The rest stay names
+until a sit asks.
 
 - Typewriter scrolling (already a pref, off, easy to make tacky)
 - Tags as a *filter*, not a place
@@ -196,10 +197,14 @@ from here until Tucson is behind us.
 
 | Milestone | Town | Verdict |
 |-----------|------|---------|
-| M13–M19 | the drive | Blank on purpose. Sit bugs fill them. |
+| M13–M19 | the drive | Blank on purpose. I-2 sit bugs fill them. |
 | **M20** | California | **1.0** — notarized `.app` a stranger can keep. Still three columns. |
 | **M50** | Japan | Vacation luxury (Enrich Markup, one stylesheet, scaled recipe if asked). After M20 only. |
 | **M99** | Home | The folder outlives us. Stop adding towns. |
+
+Board I — California is cut in [`cards/README.md`](cards/README.md):
+I-1 notarized+stapled release, I-2 whole-window sit, I-3 1.0 copy.
+M13–M19 stay blank except for what I-2's sit finds.
 
 ## The quiet test
 

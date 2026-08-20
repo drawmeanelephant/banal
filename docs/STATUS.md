@@ -1,7 +1,7 @@
 # Status
 
-**Phase:** 1.0 Silhouette (sit open) · Fluency board written  
-**Bar:** The first product is drawn — folders · list · page, three languages, recipe Read, publish as Export. A whole-window sit is still C-1. Fluency (D) deepens the file after that sit — it does not add a column.
+**Phase:** Tucson done (E·F·G·H landed) · California board cut  
+**Bar:** The whole window is drawn — folders · list · page, three languages, recipe Read, publish as Export, Mac furniture, files that file themselves. What is left is the 1.0 pass: a notarized+stapled release, one whole-window sit, and 1.0 copy. Board I: [`cards/README.md`](cards/README.md).
 
 ## What works today
 
@@ -68,6 +68,17 @@ Board written. Do not pick until C-1 has been sat.
 | Ingredient search | [D-4](cards/D-4-find.md) | Implemented: ⌘F matches typed ingredient names in `.cook` notes (bare tokens, braced multi-word, and inlined sauces via `CooklangScanner`) and Oliver's `serialize --json` names in an in-memory disposable cache. Missing Oliver searches file body and tokens accurately. No food ontology. |
 
 Pulled forward from M10 by a real bug report: [F-8 File associations](cards/F-8-file-associations.md) landed (issue #44) — Open With / Dock drag for the three languages, outside files copied into the vault. GUI gate still open on a real machine.
+
+## Next (California)
+
+Board I is cut — [`cards/README.md`](cards/README.md). Tucson
+(E·F·G·H) is landed (issues #37–40 closed).
+
+| Gap | Card | Notes |
+| --- | --- | --- |
+| Notarized + stapled 1.0 | [I-1](cards/I-1-release.md) | issue #75 — F-1 built the pipeline; no real Developer ID build yet on this machine. |
+| Whole-window release sit | [I-2](cards/I-2-release-sit.md) | issue #76 — rolls up C-1 GUI + D-1/D-2 visual gates + F-8 GUI gate on the signed build. Sit bugs fill M13–M19. |
+| 1.0 copy | [I-3](cards/I-3-copy.md) | issue #77 — Help, About, empty states read aloud; release notes; version 1.0. |
 
 ## Known gaps in the scaffold
 
