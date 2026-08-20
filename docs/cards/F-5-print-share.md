@@ -1,10 +1,10 @@
 # Card F-5 — Print, Share, and Services
 
-**Milestone:** M10 · **Lane:** system · **Depends:** M7 Close landed · **Status:** ready — standard Mac export furniture
+**Milestone:** M10 · **Lane:** system · **Depends:** M7 Close landed · **Status:** landed — File → Print (⌘P), Share sheet, and Services menu integration
 
 ## Handoff
 
-- **Not started.** File → Print is inactive or unformatted. macOS Share sheet and Services menu ("New Note from Selection") are not registered.
+- **Landed.** File → Print (`⌘P`) uses `NSPrintOperation` with clean SF Pro typography (formatted note in Edit mode, ingredients/cookware/steps in Recipe Read mode). File → Share invokes `NSSharingServicePicker` with file URL and plain text payload. Services menu ("New BANAL Note") captures plain text selection into `Inbox/`.
 - **Not this card:** export wizard, PDF layout builder, social sharing hub.
 
 ## Owns

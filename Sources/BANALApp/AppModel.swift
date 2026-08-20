@@ -509,6 +509,51 @@ public final class AppModel: ObservableObject {
         applyEditorChanges()
     }
 
+    public func printSelectedNote(window: NSWindow? = nil) {
+        flushEditor()
+        guard let note = selectedNote else { return }
+        let isRecipeRead = (viewMode == .read && note.language == .cooklang)
+        NotePrintCoordinator.printNote(
+            note,
+            isRecipeReadMode: isRecipeRead,
+            oliverRecipe: oliverRecipe,
+            scale: recipeScale,
+            window: window
+        )
+    }
+
+    public func shareSelectedNote(from view: NSView? = nil, window: NSWindow? = nil) {
+        flushEditor()
+        guard let note = selectedNote else { return }
+        NoteShareCoordinator.shareNote(note, from: view, window: window)
+    }
+
+    public func createNoteFromService(text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        let dest = (preferences.newNoteLocation == .vaultRoot) ? nil : (preferences.folderForNewNote(selected: filter) ?? "Inbox")
+        let resolvedTitle = inferredTitle(from: trimmed) ?? "Note"
+        do {
+            let note = try store.createNote(
+                title: resolvedTitle,
+                body: trimmed,
+                folder: dest,
+                language: .markdown
+            )
+            sessionViewMode = .edit
+            if let dest {
+                filter = .folder(dest)
+            } else {
+                filter = .all
+            }
+            select(note.id)
+            editorFocus.request()
+            NSApp.activate(ignoringOtherApps: true)
+        } catch {
+            statusMessage = error.localizedDescription
+        }
+    }
+
     public func dismissStatusLater() {
         let message = statusMessage
         Task { @MainActor in

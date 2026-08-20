@@ -84,7 +84,7 @@ Stage after M8 is done (or beside D where noted).
 | [F-2 Intents](F-2-intents.md) | M10 | system | landed — Siri & Shortcuts: New Note, New Recipe, Take a Note |
 | [F-3 Spotlight](F-3-spotlight.md) | M10 | system | landed — `CSSearchableItem` / `NoteEntity` finds notes + ingredients |
 | [F-4 Quick Look](F-4-quicklook.md) | M10 | system | landed — `NotePreviewGenerator` RTF for `.md`/`.cook`/`.textile`; Spacebar in note list opens `QLPreviewPanel` |
-| [F-5 Print & Share](F-5-print-share.md) | M10 | system | File → Print, Share sheet, Services menu item |
+| [F-5 Print & Share](F-5-print-share.md) | M10 | system | landed — File → Print (⌘P), Share sheet, Services menu item |
 | [F-6 Translate](F-6-translate.md) | M10 | system | Edit → Translate… via system `TranslationSession` |
 | [F-7 System sit](F-7-system-sit.md) | M10 | chrome | VoiceOver, Reduce Motion, Increase Contrast audit |
 | [F-8 File associations](F-8-file-associations.md) | M10 | system | Open With / double-click `.md`, `.textile`, `.cook` in Finder |
