@@ -5,17 +5,10 @@ import SwiftUI
 struct NoteListView: View {
     @ObservedObject var model: AppModel
     @FocusState private var searchFieldFocused: Bool
-    @State private var searchVisible = false
-
-    private var showSearch: Bool {
-        searchVisible || searchFieldFocused || !model.searchQuery.isEmpty
-    }
 
     var body: some View {
         VStack(spacing: 0) {
-            if showSearch {
-                searchField
-            }
+            searchField
 
             if model.visibleNotes.isEmpty {
                 emptyState
@@ -46,19 +39,12 @@ struct NoteListView: View {
         .navigationTitle(title)
         .navigationSplitViewColumnWidth(min: 240, ideal: 280, max: 360)
         .onChange(of: model.searchFocusToken) { _, _ in
-            searchVisible = true
             searchFieldFocused = true
         }
-        .onChange(of: searchFieldFocused) { _, focused in
-            if !focused, model.searchQuery.isEmpty {
-                searchVisible = false
-            }
-        }
         .onExitCommand {
-            if showSearch {
+            if searchFieldFocused || !model.searchQuery.isEmpty {
                 model.searchQuery = ""
                 searchFieldFocused = false
-                searchVisible = false
             }
         }
     }
@@ -190,6 +176,7 @@ private struct NoteListFocusHelper: NSViewRepresentable {
         func setup(view: NSView) {
             self.hostView = view
             installFocusHandler()
+            installQuickLookHandler()
             installMonitor()
             DispatchQueue.main.async { [weak self] in
                 self?.attachIfNeeded()
@@ -202,8 +189,15 @@ private struct NoteListFocusHelper: NSViewRepresentable {
             }
         }
 
+        func installQuickLookHandler() {
+            model?.quickLook.handler = { [weak self] in
+                self?.toggleQuickLook()
+            }
+        }
+
         func attachIfNeeded() {
             installFocusHandler()
+            installQuickLookHandler()
             if tableView == nil, let hostView {
                 tableView = findTableView(from: hostView)
             }
@@ -220,6 +214,11 @@ private struct NoteListFocusHelper: NSViewRepresentable {
             window.makeFirstResponder(tableView)
         }
 
+        func toggleQuickLook() {
+            guard let note = model?.selectedNote else { return }
+            NSWorkspace.shared.open(note.fileURL)
+        }
+
         private func installMonitor() {
             guard eventMonitor == nil else { return }
             eventMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -228,6 +227,12 @@ private struct NoteListFocusHelper: NSViewRepresentable {
                       let window = tableView.window,
                       window.firstResponder === tableView else {
                     return event
+                }
+                if event.keyCode == 49 { // Space
+                    if event.modifierFlags.intersection([.command, .option, .control]).isEmpty {
+                        self.toggleQuickLook()
+                        return nil
+                    }
                 }
                 if event.keyCode == 36 || event.keyCode == 76 { // Return / Enter
                     self.model?.focusEditor()
@@ -251,6 +256,7 @@ private struct NoteListFocusHelper: NSViewRepresentable {
                 self.eventMonitor = nil
             }
             model?.noteListFocus.handler = nil
+            model?.quickLook.handler = nil
         }
 
         private func findTableView(from view: NSView) -> NSTableView? {

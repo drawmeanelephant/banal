@@ -43,6 +43,7 @@ public final class AppModel: ObservableObject {
     public let sidebarFocus = FocusToken()
     public let noteListFocus = FocusToken()
     public let editorFocus = FocusToken()
+    public let quickLook = FocusToken()
     /// Last Oliver HTML for the open buffer. Published so the prose Read
     /// view (D-2) updates when the idle render lands; the editor itself
     /// ignores it (a render never changes the text).
@@ -488,6 +489,11 @@ public final class AppModel: ObservableObject {
             setViewMode(.edit)
         }
         editorFocus.request()
+    }
+
+    public func toggleQuickLook() {
+        guard selectedID != nil else { return }
+        quickLook.request()
     }
 
     public func focusSearch() {

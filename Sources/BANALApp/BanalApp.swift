@@ -180,6 +180,14 @@ struct BanalApp: App {
                     model.setViewMode(.read)
                 }
                 .disabled(model.selectedID == nil)
+
+                Divider()
+
+                Button("Quick Look Note") {
+                    model.toggleQuickLook()
+                }
+                .keyboardShortcut("y", modifiers: .command)
+                .disabled(model.selectedID == nil)
             }
         }
 

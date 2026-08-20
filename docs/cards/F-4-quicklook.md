@@ -1,6 +1,6 @@
 # Card F-4 — Quick Look preview provider
 
-**Milestone:** M10 · **Lane:** system · **Depends:** M7 Close landed · **Status:** ready — spacebar preview in Finder
+**Milestone:** M10 · **Lane:** system · **Depends:** M7 Close landed · **Status:** landed
 
 ## Handoff
 
