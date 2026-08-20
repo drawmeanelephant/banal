@@ -431,6 +431,53 @@ final class EditorTextView: NSTextView {
         }
     }
 
+    override func mouseDown(with event: NSEvent) {
+        guard isEditable else {
+            super.mouseDown(with: event)
+            return
+        }
+
+        let nonModifierFlags = event.modifierFlags.intersection([.command, .option, .control, .shift])
+        if nonModifierFlags.isEmpty && event.clickCount == 1 {
+            let point = convert(event.locationInWindow, from: nil)
+            let charIndex = characterIndexForInsertion(at: point)
+
+            if charIndex != NSNotFound && charIndex <= (string as NSString).length {
+                if let target = CheckboxToggle.toggleAction(in: string, at: charIndex) {
+                    if let window, window.firstResponder != self {
+                        window.makeFirstResponder(self)
+                    }
+                    if let layoutManager, let textContainer {
+                        let glyphRange = layoutManager.glyphRange(forCharacterRange: target.bracketRange, actualCharacterRange: nil)
+                        var rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+                        rect = rect.offsetBy(dx: textContainerOrigin.x, dy: textContainerOrigin.y)
+                        let hitRect = NSRect(
+                            x: max(0, rect.minX - 24),
+                            y: rect.minY - 4,
+                            width: rect.width + 30,
+                            height: rect.height + 8
+                        )
+                        if hitRect.contains(point) {
+                            if shouldChangeText(in: target.replacementRange, replacementString: target.replacementText) {
+                                replaceCharacters(in: target.replacementRange, with: target.replacementText)
+                                didChangeText()
+                                return
+                            }
+                        }
+                    } else {
+                        if shouldChangeText(in: target.replacementRange, replacementString: target.replacementText) {
+                            replaceCharacters(in: target.replacementRange, with: target.replacementText)
+                            didChangeText()
+                            return
+                        }
+                    }
+                }
+            }
+        }
+
+        super.mouseDown(with: event)
+    }
+
     override func cancelOperation(_ sender: Any?) {
         if let scroll = enclosingScrollView, scroll.isFindBarVisible {
             super.cancelOperation(sender)
