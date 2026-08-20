@@ -72,6 +72,10 @@ struct EditorView: View {
                             },
                             onInsertFile: { [weak model] in
                                 model?.insertFile()
+                            },
+                            onAssetError: { [weak model] message in
+                                model?.statusMessage = message
+                                model?.dismissStatusLater()
                             }
                         )
                         .onChange(of: model.editorText) { _, _ in

@@ -53,6 +53,7 @@ struct MarkdownTextView: NSViewRepresentable {
     var onAttachInsertHandler: ((@escaping (String) -> Bool) -> Void)?
     var onInsertContact: (() -> Void)?
     var onInsertFile: (() -> Void)?
+    var onAssetError: ((String) -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -95,6 +96,7 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.onTranslate = onTranslate
         textView.onInsertContact = onInsertContact
         textView.onInsertFile = onInsertFile
+        textView.onAssetError = onAssetError
         onAttachInsertHandler?({ [weak editorTextView = textView] text in
             guard let editorTextView else { return false }
             editorTextView.insertTextAtCaret(text)
@@ -134,6 +136,7 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.onTranslate = onTranslate
         textView.onInsertContact = onInsertContact
         textView.onInsertFile = onInsertFile
+        textView.onAssetError = onAssetError
         onAttachInsertHandler?({ [weak editorTextView = textView] text in
             guard let editorTextView else { return false }
             editorTextView.insertTextAtCaret(text)
@@ -354,6 +357,7 @@ final class EditorTextView: NSTextView {
     var onTranslate: ((String, NSRange) -> Void)?
     var onInsertContact: (() -> Void)?
     var onInsertFile: (() -> Void)?
+    var onAssetError: ((String) -> Void)?
     var style: EditorStyle?
 
     func insertTextAtCaret(_ text: String) {
@@ -589,8 +593,11 @@ final class EditorTextView: NSTextView {
         let options: [NSPasteboard.ReadingOptionKey: Any] = [.urlReadingFileURLsOnly: true]
         if let urls = pboard.readObjects(forClasses: classes, options: options) as? [URL] {
             for url in urls where AssetManager.isSupportedImage(url: url) {
-                if let result = try? AssetManager.importAsset(from: url, vaultURL: vaultURL) {
+                do {
+                    let result = try AssetManager.importAsset(from: url, vaultURL: vaultURL)
                     links.append(result.markdownLink)
+                } catch {
+                    onAssetError?(error.localizedDescription)
                 }
             }
         }
@@ -600,8 +607,11 @@ final class EditorTextView: NSTextView {
             for path in filenames {
                 let url = URL(fileURLWithPath: path)
                 if AssetManager.isSupportedImage(url: url) {
-                    if let result = try? AssetManager.importAsset(from: url, vaultURL: vaultURL) {
+                    do {
+                        let result = try AssetManager.importAsset(from: url, vaultURL: vaultURL)
                         links.append(result.markdownLink)
+                    } catch {
+                        onAssetError?(error.localizedDescription)
                     }
                 }
             }
@@ -609,16 +619,22 @@ final class EditorTextView: NSTextView {
 
         if links.isEmpty {
             if let pngData = pboard.data(forType: .png) {
-                if let result = try? AssetManager.saveAsset(data: pngData, originalFilename: "image.png", vaultURL: vaultURL) {
+                do {
+                    let result = try AssetManager.saveAsset(data: pngData, originalFilename: "image.png", vaultURL: vaultURL)
                     links.append(result.markdownLink)
+                } catch {
+                    onAssetError?(error.localizedDescription)
                 }
             } else if let tiffData = pboard.data(forType: .tiff),
                       let image = NSImage(data: tiffData),
                       let tiffRep = image.tiffRepresentation,
                       let bitmap = NSBitmapImageRep(data: tiffRep),
                       let pngData = bitmap.representation(using: .png, properties: [:]) {
-                if let result = try? AssetManager.saveAsset(data: pngData, originalFilename: "image.png", vaultURL: vaultURL) {
+                do {
+                    let result = try AssetManager.saveAsset(data: pngData, originalFilename: "image.png", vaultURL: vaultURL)
                     links.append(result.markdownLink)
+                } catch {
+                    onAssetError?(error.localizedDescription)
                 }
             }
         }
@@ -709,8 +725,11 @@ final class EditorTextView: NSTextView {
                 if !imageURLs.isEmpty {
                     var links: [String] = []
                     for url in imageURLs {
-                        if let result = try? AssetManager.importAsset(from: url, vaultURL: vaultURL) {
+                        do {
+                            let result = try AssetManager.importAsset(from: url, vaultURL: vaultURL)
                             links.append(result.markdownLink)
+                        } catch {
+                            onAssetError?(error.localizedDescription)
                         }
                     }
                     if !links.isEmpty {
@@ -720,16 +739,22 @@ final class EditorTextView: NSTextView {
             }
 
             if let pngData = pboard.data(forType: .png) {
-                if let result = try? AssetManager.saveAsset(data: pngData, originalFilename: "image.png", vaultURL: vaultURL) {
+                do {
+                    let result = try AssetManager.saveAsset(data: pngData, originalFilename: "image.png", vaultURL: vaultURL)
                     return applySmartReplacement(result.markdownLink, for: range)
+                } catch {
+                    onAssetError?(error.localizedDescription)
                 }
             } else if let tiffData = pboard.data(forType: .tiff),
                       let image = NSImage(data: tiffData),
                       let tiffRep = image.tiffRepresentation,
                       let bitmap = NSBitmapImageRep(data: tiffRep),
                       let pngData = bitmap.representation(using: .png, properties: [:]) {
-                if let result = try? AssetManager.saveAsset(data: pngData, originalFilename: "image.png", vaultURL: vaultURL) {
+                do {
+                    let result = try AssetManager.saveAsset(data: pngData, originalFilename: "image.png", vaultURL: vaultURL)
                     return applySmartReplacement(result.markdownLink, for: range)
+                } catch {
+                    onAssetError?(error.localizedDescription)
                 }
             }
         }
