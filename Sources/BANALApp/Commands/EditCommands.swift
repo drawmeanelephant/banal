@@ -2,10 +2,15 @@ import BANALCore
 import SwiftUI
 
 public struct EditCommands: Commands {
-    @ObservedObject var model: AppModel
+    @FocusedObject private var focusedModel: AppModel?
+    private var fallbackModel: AppModel
+
+    private var model: AppModel {
+        focusedModel ?? fallbackModel
+    }
 
     public init(model: AppModel) {
-        self.model = model
+        self.fallbackModel = model
     }
 
     public var body: some Commands {

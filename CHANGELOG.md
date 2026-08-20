@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 
+- New window on same folder (H-4, issue #40): File → New Window (`⌥⌘N`) opens independent Mac windows for the same active notes folder. Each window maintains its own local UI state (selection, search query, view mode) while observing the shared `NoteStore`. Editing a note in one window propagates immediately across windows with automatic dirty-state coordination.
 - Tags as secondary filter (H-3, issue #39): Sidebar displays a quiet "Tags" section below the folder hierarchy collecting unique tags in memory from note frontmatter. Clicking a tag (e.g. `#draft`) filters the note list immediately in memory; clicking the active tag again deselects it and restores the note list.
 - Quiet word count in status strip (H-2, issue #38): The window footer status strip quietly displays real-time word and character counts (e.g. `342 words · 1,840 characters`) when editing a note, and reverts to vault note count (e.g. `12 notes`) when no note is selected. Counts are evaluated in memory via linguistic substring tokenization (`.byWords`) without background polling or extra chrome.
 - Source checkbox toggle (H-1, issue #37): Clicking inside the `[ ]` or `[x]` prefix of a checklist line (`- [ ]`, `- [x]`, `* [ ]`, `+ [ ]`) toggles the box directly in the plain text source buffer. Replaces the inner character (` ` <-> `x`) in TextKit with full `⌘Z` undo and standard Mac caret placement, with no custom canvas or hidden syntax.
