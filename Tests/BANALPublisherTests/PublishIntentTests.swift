@@ -7,8 +7,8 @@ import XCTest
 final class PublishIntentTests: XCTestCase {
     private var tempVaultURL: URL!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
         tempVaultURL = FileManager.default.temporaryDirectory.appendingPathComponent(
             "banal-pub-intent-tests-\(UUID().uuidString)",
             isDirectory: true
@@ -17,12 +17,12 @@ final class PublishIntentTests: XCTestCase {
         IntentVaultResolver.setTestVaultURL(tempVaultURL)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         IntentVaultResolver.setTestVaultURL(nil)
         if let tempVaultURL {
             try? FileManager.default.removeItem(at: tempVaultURL)
         }
-        try super.tearDownWithError()
+        try await super.tearDown()
     }
 
     func testPublishSiteIntentWithoutPublishedNotes() async throws {

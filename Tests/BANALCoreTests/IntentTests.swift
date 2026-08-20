@@ -6,8 +6,8 @@ import XCTest
 final class IntentTests: XCTestCase {
     private var tempVaultURL: URL!
 
-    override func setUpWithError() throws {
-        try super.setUpWithError()
+    override func setUp() async throws {
+        try await super.setUp()
         tempVaultURL = FileManager.default.temporaryDirectory.appendingPathComponent(
             "banal-intent-tests-\(UUID().uuidString)",
             isDirectory: true
@@ -16,12 +16,12 @@ final class IntentTests: XCTestCase {
         IntentVaultResolver.setTestVaultURL(tempVaultURL)
     }
 
-    override func tearDownWithError() throws {
+    override func tearDown() async throws {
         IntentVaultResolver.setTestVaultURL(nil)
         if let tempVaultURL {
             try? FileManager.default.removeItem(at: tempVaultURL)
         }
-        try super.tearDownWithError()
+        try await super.tearDown()
     }
 
     func testNewNoteIntentCreatesMarkdownFile() async throws {
