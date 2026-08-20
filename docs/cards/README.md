@@ -31,7 +31,23 @@ Each card’s **Handoff** block is the note for the next person.
 | D-2 | **landed code, gate pending** — `ProseReadView` native page, pending I-2 friend visual |
 | D-3 | landed — recipe references inlined in Read |
 | D-4 | landed — ⌘F matches ingredient names + inlined sauces |
-| M13–M19 | **blank active triage** — cut one card per sit bug found by I-2 |
+| M13–M19 | **active triage — Casa Grande cut** — J-13 board (`fix/j13-casa-grande` #110 → #117-#120); M14–M19 stay blank until I-2 files that class |
+
+### Board J — The Drive: Casa Grande → Quartzsite (M13–M19) — stability triage
+
+I-8 shithole towns, not macOS names. One sit bug = one card in the town whose theme it broke. Blank until filed; J-13 is now the first cut. Do not pull M14–M19 work into J-13.
+
+| Card | Milestone | Lane | Gate |
+|------|-----------|------|------|
+| [J-13 Casa Grande](J-13-casa-grande.md) | M13 | core+app | **board** — bookmark survives move/rename/reboot; first-run vs missing; vanish-while-open dumps to picker; Reveal after Finder rename. Subissues #117 #118 #119 #120 · `fix/j13-casa-grande` · `docs/TESTING-NOTES-FOLDER.md:1` |
+| M14 Gila Bend | M14 | core | **blank** — external truth (FSEvents dirty/clean, F-9) — cut only if I-2 files |
+| M15 Yuma | M15 | core | **blank** — write & crash safety — cut only if I-2 files |
+| M16 El Centro | M16 | app | **blank** — latency & large vault — cut only if I-2 files |
+| M17 Niland | M17 | chrome | **blank** — a11y & keyboard — cut only if I-2 files |
+| M18 Desert Center | M18 | system | **blank** — UTType/Quick Look/Print — cut only if I-2 files |
+| M19 Quartzsite | M19 | chrome | **blank** — copy/help & final sit — cut only if I-2 files |
+
+Suggested prefixes: `fix/j13-casa-grande` … `fix/j19-quartzsite`. One card = one branch = one PR; `swift test` green, no second DB, no silently recreating the vault.
 
 ## Board — Fluency
 
