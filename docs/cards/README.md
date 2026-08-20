@@ -97,7 +97,7 @@ Stage after M8 is done (or beside D where noted).
 | [G-2 Copy As](G-2-copy-as.md) | M11 | editor | landed — Edit → Copy As: Markdown, Rich Text (RTF), HTML |
 | [G-3 Import](G-3-import.md) | M11 | files | File → Import… copies folder/files into vault |
 | [G-4 Pickers](G-4-pickers.md) | M11 | editor | Edit → Insert Contact… / Insert File… |
-| [G-5 Drag out](G-5-drag-out.md) | M11 | list | Drag note from list into Mail / Messages / Finder |
+| [G-5 Drag out](G-5-drag-out.md) | M11 | list | landed — Drag note from list into Mail / Messages / Finder |
 
 ### Board H — Consider (M12)
 
