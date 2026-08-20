@@ -15,7 +15,7 @@ settings:
     CODE_SIGN_STYLE: Manual
     CODE_SIGN_IDENTITY: "-"
     ENABLE_APP_SANDBOX: YES
-    ENABLE_HARDENED_RUNTIME: NO
+    ENABLE_HARDENED_RUNTIME: YES
 targets:
   BANAL:
     type: application
@@ -52,8 +52,8 @@ targets:
           set -euo pipefail
           help_book_locale="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/BANAL.help/Contents/Resources/en.lproj"
           if ! command -v hiutil >/dev/null 2>&1; then
-            echo "error: hiutil is required to build the Apple Help Book index."
-            exit 1
+            echo "warning: hiutil not found — Help Book index not built."
+            exit 0
           fi
           hiutil -I corespotlight -Caf "${help_book_locale}/BANAL.cshelpindex" -g -s en -l en_US "${help_book_locale}"
     entitlements:
