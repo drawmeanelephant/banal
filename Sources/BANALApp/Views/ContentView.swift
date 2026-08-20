@@ -12,48 +12,27 @@ struct ContentView: View {
             if model.needsVault {
                 VaultPicker(model: model)
             } else {
-                NavigationSplitView {
-                    SidebarView(model: model)
-                        .accessibilityElement(children: .contain)
-                        .accessibilityLabel("Folders")
-                } content: {
-                    NoteListView(model: model)
-                        .accessibilityElement(children: .contain)
-                        .accessibilityLabel("Notes")
-                } detail: {
-                    EditorView(model: model)
-                        .accessibilityElement(children: .contain)
-                        .accessibilityLabel("Note")
+                VStack(spacing: 0) {
+                    NavigationSplitView {
+                        SidebarView(model: model)
+                            .accessibilityElement(children: .contain)
+                            .accessibilityLabel("Folders")
+                    } content: {
+                        NoteListView(model: model)
+                            .accessibilityElement(children: .contain)
+                            .accessibilityLabel("Notes")
+                    } detail: {
+                        EditorView(model: model)
+                            .accessibilityElement(children: .contain)
+                            .accessibilityLabel("Note")
+                    }
+                    .navigationSplitViewStyle(.balanced)
+
+                    StatusStripView(model: model)
                 }
-                .navigationSplitViewStyle(.balanced)
             }
         }
         .frame(minWidth: 720, minHeight: 520)
-        .overlay(alignment: .bottom) {
-            if let status = model.statusMessage {
-                Text(status)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .frame(maxWidth: .infinity)
-                    .background(Color(nsColor: .windowBackgroundColor))
-                    .overlay(alignment: .top) {
-                        if contrast == .increased {
-                            Rectangle()
-                                .fill(Color(nsColor: .separatorColor))
-                                .frame(height: 1)
-                        } else {
-                            Divider()
-                        }
-                    }
-                    .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
-                    .accessibilityLabel(status)
-                    .accessibilityAddTraits(.updatesFrequently)
-                    .onTapGesture { model.statusMessage = nil }
-            }
-        }
         .animation(reduceMotion ? nil : .easeOut(duration: 0.18), value: model.statusMessage)
         .onChange(of: model.statusMessage) { _, new in
             if new != nil { model.dismissStatusLater() }
