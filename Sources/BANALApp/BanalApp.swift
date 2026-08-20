@@ -138,6 +138,21 @@ struct BanalApp: App {
                 .disabled(model.needsVault || !model.canDeploy)
             }
 
+            CommandGroup(replacing: .printItem) {
+                Button("Print…") {
+                    model.printSelectedNote()
+                }
+                .keyboardShortcut("p", modifiers: .command)
+                .disabled(model.needsVault || model.selectedID == nil)
+            }
+
+            CommandGroup(after: .importExport) {
+                Button("Share…") {
+                    model.shareSelectedNote()
+                }
+                .disabled(model.needsVault || model.selectedID == nil)
+            }
+
             CommandMenu("Find") {
                 Button("Find Notes") {
                     model.focusSearch()
@@ -229,12 +244,14 @@ enum BanalAbout {
     }
 }
 
+@MainActor
 final class BanalAppDelegate: NSObject, NSApplicationDelegate {
     weak var model: AppModel?
     /// Open-file events (Finder double-click, Dock drag) that arrived
     /// before ContentView handed us the model. Drained in
     /// `flushPendingOpens()`.
     private var pendingOpenURLs: [URL] = []
+    private var pendingServiceTexts: [String] = []
 
     /// A multi-file open (Finder multi-select → Open With, a Dock drag of
     /// several files) arrives as one Apple event. SwiftUI's `.onOpenURL`
@@ -259,11 +276,32 @@ final class BanalAppDelegate: NSObject, NSApplicationDelegate {
     /// MainActor contexts (the open-files delegate hook and `.onAppear`).
     @MainActor
     func flushPendingOpens() {
-        guard !pendingOpenURLs.isEmpty else { return }
-        let urls = pendingOpenURLs
-        pendingOpenURLs.removeAll()
-        for url in urls {
-            model?.openExternalNote(at: url)
+        if !pendingOpenURLs.isEmpty {
+            let urls = pendingOpenURLs
+            pendingOpenURLs.removeAll()
+            for url in urls {
+                model?.openExternalNote(at: url)
+            }
+        }
+        if !pendingServiceTexts.isEmpty {
+            let texts = pendingServiceTexts
+            pendingServiceTexts.removeAll()
+            for text in texts {
+                model?.createNoteFromService(text: text)
+            }
+        }
+    }
+
+    @objc func newNoteFromService(_ pboard: NSPasteboard, userData: String, error: AutoreleasingUnsafeMutablePointer<NSString?>) {
+        guard let text = ServicesPasteboardParser.extractText(from: pboard) else {
+            return
+        }
+        Task { @MainActor in
+            if let model = self.model {
+                model.createNoteFromService(text: text)
+            } else {
+                self.pendingServiceTexts.append(text)
+            }
         }
     }
 
@@ -283,6 +321,8 @@ final class BanalAppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
+        NSApp.servicesProvider = self
+        NSUpdateDynamicServices()
         if ProcessInfo.processInfo.environment["BANAL_SMOKE_TEST"] != nil {
             // Startup smoke (Scripts/smoke.sh): give the window a beat to
             // appear, then wait until bootstrap() has written
