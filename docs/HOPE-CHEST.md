@@ -58,17 +58,15 @@ eat **after** we can fly. Do not fly from the driveway.
 
 ## Immediate miles (do not skip)
 
-Tucson is behind us; California is next. If the navigator has to
-pick *one* next turn:
+Tucson is behind us; California is next. Free-tier vs paid:
 
-1. **Release** ([I-1](cards/I-1-release.md)) — a Developer ID,
-   notarized + stapled `.app` a stranger can keep.
-2. **Sit the signed build** ([I-2](cards/I-2-release-sit.md)) —
-   the one human pass that closes C-1, D-1/D-2, and F-8.
+1. **Release (free-tier)** ([I-1](cards/I-1-release.md)) — **deferred** — ad-hoc or `Apple Development ZQT4XUHVT5` (free team) ships via right-click Open; `Scripts/notarize.sh` no-ops without paid `Developer ID Application`. Notarized + stapled stays the paid step.
+2. **Sit the ad-hoc build** ([I-2](cards/I-2-release-sit.md)) —
+   the one human pass that closes C-1, D-1/D-2, and F-8. Local light sit may run now; friend full sit (light+dark 720/1100/1400 + VoiceOver) is the gate. Sit bugs fill M13–M19, one card at a time.
 
 If the sit hates the caret or publish feels like onboarding,
 that bug is the whole map. We do not reach California with a
-broken windshield.
+broken windshield. Paid notarize does not precede the sit.
 
 ## Tucson — before California (M9–M12)
 
@@ -91,23 +89,26 @@ The coast. A friend who does not have this checkout double-clicks
 an `.app`, picks a folder, writes, files, cooks, optionally
 publishes. They do not write us. They do not need a README.
 
-M20 is true when all of this is boring:
+**Free-tier vs paid:** free-tier ships ad-hoc (`make app` `-` or `Apple Development ZQT4XUHVT5`) — friend drags to Applications → right-click Open. Gatekeeper warning is expected until paid `Developer ID Application` + `notarytool` creds are provisioned. Do not block the sit on notarize.
 
-- Gatekeeper is happy (Developer ID, notarized, stapled)
-- C-1 sit plus a furniture sit after M9–M11
-- Help is one page
-- Empty states are still one sentence
+M20 (free-tier) is true when all of this is boring:
+
+- Friend ad-hoc install works (right-click Open), picker → write → file → cook → `⇧⌘P` publish to `.publish/` without token
+- C-1 sit plus D-1/D-2/F-8 gates checked (local light + friend full 720/1100/1400)
+- Help is one page `Resources/BANAL.help/Contents/Resources/en.lproj/BANAL.html` + About `BANAL is a beautiful, boring…` `Sources/BANALApp/BanalApp.swift:121`
+- Empty states are still one sentence `Sources/BANALApp/Views/NoteListView.swift:100`
 - Local notes never need a token
 - Finder and BANAL still agree
 - The window is still folders · list · page
+
+M20 (paid) adds: Gatekeeper happy without right-click (`Developer ID Application`, notarized, stapled, `spctl --assess` `Notarized`), same sit on paid build.
 
 M20 is **not** iPhone, iCloud we operate, a theme store, or
 version 2.0 energy. If we want to charge money, this is the
 first honest day — not because we added surfaces, because we
 stopped.
 
-Miles M13–M19 stay blank. If Tucson surfaces a sit bug, that
-is the next exit. Do not pre-build rest stops.
+Miles M13–M19 stay **active triage** — blank until I-2 friend sit files them. If the sit surfaces a bug, that is the next exit. Cut one card at a time. Do not pre-build rest stops.
 
 ## Japan — vacation (M50)
 
@@ -213,9 +214,8 @@ How a future idea earns a place is
 
 ## How to use this chest
 
-- **Asleep / new session:** Board I — release, then sit, then
-  copy. Do not open Japan.
-- **Planning:** cut a board from the next *town*, not from M99.
+- **Asleep / new session:** Board I free-tier — I-1 deferred (ad-hoc), then sit (I-2 — you light, friend full), M13–M19 bugs one at a time, then paid notarize when Program available, then `copy` is already landed. Do not open Japan yet.
+- **Planning:** cut a board from the next *town*, not from M99. Next board after free-tier is the **M13–M19 drive** (sit bugs), not Japan.
 - **Tempted:** read the Louisiana list out loud. If you are
   defending the idea, it is already a detour.
 - **Done with a town:** one line in [`STATUS.md`](STATUS.md)
