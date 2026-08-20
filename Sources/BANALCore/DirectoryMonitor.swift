@@ -44,7 +44,6 @@ public final class DirectoryMonitor: NSObject, NSFilePresenter, @unchecked Senda
 
         NSFileCoordinator.addFilePresenter(self)
 
-        let allocator = kCFAllocatorDefault
         var context = FSEventStreamContext(
             version: 0,
             info: Unmanaged.passUnretained(self).toOpaque(),
@@ -59,7 +58,7 @@ public final class DirectoryMonitor: NSObject, NSFilePresenter, @unchecked Senda
                 | kFSEventStreamCreateFlagNoDefer
         )
         guard let created = FSEventStreamCreate(
-            allocator,
+            kCFAllocatorDefault,
             DirectoryMonitor.streamCallback,
             &context,
             paths,
@@ -72,13 +71,18 @@ public final class DirectoryMonitor: NSObject, NSFilePresenter, @unchecked Senda
         stream = created
         FSEventStreamSetDispatchQueue(created, callbackQueue)
         FSEventStreamStart(created)
+        lock.lock()
         started = true
+        lock.unlock()
     }
 
     public func stop() {
-        if started {
+        lock.lock()
+        let wasStarted = started
+        started = false
+        lock.unlock()
+        if wasStarted {
             NSFileCoordinator.removeFilePresenter(self)
-            started = false
         }
         if let stream {
             FSEventStreamStop(stream)

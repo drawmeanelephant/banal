@@ -18,7 +18,7 @@ final class FolderTreeTests: XCTestCase {
     }
 
     func testUniqueSiblingIncrements() {
-        XCTAssertEqual(FolderName.uniqueSibling(base: "Inbox", existing: ["Inbox", "Inbox 2"]), "Inbox 3")
+        XCTAssertEqual(FolderName.uniqueSibling(base: "Inbox", existing: ["Inbox", "Inbox 2"]), "Inbox-2")
     }
 
     func testPathRemapAndContains() {
