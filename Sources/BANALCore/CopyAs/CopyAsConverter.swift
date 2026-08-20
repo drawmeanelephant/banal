@@ -521,7 +521,7 @@ public enum CopyAsConverter {
 
             guard textRange.location != NSNotFound, urlRange.location != NSNotFound else { continue }
             let urlString = (attrString.string as NSString).substring(with: urlRange).trimmingCharacters(in: .whitespacesAndNewlines)
-            let innerAttr = attrString.attributedSubstring(from: textRange).mutableCopy() as! NSMutableAttributedString
+            let innerAttr = NSMutableAttributedString(attributedString: attrString.attributedSubstring(from: textRange))
             let linkRange = NSRange(location: 0, length: innerAttr.length)
             if let url = URL(string: urlString) {
                 innerAttr.addAttribute(.link, value: url, range: linkRange)
@@ -550,7 +550,7 @@ public enum CopyAsConverter {
             let innerRange = match.range(at: 1)
 
             guard innerRange.location != NSNotFound, innerRange.length > 0 else { continue }
-            let innerAttr = attrString.attributedSubstring(from: innerRange).mutableCopy() as! NSMutableAttributedString
+            let innerAttr = NSMutableAttributedString(attributedString: attrString.attributedSubstring(from: innerRange))
             let targetRange = NSRange(location: 0, length: innerAttr.length)
 
             if let font {
