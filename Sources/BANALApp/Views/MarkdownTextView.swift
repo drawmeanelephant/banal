@@ -43,6 +43,7 @@ struct MarkdownTextView: NSViewRepresentable {
     var findToken: Int
     var focusToken: FocusToken
     var style: EditorStyle
+    var vaultURL: URL?
     var onEscape: (() -> Void)?
     var onTab: (() -> Void)?
     var onBacktab: (() -> Void)?
@@ -64,6 +65,7 @@ struct MarkdownTextView: NSViewRepresentable {
 
         let textView = EditorTextView()
         textView.delegate = context.coordinator
+        textView.vaultURL = vaultURL
         textView.isRichText = false
         textView.allowsUndo = true
         textView.usesFindBar = true
@@ -116,6 +118,7 @@ struct MarkdownTextView: NSViewRepresentable {
         context.coordinator.onSelectionChange = onSelectionChange
         context.coordinator.onTranslate = onTranslate
         if let editorTextView = textView as? EditorTextView {
+            editorTextView.vaultURL = vaultURL
             editorTextView.onEscape = onEscape
             editorTextView.onTab = onTab
             editorTextView.onBacktab = onBacktab
@@ -329,6 +332,7 @@ private final class TextFinderSender: NSObject {
 }
 
 final class EditorTextView: NSTextView {
+    var vaultURL: URL?
     var onEscape: (() -> Void)?
     var onTab: (() -> Void)?
     var onBacktab: (() -> Void)?
@@ -461,6 +465,100 @@ final class EditorTextView: NSTextView {
         super.insertNewline(sender)
     }
 
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        if vaultURL != nil && hasSupportedImage(in: sender.draggingPasteboard) {
+            return .copy
+        }
+        return super.draggingEntered(sender)
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        if vaultURL != nil && hasSupportedImage(in: sender.draggingPasteboard) {
+            return .copy
+        }
+        return super.draggingUpdated(sender)
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        guard let vaultURL, hasSupportedImage(in: sender.draggingPasteboard) else {
+            return super.performDragOperation(sender)
+        }
+
+        var links: [String] = []
+        let pboard = sender.draggingPasteboard
+
+        let classes = [NSURL.self]
+        let options: [NSPasteboard.ReadingOptionKey: Any] = [.urlReadingFileURLsOnly: true]
+        if let urls = pboard.readObjects(forClasses: classes, options: options) as? [URL] {
+            for url in urls where AssetManager.isSupportedImage(url: url) {
+                if let result = try? AssetManager.importAsset(from: url, vaultURL: vaultURL) {
+                    links.append(result.markdownLink)
+                }
+            }
+        }
+
+        if links.isEmpty,
+           let filenames = pboard.propertyList(forType: NSPasteboard.PasteboardType("NSFilenamesPboardType")) as? [String] {
+            for path in filenames {
+                let url = URL(fileURLWithPath: path)
+                if AssetManager.isSupportedImage(url: url) {
+                    if let result = try? AssetManager.importAsset(from: url, vaultURL: vaultURL) {
+                        links.append(result.markdownLink)
+                    }
+                }
+            }
+        }
+
+        if links.isEmpty {
+            if let pngData = pboard.data(forType: .png) {
+                if let result = try? AssetManager.saveAsset(data: pngData, originalFilename: "image.png", vaultURL: vaultURL) {
+                    links.append(result.markdownLink)
+                }
+            } else if let tiffData = pboard.data(forType: .tiff),
+                      let image = NSImage(data: tiffData),
+                      let tiffRep = image.tiffRepresentation,
+                      let bitmap = NSBitmapImageRep(data: tiffRep),
+                      let pngData = bitmap.representation(using: .png, properties: [:]) {
+                if let result = try? AssetManager.saveAsset(data: pngData, originalFilename: "image.png", vaultURL: vaultURL) {
+                    links.append(result.markdownLink)
+                }
+            }
+        }
+
+        guard !links.isEmpty else {
+            return super.performDragOperation(sender)
+        }
+
+        let textToInsert = links.joined(separator: "\n\n")
+        let dropPoint = convert(sender.draggingLocation, from: nil)
+        let charIndex = characterIndexForInsertion(at: dropPoint)
+        let range: NSRange
+        if charIndex != NSNotFound && charIndex <= (string as NSString).length {
+            range = NSRange(location: charIndex, length: 0)
+        } else {
+            range = selectedRange()
+        }
+
+        return applySmartReplacement(textToInsert, for: range)
+    }
+
+    private func hasSupportedImage(in pboard: NSPasteboard) -> Bool {
+        let classes = [NSURL.self]
+        let options: [NSPasteboard.ReadingOptionKey: Any] = [.urlReadingFileURLsOnly: true]
+        if let urls = pboard.readObjects(forClasses: classes, options: options) as? [URL],
+           urls.contains(where: { AssetManager.isSupportedImage(url: $0) }) {
+            return true
+        }
+        if let filenames = pboard.propertyList(forType: NSPasteboard.PasteboardType("NSFilenamesPboardType")) as? [String],
+           filenames.contains(where: { AssetManager.isSupportedImage(url: URL(fileURLWithPath: $0)) }) {
+            return true
+        }
+        if pboard.types?.contains(.png) == true || pboard.types?.contains(.tiff) == true {
+            return true
+        }
+        return false
+    }
+
     override var readablePasteboardTypes: [NSPasteboard.PasteboardType] {
         var types = super.readablePasteboardTypes
         if !types.contains(.html) { types.append(.html) }
@@ -502,6 +600,40 @@ final class EditorTextView: NSTextView {
         // preserve literal ASCII characters without wrapping or markdown conversion.
         if CodeFenceScan.shouldSuppressSubstitutions(in: string, for: range) {
             return false
+        }
+
+        // 0. Image file or data paste into vault assets/
+        if let vaultURL {
+            let classes = [NSURL.self]
+            let options: [NSPasteboard.ReadingOptionKey: Any] = [.urlReadingFileURLsOnly: true]
+            if let urls = pboard.readObjects(forClasses: classes, options: options) as? [URL] {
+                let imageURLs = urls.filter { AssetManager.isSupportedImage(url: $0) }
+                if !imageURLs.isEmpty {
+                    var links: [String] = []
+                    for url in imageURLs {
+                        if let result = try? AssetManager.importAsset(from: url, vaultURL: vaultURL) {
+                            links.append(result.markdownLink)
+                        }
+                    }
+                    if !links.isEmpty {
+                        return applySmartReplacement(links.joined(separator: "\n\n"), for: range)
+                    }
+                }
+            }
+
+            if let pngData = pboard.data(forType: .png) {
+                if let result = try? AssetManager.saveAsset(data: pngData, originalFilename: "image.png", vaultURL: vaultURL) {
+                    return applySmartReplacement(result.markdownLink, for: range)
+                }
+            } else if let tiffData = pboard.data(forType: .tiff),
+                      let image = NSImage(data: tiffData),
+                      let tiffRep = image.tiffRepresentation,
+                      let bitmap = NSBitmapImageRep(data: tiffRep),
+                      let pngData = bitmap.representation(using: .png, properties: [:]) {
+                if let result = try? AssetManager.saveAsset(data: pngData, originalFilename: "image.png", vaultURL: vaultURL) {
+                    return applySmartReplacement(result.markdownLink, for: range)
+                }
+            }
         }
 
         // 1. Paste URL over selection: wrap into [selectedText](url)

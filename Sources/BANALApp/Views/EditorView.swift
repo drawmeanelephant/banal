@@ -45,6 +45,7 @@ struct EditorView: View {
                         findToken: model.findInNoteToken,
                         focusToken: model.editorFocus,
                         style: EditorStyle(from: model.preferences),
+                        vaultURL: model.store.configuration.rootURL,
                         onEscape: { [weak model] in model?.focusNoteList() },
                         onTab: { [weak model] in model?.focusSidebar() },
                         onBacktab: { [weak model] in model?.focusNoteList() },

@@ -620,6 +620,55 @@ public final class AppModel: ObservableObject {
     public func triggerNativeTranslation() {
         NSApp.sendAction(NSSelectorFromString("translate:"), to: nil, from: nil)
     }
+
+    public var canInsertPhoto: Bool {
+        !needsVault && selectedNote != nil && viewMode == .edit
+    }
+
+    public func insertPhoto() {
+        guard canInsertPhoto else { return }
+        let panel = NSOpenPanel()
+        panel.title = "Insert Photo"
+        panel.prompt = "Insert"
+        panel.canChooseFiles = true
+        panel.canChooseDirectories = false
+        panel.allowsMultipleSelection = true
+        panel.allowedContentTypes = AssetManager.supportedContentTypes
+
+        let response = panel.runModal()
+        guard response == .OK, !panel.urls.isEmpty else { return }
+
+        let vaultURL = store.configuration.rootURL
+        var links: [String] = []
+        for url in panel.urls {
+            do {
+                let result = try AssetManager.importAsset(from: url, vaultURL: vaultURL)
+                links.append(result.markdownLink)
+            } catch {
+                statusMessage = error.localizedDescription
+            }
+        }
+        guard !links.isEmpty else { return }
+        let insertion = links.joined(separator: "\n\n")
+        insertTextIntoEditor(insertion)
+        editorFocus.request()
+    }
+
+    public func insertTextIntoEditor(_ insertion: String) {
+        let nsText = editorText as NSString
+        let range: NSRange
+        if selectedRange.location != NSNotFound, selectedRange.location + selectedRange.length <= nsText.length {
+            range = selectedRange
+        } else {
+            range = NSRange(location: nsText.length, length: 0)
+        }
+        let newText = nsText.replacingCharacters(in: range, with: insertion)
+        editorText = newText
+        let newCaret = range.location + (insertion as NSString).length
+        selectedRange = NSRange(location: newCaret, length: 0)
+        selectedText = ""
+        applyEditorChanges()
+    }
     public func dismissStatusLater() {
         let message = statusMessage
         Task { @MainActor in
