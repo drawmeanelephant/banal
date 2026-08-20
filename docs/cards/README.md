@@ -31,7 +31,7 @@ Each card’s **Handoff** block is the note for the next person.
 | D-2 | **landed code, gate pending** — `ProseReadView` native page, pending I-2 friend visual |
 | D-3 | landed — recipe references inlined in Read |
 | D-4 | landed — ⌘F matches ingredient names + inlined sauces |
-| M13–M19 | **active triage — Casa Grande cut** — J-13 board (`fix/j13-casa-grande` #110 → #117-#120); M14–M19 stay blank until I-2 files that class |
+| M13–M19 | **active triage — Casa Grande + Gila Bend cut** — J-13 board (`fix/j13-casa-grande` #110 → #117-#120) landed, J-14 board (`fix/j14-gila-bend` #111 → #123-#126) active; M15–M19 stay blank until I-2 files that class |
 
 ### Board J — The Drive: Casa Grande → Quartzsite (M13–M19) — stability triage
 
@@ -39,8 +39,8 @@ I-8 shithole towns, not macOS names. One sit bug = one card in the town whose th
 
 | Card | Milestone | Lane | Gate |
 |------|-----------|------|------|
-| [J-13 Casa Grande](J-13-casa-grande.md) | M13 | core+app | **board** — bookmark survives move/rename/reboot; first-run vs missing; vanish-while-open dumps to picker; Reveal after Finder rename. Subissues #117 #118 #119 #120 · `fix/j13-casa-grande` · `docs/TESTING-NOTES-FOLDER.md:1` |
-| M14 Gila Bend | M14 | core | **blank** — external truth (FSEvents dirty/clean, F-9) — cut only if I-2 files |
+| [J-13 Casa Grande](J-13-casa-grande.md) | M13 | core+app | **landed** — bookmark survives move/rename/reboot; first-run vs missing; vanish-while-open dumps to picker; Reveal after Finder rename. Subissues #117 #118 #119 #120 · `fix/j13-casa-grande` · `docs/TESTING-NOTES-FOLDER.md:1` |
+| [J-14 Gila Bend](J-14-gila-bend.md) | M14 | core | **board** — external truth (FSEvents dirty/clean, F-9) — coalesce/no DB/empty folders + dirty-keep/clean-reload + watch-off + F-9 guard. Subissues #123 #124 #125 #126 · `fix/j14-gila-bend` · `docs/TESTING-WINDOW.md:4` |
 | M15 Yuma | M15 | core | **blank** — write & crash safety — cut only if I-2 files |
 | M16 El Centro | M16 | app | **blank** — latency & large vault — cut only if I-2 files |
 | M17 Niland | M17 | chrome | **blank** — a11y & keyboard — cut only if I-2 files |

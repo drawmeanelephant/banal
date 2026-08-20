@@ -169,6 +169,10 @@ public final class NoteStore: ObservableObject {
             }
         }
         notes = loaded.sorted { $0.updated > $1.updated }
+        // J-14a/d: directory-level rescan must not keep stale disposable caches for vanished ids.
+        let currentIDs = Set(notes.map(\.id))
+        ingredientCache = ingredientCache.filter { currentIDs.contains($0.key) }
+        recentlyWritten = recentlyWritten.filter { currentIDs.contains($0.key) }
         refreshFolders()
         reindexSpotlight()
     }
@@ -351,7 +355,8 @@ public final class NoteStore: ObservableObject {
         guard existing.title != note.title
             || existing.body != note.body
             || existing.tags != note.tags
-            || existing.published != note.published else { return }
+            || existing.published != note.published
+            || existing.extras != note.extras else { return }
         ingredientCache.removeValue(forKey: note.id)
         var next = note
         next.updated = Date()
