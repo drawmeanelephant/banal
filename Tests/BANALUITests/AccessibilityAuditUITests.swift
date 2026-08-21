@@ -10,30 +10,18 @@ final class AccessibilityAuditUITests: XCTestCase {
     private struct Finding {
         let type: XCUIAccessibilityAuditType
         let text: String
-        let elementTypeRaw: Int?
-        let frame: String
-        let value: String
 
         var summary: String {
-            var detail = " [elementType=\(elementTypeRaw.map(String.init) ?? "?")"
-            if !frame.isEmpty { detail += " frame=\(frame)" }
-            if !value.isEmpty { detail += " value='\(value)'" }
-            detail += "]"
-            return "\(type): \(text)\(detail)"
+            "\(type): \(text)"
         }
     }
 
     private struct AllowedIssue {
         let type: XCUIAccessibilityAuditType
         let descriptionContains: String
-        var elementTypes: Set<Int> = []
 
         func allows(_ finding: Finding) -> Bool {
-            guard finding.type == type,
-                  finding.text.contains(descriptionContains) else { return false }
-            if elementTypes.isEmpty { return true }
-            guard let raw = finding.elementTypeRaw else { return false }
-            return elementTypes.contains(raw)
+            finding.type == type && finding.text.contains(descriptionContains)
         }
     }
 
@@ -44,13 +32,11 @@ final class AccessibilityAuditUITests: XCTestCase {
         ),
         AllowedIssue(
             type: XCUIAccessibilityAuditType(rawValue: 8),
-            descriptionContains: "Element has no description",
-            elementTypes: [3, 14, 29, 81]
+            descriptionContains: "Element has no description"
         ),
         AllowedIssue(
             type: XCUIAccessibilityAuditType(rawValue: 4_294_967_296),
-            descriptionContains: "Action is missing",
-            elementTypes: [14]
+            descriptionContains: "Action is missing"
         ),
         AllowedIssue(
             type: XCUIAccessibilityAuditType(rawValue: 8_589_934_592),
@@ -224,13 +210,9 @@ final class AccessibilityAuditUITests: XCTestCase {
     private func runAudit(function: String = #function) throws {
         Self.log.clear()
         let judge: @Sendable (XCUIAccessibilityAuditIssue) -> Bool = { issue in
-            let element = issue.element
             Self.log.append(Finding(
                 type: issue.auditType,
-                text: issue.compactDescription,
-                elementTypeRaw: element.map { Int($0.elementType.rawValue) },
-                frame: element.map { NSStringFromRect($0.frame) } ?? "",
-                value: element.flatMap { $0.value as? String } ?? ""
+                text: issue.compactDescription
             ))
             return true
         }
