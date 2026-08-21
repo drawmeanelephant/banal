@@ -33,10 +33,10 @@ run:
 # Signed .app for dragging to /Applications. Ad-hoc (`-`) unless
 # SIGN_IDENTITY is a Developer ID Application identity.
 app:
-	$(SWIFT) build -c release --product BANAL
+	$(SWIFT) build -c release --product banal-cli
 	rm -rf "$(APP)"
 	mkdir -p "$(APP)/Contents/MacOS" "$(APP)/Contents/Resources"
-	cp .build/release/BANAL "$(APP)/Contents/MacOS/BANAL"
+	cp .build/release/banal-cli "$(APP)/Contents/MacOS/BANAL"
 	chmod +x "$(APP)/Contents/MacOS/BANAL"
 	cp Resources/AppIcon.icns "$(APP)/Contents/Resources/AppIcon.icns"
 	cp -R "$(HELP_BOOK)" "$(APP)/Contents/Resources/"
