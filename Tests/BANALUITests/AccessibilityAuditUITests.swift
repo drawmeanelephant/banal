@@ -1,6 +1,5 @@
 import XCTest
 
-@MainActor
 final class AccessibilityAuditUITests: XCTestCase {
 
     private enum Config {
