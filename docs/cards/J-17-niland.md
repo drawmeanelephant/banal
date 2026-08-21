@@ -1,6 +1,6 @@
 # Card J-17 — Niland — a11y & keyboard (Drive triage)
 
-**Milestone:** M17 · **Lane:** chrome · **Status:** board · **Branch:** `fix/j17-niland` · **Parent:** #114 · **Subissues:** #139 J-17a, #140 J-17b, #141 J-17c
+**Milestone:** M17 · **Lane:** chrome · **Status:** landed — `ee0af6c` board verified · **Branch:** `fix/j17-niland` · **Parent:** #114 · **Subissues:** #139 J-17a, #140 J-17b, #141 J-17c — verified
 
 ## Handoff
 
