@@ -1,5 +1,6 @@
 import XCTest
 
+@MainActor
 final class AccessibilityAuditUITests: XCTestCase {
 
     private enum Config {
@@ -84,28 +85,42 @@ final class AccessibilityAuditUITests: XCTestCase {
 
     private var app: XCUIApplication!
 
-    override func setUpWithError() throws {
+    override func setUp() {
+        super.setUp()
         continueAfterFailure = false
+    }
+
+    private func makeApp(size: String? = nil, dark: Bool) {
         app = XCUIApplication()
         app.launchEnvironment["BANAL_UI_TEST_VAULT"] = "fixture"
+        if let size {
+            app.launchEnvironment["BANAL_UI_TEST_WINDOW_SIZE"] = size
+        }
+        if dark {
+            app.launchArguments += ["-AppleInterfaceStyle", "Dark"]
+        }
         app.launchArguments += ["-NSDisablePersistence", "YES"]
     }
 
-    override func tearDownWithError() throws {
+    private func shutdownApp() {
         if app.state == .runningForeground {
             app.terminate()
         }
     }
 
     func testMainWindowPassesAccessibilityAudit() throws {
-        launch(dark: false)
+        makeApp(dark: false)
+        defer { shutdownApp() }
+        app.launch()
         waitUntilReady()
         selectNote(titled: "Groceries")
         try runAudit()
     }
 
     func testMinimumSizeInDarkModePassesAccessibilityAuditAndKeepsListAndEditor() throws {
-        launch(size: "720,520", dark: true)
+        makeApp(size: "720,520", dark: true)
+        defer { shutdownApp() }
+        app.launch()
         waitUntilReady()
 
         XCTAssertEqual(app.windows.firstMatch.frame.width, 720, accuracy: 4, "window is not at the 720pt minimum")
@@ -124,7 +139,9 @@ final class AccessibilityAuditUITests: XCTestCase {
     }
 
     func testWideWindowAndRecipeReadPassAccessibilityAudit() throws {
-        launch(size: "1400,900", dark: false)
+        makeApp(size: "1400,900", dark: false)
+        defer { shutdownApp() }
+        app.launch()
         waitUntilReady()
 
         XCTAssertEqual(app.windows.firstMatch.frame.width, 1400, accuracy: 4, "window is not at the wide size")
@@ -142,16 +159,6 @@ final class AccessibilityAuditUITests: XCTestCase {
         }
 
         try runAudit()
-    }
-
-    private func launch(size: String? = nil, dark: Bool) {
-        if let size {
-            app.launchEnvironment["BANAL_UI_TEST_WINDOW_SIZE"] = size
-        }
-        if dark {
-            app.launchArguments += ["-AppleInterfaceStyle", "Dark"]
-        }
-        app.launch()
     }
 
     private func waitUntilReady() {
