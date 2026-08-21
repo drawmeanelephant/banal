@@ -1,6 +1,6 @@
 # Card J-18 — Desert Center — system furniture (Drive triage)
 
-**Milestone:** M18 · **Lane:** system · **Status:** board · **Branch:** `fix/j18-desert-center` · **Parent:** #115 · **Subissues:** #143 J-18a, #144 J-18b, #145 J-18c
+**Milestone:** M18 · **Lane:** system · **Status:** landed — `e8d9031` board verified · **Branch:** `fix/j18-desert-center` · **Parent:** #115 · **Subissues:** #143 J-18a, #144 J-18b, #145 J-18c — verified
 
 ## Handoff
 
