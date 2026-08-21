@@ -1,6 +1,6 @@
 # Card J-16 — El Centro — latency & large vault (Drive triage)
 
-**Milestone:** M16 · **Lane:** app · **Status:** board · **Branch:** `fix/j16-el-centro` · **Parent:** #113 · **Subissues:** #134 J-16a, #135 J-16b, #136 J-16c
+**Milestone:** M16 · **Lane:** app · **Status:** landed — `4378a6a` + `f0580eb` snack · **Branch:** `fix/j16-el-centro` · **Parent:** #113 · **Subissues:** #134 J-16a, #135 J-16b, #136 J-16c — verified
 
 ## Handoff
 
