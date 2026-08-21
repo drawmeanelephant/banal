@@ -75,6 +75,15 @@ for card in cards:
     subissues_raw = info.get("Subissues", "")
     # Clean subissues: remove trailing " — closed" etc, keep as is for summary
     subissues_clean = subissues_raw.split("—")[0].strip()
+    # Compact sequential #117 #118 #119 #120 → #117-#120 for summary (matches hand-written README)
+    nums = re.findall(r'#(\d+)', subissues_clean)
+    if nums and len(nums) > 1:
+        inums = [int(n) for n in nums]
+        if inums == list(range(inums[0], inums[0]+len(inums))):
+            subissues_clean = f"#{inums[0]}-#{inums[-1]}"
+        else:
+            # keep as comma-joined #123, #124...
+            subissues_clean = ", ".join(f"#{n}" for n in inums)
     # Title: "# Card J-14 — Gila Bend — …"
     title_line = raw.splitlines()[0] if raw else ""
     title = fname.replace(".md", "")

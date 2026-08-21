@@ -1,6 +1,6 @@
 # Card J-13 — Casa Grande — bookmark & first-run (Drive triage)
 
-**Milestone:** M13 · **Lane:** core+app · **Status:** in progress — J-13a-c verified, J-13d shipped · **Branch:** `fix/j13d-reveal` (from `fix/j13-casa-grande` landed `3cc22cb`) · **Parent:** #110 · **Subissues:** #117 #118 #119 #120
+**Milestone:** M13 · **Lane:** core+app · **Status:** landed — `3cc22cb` (#121) · **Branch:** `fix/j13-casa-grande` · **Parent:** #110 · **Subissues:** #117 #118 #119 #120
 
 ## Handoff
 

@@ -31,7 +31,7 @@ Each card’s **Handoff** block is the note for the next person.
 | D-2 | **landed code, gate pending** — `ProseReadView` native page, pending I-2 friend visual |
 | D-3 | landed — recipe references inlined in Read |
 | D-4 | landed — ⌘F matches ingredient names + inlined sauces |
-| M13–M19 | **active triage — Drive** — J-13 Casa Grande (`fix/j13-casa-grande` #110 → #117-#120) landed, J-14 Gila Bend (`fix/j14-gila-bend` #111 → #123-#126) landed `686d972`, J-15 Yuma (`fix/j15-yuma` #112 → #129 #130 #131) landed `c2d039e`, J-16 El Centro (`fix/j16-el-centro` #113 → #134 #135 #136) landed `4378a6a`, J-17 Niland (`fix/j17-niland` #114 → #139 #140 #141) landed `ee0af6c`, J-18 Desert Center (`fix/j18-desert-center` #115 → #143 #144 #145) landed `e8d9031`, J-19 Quartzsite (`fix/j19-quartzsite` #116 → #147 #148 #149) landed `7d8a542` |
+| M13–M19 | **active triage — Drive** — J-13 Casa Grande (`fix/j13-casa-grande` #110 → #117-#120) landed `3cc22cb`, J-14 Gila Bend (`fix/j14-gila-bend` #111 → #123-#126) landed `686d972`, J-15 Yuma (`fix/j15-yuma` #112 → #129-#131) landed `c2d039e`, J-16 El Centro (`fix/j16-el-centro` #113 → #134-#136) landed `4378a6a`, J-17 Niland (`fix/j17-niland` #114 → #139-#141) landed `ee0af6c`, J-18 Desert Center (`fix/j18-desert-center` #115 → #143-#145) landed `e8d9031`, J-19 Quartzsite (`fix/j19-quartzsite` #116 → #147-#149) landed `7d8a542` |
 
 ### Board J — The Drive: Casa Grande → Quartzsite (M13–M19) — stability triage
 
