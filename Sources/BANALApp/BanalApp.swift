@@ -9,8 +9,92 @@ struct BanalApp: App {
     @StateObject private var primaryModel: AppModel
     @NSApplicationDelegateAdaptor(BanalAppDelegate.self) private var appDelegate
 
+    static var uiTestWindowSize: CGSize? {
+        let spec = ProcessInfo.processInfo.environment["BANAL_UI_TEST_WINDOW_SIZE"] ?? ""
+        let parts = spec.split(separator: ",").compactMap { Double($0) }
+        guard parts.count == 2 else { return nil }
+        let width = max(CGFloat(parts[0]), 720)
+        let height = max(CGFloat(parts[1]), 520)
+        return CGSize(width: width, height: height)
+    }
+
+    static func clearPersistedWindowFramesForUITest() {
+        guard ProcessInfo.processInfo.environment["BANAL_UI_TEST_WINDOW_SIZE"] != nil else { return }
+        let defaults = UserDefaults.standard
+        for key in defaults.dictionaryRepresentation().keys
+        where key.hasPrefix("NSSplitView Subview Frames")
+            || key.hasPrefix("NSWindow Frame")
+            || key.hasPrefix("NSWindow Last Frame") {
+            defaults.removeObject(forKey: key)
+        }
+    }
+
+    static func uiTestFixtureVault() -> URL? {
+        guard ProcessInfo.processInfo.environment["BANAL_UI_TEST_VAULT"] == "fixture" else { return nil }
+        let caches = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? URL(fileURLWithPath: NSHomeDirectory())
+        if let stale = try? FileManager.default.contentsOfDirectory(at: caches, includingPropertiesForKeys: nil) {
+            for url in stale where url.lastPathComponent.hasPrefix("banal-ui-test-") {
+                try? FileManager.default.removeItem(at: url)
+            }
+        }
+        let vault = caches.appendingPathComponent("banal-ui-test-\(UUID().uuidString)", isDirectory: true)
+        let recipes = vault.appendingPathComponent("Recipes", isDirectory: true)
+        try? FileManager.default.createDirectory(at: recipes, withIntermediateDirectories: true)
+        try? Data(Self.fixtureGroceriesMarkdown.utf8).write(to: vault.appendingPathComponent("Groceries.md"))
+        try? Data(Self.fixtureTextilePage.utf8).write(to: vault.appendingPathComponent("a-page.textile"))
+        try? Data(Self.fixtureRisottoCook.utf8).write(to: recipes.appendingPathComponent("risotto.cook"))
+        return vault
+    }
+
+    private static let fixtureGroceriesMarkdown = """
+    ---
+    title: Groceries
+    created: 2026-08-21T09:00:00Z
+    updated: 2026-08-21T09:00:00Z
+    tags: [kitchen]
+    ---
+
+    # Groceries
+
+    - Olive oil
+    - Arborio rice
+    - Parmesan
+
+    ## Later
+
+    Buy the good parmesan, not the pre-grated kind.
+    """
+
+    private static let fixtureTextilePage = """
+    h1. A page
+
+    A Textile page kept next to the recipes.
+
+    * one
+    * two
+    """
+
+    private static let fixtureRisottoCook = """
+    >> title: Mushroom Risotto
+    >> serves: 2
+
+    Warm @stock{4%cups} in a pot.
+
+    Melt @butter{2%tbsp} with @olive oil{1%tbsp} in @large pan{1}.
+
+    Soften @shallot{1} and @mushrooms{250%g}.
+
+    Add @arborio rice{1%cups} and toast.
+
+    Ladle stock in slowly, stirring. About #18 minutes.
+
+    Finish with @parmesan{30%g}.
+    """
+
     init() {
-        let remembered = VaultBookmark.restore()
+        Self.clearPersistedWindowFramesForUITest()
+        let remembered = Self.uiTestFixtureVault() ?? VaultBookmark.restore()
         let access = NotesFolderAccess.resolve(remembered: remembered)
         let root: URL
         let needsVault: Bool
@@ -52,7 +136,7 @@ struct BanalApp: App {
                 appDelegate: appDelegate
             )
         }
-        .defaultSize(width: 1100, height: 720)
+        .defaultSize(width: Self.uiTestWindowSize?.width ?? 1100, height: Self.uiTestWindowSize?.height ?? 720)
         .windowResizability(.contentMinSize)
         .commands {
             FileCommands(model: primaryModel)
@@ -234,6 +318,16 @@ final class BanalAppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
         NSApp.servicesProvider = self
         NSUpdateDynamicServices()
+        if let size = BanalApp.uiTestWindowSize {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                guard let window = NSApp.windows.first(where: { $0.isVisible && !($0 is NSPanel) }) else { return }
+                var frame = window.frame
+                frame.origin.x += (frame.width - size.width) / 2
+                frame.origin.y += (frame.height - size.height) / 2
+                frame.size = size
+                window.setFrame(frame, display: true)
+            }
+        }
         if ProcessInfo.processInfo.environment["BANAL_SMOKE_TEST"] != nil {
             // Startup smoke (Scripts/smoke.sh): give the window a beat to
             // appear, then wait until bootstrap() has written

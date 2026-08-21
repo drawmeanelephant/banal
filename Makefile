@@ -1,5 +1,7 @@
 SWIFT ?= swift
 BASH ?= /bin/bash
+XCODEGEN ?= xcodegen
+PROJECT ?= BANAL.xcodeproj
 VERSION ?= $(shell grep 'MARKETING_VERSION' Project.yml | sed 's/.*"\(.*\)"/\1/')
 DIST ?= dist
 APP = $(DIST)/BANAL.app
@@ -17,7 +19,7 @@ else
 CODESIGN_FLAGS = --options runtime --timestamp
 endif
 
-.PHONY: test build run app sign-developer-id notarize dmg release-dmg release smoke clean board board-check
+.PHONY: test build run app sign-developer-id notarize dmg release-dmg release smoke project ui-test clean board board-check
 
 test:
 	$(SWIFT) test
@@ -31,10 +33,10 @@ run:
 # Signed .app for dragging to /Applications. Ad-hoc (`-`) unless
 # SIGN_IDENTITY is a Developer ID Application identity.
 app:
-	$(SWIFT) build -c release --product BANAL
+	$(SWIFT) build -c release --product banal-cli
 	rm -rf "$(APP)"
 	mkdir -p "$(APP)/Contents/MacOS" "$(APP)/Contents/Resources"
-	cp .build/release/BANAL "$(APP)/Contents/MacOS/BANAL"
+	cp .build/release/banal-cli "$(APP)/Contents/MacOS/BANAL"
 	chmod +x "$(APP)/Contents/MacOS/BANAL"
 	cp Resources/AppIcon.icns "$(APP)/Contents/Resources/AppIcon.icns"
 	cp -R "$(HELP_BOOK)" "$(APP)/Contents/Resources/"
@@ -100,6 +102,16 @@ release:
 # Launch smoke: the signed app boots, opens BANAL_VAULT, quits cleanly.
 smoke: app
 	$(BASH) Scripts/smoke.sh
+
+# Regenerate the XcodeGen project (BANAL.xcodeproj is not checked in).
+project:
+	$(XCODEGEN) generate
+
+# XCUITest accessibility audit + window-size pass against the app target.
+# Requires xcodegen; runs unit-test-free via the BANAL scheme (UI tests only).
+ui-test: project
+	xcodebuild test -project "$(PROJECT)" -scheme BANAL -destination 'platform=macOS' \
+		-only-testing:BANALUITests
 
 board:
 	$(BASH) Scripts/generate-board.sh

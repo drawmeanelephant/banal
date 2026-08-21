@@ -20,7 +20,7 @@ BANAL is not Solipsist, not a knowledge graph, and not a hosting dashboard.
 ```bash
 swift test
 swift build
-swift run BANAL
+swift run banal-cli
 ```
 
 `swift test` is the source of truth for the storage contract and the publisher. The app target is a native SwiftUI + AppKit executable; it does not use Electron or a webview for editing.
@@ -41,7 +41,7 @@ make app SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)"
 
 Still not notarized unless you run `notarytool` yourself.
 
-`swift run BANAL` is **not** sandboxed. Use `make app` when you want the real bookmark / picker sit. Boris and Oliver stay on PATH or Settings → Publish (Choose…). They are not inside the bundle.
+`swift run banal-cli` is **not** sandboxed. Use `make app` when you want the real bookmark / picker sit. Boris and Oliver stay on PATH or Settings → Publish (Choose…). They are not inside the bundle.
 
 ## Vault
 

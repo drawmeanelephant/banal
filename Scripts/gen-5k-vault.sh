@@ -121,5 +121,5 @@ mkdir -p "$OUT/Empty Sit"
 found=$(find "$OUT" -type f \( -name "*.md" -o -name "*.textile" -o -name "*.cook" \) | wc -l | tr -d ' ')
 folders=$(find "$OUT" -type d -mindepth 1 | wc -l | tr -d ' ')
 echo "gen-5k-vault: wrote $found notes, $folders folders -> $OUT"
-echo "Next: BANAL_VAULT=\"$OUT\" swift run BANAL  # or: make smoke BANAL_VAULT=\"$OUT\""
+echo "Next: BANAL_VAULT=\"$OUT\" swift run banal-cli  # or: make smoke BANAL_VAULT=\"$OUT\""
 echo "Measure: time swift test --filter testFilesystemMonitorObservesExternalCreate  # and Instruments Hang trace while typing 30s"

@@ -36,6 +36,7 @@ dist/
 xcuserdata/
 *.xcuserstate
 DerivedData/
+/BANAL.xcodeproj
 
 # CocoaPods
 #

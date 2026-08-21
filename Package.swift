@@ -10,7 +10,7 @@ let package = Package(
     products: [
         .library(name: "BANALCore", targets: ["BANALCore"]),
         .library(name: "BANALPublisher", targets: ["BANALPublisher"]),
-        .executable(name: "BANAL", targets: ["BANALApp"]),
+        .executable(name: "banal-cli", targets: ["BANALApp"]),
     ],
     targets: [
         .target(
