@@ -1,0 +1,15 @@
+# BANAL: the shared docs that everyone touches. `merge=union` keeps both sides
+# when two branches append different rows — the common case for Board J,
+# CHANGELOG, and STATUS. Same-line edits (e.g. two branches fixing the same
+# sentence) still need a human, but the parallel-cut Drive board no longer
+# forces a rebase every time.
+#
+# Why not per-card generation yet? This one line is the 80% snack.
+# The 20% is `Scripts/generate-board.sh` + `make board` which builds Board J
+# from `docs/cards/J-*.md` Status lines — branches then never touch README
+# by hand at all. Until that lands, `union` stops the hate.
+
+docs/cards/README.md merge=union
+CHANGELOG.md merge=union
+docs/STATUS.md merge=union
+docs/ROADMAP.md merge=union
