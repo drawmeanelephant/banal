@@ -17,7 +17,7 @@ else
 CODESIGN_FLAGS = --options runtime --timestamp
 endif
 
-.PHONY: test build run app sign-developer-id notarize dmg release-dmg release smoke clean
+.PHONY: test build run app sign-developer-id notarize dmg release-dmg release smoke clean board board-check
 
 test:
 	$(SWIFT) test
@@ -100,6 +100,12 @@ release:
 # Launch smoke: the signed app boots, opens BANAL_VAULT, quits cleanly.
 smoke: app
 	$(BASH) Scripts/smoke.sh
+
+board:
+	$(BASH) Scripts/generate-board.sh
+
+board-check:
+	$(BASH) Scripts/generate-board.sh --check
 
 clean:
 	$(SWIFT) package clean
