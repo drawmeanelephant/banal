@@ -1,6 +1,6 @@
 # Card J-19 — Quartzsite — copy, help & final sit (Drive triage)
 
-**Milestone:** M19 · **Lane:** chrome · **Status:** board · **Branch:** `fix/j19-quartzsite` · **Parent:** #116 · **Subissues:** #147 J-19a, #148 J-19b, #149 J-19c
+**Milestone:** M19 · **Lane:** chrome · **Status:** landed — `7d8a542` board verified · **Branch:** `fix/j19-quartzsite` · **Parent:** #116 · **Subissues:** #147 J-19a, #148 J-19b, #149 J-19c — verified
 
 ## Handoff
 
