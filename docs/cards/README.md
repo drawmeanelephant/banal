@@ -31,7 +31,7 @@ Each card’s **Handoff** block is the note for the next person.
 | D-2 | **landed code, gate pending** — `ProseReadView` native page, pending I-2 friend visual |
 | D-3 | landed — recipe references inlined in Read |
 | D-4 | landed — ⌘F matches ingredient names + inlined sauces |
-| M13–M19 | **active triage — Drive** — J-13 Casa Grande (`fix/j13-casa-grande` #110 → #117-#120) landed, J-14 Gila Bend (`fix/j14-gila-bend` #111 → #123-#126) landed `686d972`, J-15 Yuma (`fix/j15-yuma` #112 → #129 #130 #131) landed `c2d039e`, J-16 El Centro (`fix/j16-el-centro` #113 → #134 #135 #136) landed `4378a6a`, J-17 Niland (`fix/j17-niland` #114 → #139 #140 #141) landed `ee0af6c`, J-18 Desert Center (`fix/j18-desert-center` #115 → #143 #144 #145) landed `e8d9031`, J-19 Quartzsite (`fix/j19-quartzsite` #116 → #147 #148 #149) board |
+| M13–M19 | **active triage — Drive** — J-13 Casa Grande (`fix/j13-casa-grande` #110 → #117-#120) landed, J-14 Gila Bend (`fix/j14-gila-bend` #111 → #123-#126) landed `686d972`, J-15 Yuma (`fix/j15-yuma` #112 → #129 #130 #131) landed `c2d039e`, J-16 El Centro (`fix/j16-el-centro` #113 → #134 #135 #136) landed `4378a6a`, J-17 Niland (`fix/j17-niland` #114 → #139 #140 #141) landed `ee0af6c`, J-18 Desert Center (`fix/j18-desert-center` #115 → #143 #144 #145) landed `e8d9031`, J-19 Quartzsite (`fix/j19-quartzsite` #116 → #147 #148 #149) landed `7d8a542` |
 
 ### Board J — The Drive: Casa Grande → Quartzsite (M13–M19) — stability triage
 
@@ -45,7 +45,7 @@ I-8 shithole towns, not macOS names. One sit bug = one card in the town whose th
 | [J-16 El Centro](J-16-el-centro.md) | M16 | app | **landed** — latency & large vault (5k, ⌘F, Spotlight disposable) — `fix/j16-el-centro` #113 · `docs/TESTING-WINDOW.md:112` |
 | [J-17 Niland](J-17-niland.md) | M17 | chrome | **landed** — a11y & keyboard (VoiceOver, ⌘1/⌘2/⌘3, Reduce Motion/Contrast) — `fix/j17-niland` #114 · `docs/TESTING-WINDOW.md:199` |
 | [J-18 Desert Center](J-18-desert-center.md) | M18 | system | **landed** — system furniture (UTType/Quick Look/Print) — `fix/j18-desert-center` #115 · `docs/TESTING-WINDOW.md:4` |
-| [J-19 Quartzsite](J-19-quartzsite.md) | M19 | chrome | **board** — copy, help & final sit (empties, Copy As, Help, whole-window) — `fix/j19-quartzsite` #116 · `docs/TESTING-WINDOW.md:220` |
+| [J-19 Quartzsite](J-19-quartzsite.md) | M19 | chrome | **landed** — copy, help & final sit (empties, Copy As, Help, whole-window) — `fix/j19-quartzsite` #116 · `docs/TESTING-WINDOW.md:220` |
 
 Suggested prefixes: `fix/j13-casa-grande` … `fix/j19-quartzsite`. One card = one branch = one PR; `swift test` green, no second DB, no silently recreating the vault.
 
