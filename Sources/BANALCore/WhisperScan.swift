@@ -8,6 +8,22 @@ public enum HeadingSpacingMetrics {
     public static let spacingAfter: CGFloat = 4
 }
 
+/// Caret-aware sigil dimming: 28% near the caret, 35% far away.
+public enum WhisperDimming {
+    /// Minimum opacity (nearest caret). ~28%.
+    public static let minOpacity: CGFloat = 0.28
+    /// Maximum opacity (furthest from caret). ~35%.
+    public static let maxOpacity: CGFloat = 0.35
+    /// Distance in characters at which dimming reaches the maximum.
+    public static let fullDimDistance: CGFloat = 120
+
+    /// Opacity for a sigil at `distance` characters from the caret.
+    public static func opacity(for distance: CGFloat) -> CGFloat {
+        let t = min(distance / fullDimDistance, 1.0)
+        return minOpacity + (maxOpacity - minOpacity) * t
+    }
+}
+
 /// A scanned heading line and its structural position for paragraph spacing.
 public struct HeadingLine: Equatable, Sendable {
     /// Full UTF-16 range of the heading line in the text.

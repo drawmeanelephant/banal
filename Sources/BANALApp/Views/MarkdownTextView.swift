@@ -266,6 +266,7 @@ struct MarkdownTextView: NSViewRepresentable {
             let text = TranslationState.extractSelectedText(from: editorTextView.string, range: range) ?? ""
             onSelectionChange?(text, range)
             typewriterCenterCaret(in: editorTextView)
+            refreshWhisperDimming()
         }
 
         /// Center the caret vertically when typewriter scrolling is enabled.
@@ -337,6 +338,7 @@ struct MarkdownTextView: NSViewRepresentable {
                 layoutManager.removeTemporaryAttribute(.foregroundColor, forCharacterRange: full)
                 if full.length > 0 {
                     let marks = WhisperScan.marks(in: textView.string, language: language)
+                    let caretLocation = textView.selectedRange().location
                     for mark in marks {
                         let attributes: [NSAttributedString.Key: Any]
                         switch mark.kind {
@@ -344,7 +346,9 @@ struct MarkdownTextView: NSViewRepresentable {
                             let size = lastStyle?.fontSize ?? 16
                             attributes = [.font: EditorTypography.nsFont(size: size, weight: .semibold)]
                         case .sigil:
-                            attributes = [.foregroundColor: NSColor.secondaryLabelColor.withAlphaComponent(0.3)]
+                            let distance = CGFloat(abs(mark.range.location - caretLocation))
+                            let opacity = WhisperDimming.opacity(for: distance)
+                            attributes = [.foregroundColor: NSColor.secondaryLabelColor.withAlphaComponent(opacity)]
                         }
                         layoutManager.addTemporaryAttributes(attributes, forCharacterRange: mark.range)
                     }
@@ -373,6 +377,29 @@ struct MarkdownTextView: NSViewRepresentable {
                 }
                 storage.endEditing()
                 textView.undoManager?.enableUndoRegistration()
+            }
+        }
+
+        /// Lightweight refresh: update sigil opacities based on caret
+        /// position without rebuilding paragraph styles. Called on selection
+        /// change for the 28–35% caret-aware dimming sweep.
+        private func refreshWhisperDimming() {
+            guard let textView else { return }
+            if #available(macOS 15.0, *), textView.isWritingToolsActive { return }
+            guard let layoutManager = textView.layoutManager else { return }
+            let nsString = textView.string as NSString
+            let full = NSRange(location: 0, length: nsString.length)
+            guard full.length > 0 else { return }
+
+            let marks = WhisperScan.marks(in: textView.string, language: language)
+            let caretLocation = textView.selectedRange().location
+            for mark in marks where mark.kind == .sigil {
+                let distance = CGFloat(abs(mark.range.location - caretLocation))
+                let opacity = WhisperDimming.opacity(for: distance)
+                layoutManager.addTemporaryAttributes(
+                    [.foregroundColor: NSColor.secondaryLabelColor.withAlphaComponent(opacity)],
+                    forCharacterRange: mark.range
+                )
             }
         }
     }
