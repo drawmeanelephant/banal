@@ -28,11 +28,24 @@ struct SidebarView: View {
                 Section {
                     OutlineGroup(model.store.folderTree, children: \.outlineChildren) { node in
                         let count = model.store.notes.filter { $0.folder == node.id }.count
-                        Label(node.name, systemImage: "folder")
-                            .tag(SidebarFilter.folder(node.id))
-                            .accessibilityLabel(node.name)
-                            .accessibilityValue(AccessibilityFormatting.folderNoteCount(count))
-                            .accessibilityHint("Folder")
+                        let isVanished = model.store.vanishedFolderPaths.contains(node.id)
+                        Label {
+                            HStack(spacing: 4) {
+                                Text(node.name)
+                                if isVanished {
+                                    Image(systemName: "exclamationmark.triangle")
+                                        .font(.caption2)
+                                        .foregroundStyle(.secondary)
+                                        .accessibilityLabel("Moved or renamed in Finder")
+                                }
+                            }
+                        } icon: {
+                            Image(systemName: isVanished ? "folder.badge.questionmark" : "folder")
+                        }
+                        .tag(SidebarFilter.folder(node.id))
+                        .accessibilityLabel(isVanished ? "\(node.name), moved or renamed" : node.name)
+                        .accessibilityValue(AccessibilityFormatting.folderNoteCount(count))
+                        .accessibilityHint(isVanished ? "Folder was moved or renamed in Finder" : "Folder")
                             .dropDestination(for: URL.self) { urls, _ in
                                 urls.forEach { model.dropNote(with: $0, onto: node.id) }
                                 return true
