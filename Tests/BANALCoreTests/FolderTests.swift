@@ -188,9 +188,22 @@ final class FolderStoreTests: XCTestCase {
         XCTAssertEqual(defaults.fontSize, 16)
         XCTAssertEqual(defaults.lineHeight, .normal)
         XCTAssertTrue(defaults.limitLineLength)
+        XCTAssertFalse(defaults.typewriter)
         XCTAssertEqual(LineHeightSetting.tight.multiplier, 1.35)
         XCTAssertEqual(LineHeightSetting.normal.multiplier, 1.5)
         XCTAssertEqual(LineHeightSetting.loose.multiplier, 1.7)
+    }
+
+    func testTypewriterPreferenceRoundTrips() {
+        let suiteName = "banal.typewriter-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        var prefs = AppPreferences()
+        XCTAssertFalse(prefs.typewriter)
+        prefs.typewriter = true
+        AppPreferencesStore.save(prefs, defaults: defaults)
+        let loaded = AppPreferencesStore.load(defaults: defaults)
+        XCTAssertTrue(loaded.typewriter)
     }
 
     private func makeVault() throws -> VaultConfiguration {

@@ -22,12 +22,14 @@ struct EditorStyle: Equatable {
     var lineHeight: CGFloat
     var spellCheck: Bool
     var smartQuotes: Bool
+    var typewriter: Bool
 
     init(from preferences: AppPreferences) {
         fontSize = preferences.fontSize
         lineHeight = preferences.lineHeight.multiplier
         spellCheck = preferences.spellCheck
         smartQuotes = preferences.smartQuotes
+        typewriter = preferences.typewriter
     }
 
     var font: NSFont {
@@ -250,6 +252,7 @@ struct MarkdownTextView: NSViewRepresentable {
                 editorTextView.updatePunctuationDiscipline()
             }
             scheduleWhisper()
+            typewriterCenterCaret(in: textView)
         }
 
         func textViewDidChangeSelection(_ notification: Notification) {
@@ -258,6 +261,37 @@ struct MarkdownTextView: NSViewRepresentable {
             let range = editorTextView.selectedRange()
             let text = TranslationState.extractSelectedText(from: editorTextView.string, range: range) ?? ""
             onSelectionChange?(text, range)
+            typewriterCenterCaret(in: editorTextView)
+        }
+
+        /// Center the caret vertically when typewriter scrolling is enabled.
+        /// Free from NSTextView — uses only the layout manager and scroll view.
+        private func typewriterCenterCaret(in textView: NSTextView) {
+            guard lastStyle?.typewriter == true else { return }
+            if #available(macOS 15.0, *), textView.isWritingToolsActive { return }
+            guard let scrollView = textView.enclosingScrollView,
+                  let layoutManager = textView.layoutManager,
+                  let textContainer = textView.textContainer else { return }
+            let range = textView.selectedRange()
+            guard range.location != NSNotFound else { return }
+
+            let glyphRange = layoutManager.glyphRange(forCharacterRange: range, actualCharacterRange: nil)
+            let rect = layoutManager.boundingRect(forGlyphRange: glyphRange, in: textContainer)
+
+            // rect is in text container coordinates; convert to text view coordinates.
+            let caretMidY = textView.textContainerOrigin.y + rect.midY
+            let visibleHeight = scrollView.contentView.bounds.height
+            let targetOffset = caretMidY - visibleHeight / 2
+
+            let maxOffset = max(0, textView.frame.height - visibleHeight)
+            let clampedOffset = min(max(targetOffset, 0), maxOffset)
+
+            // Only scroll when the caret is meaningfully off-center (>1pt).
+            let currentOffset = scrollView.contentView.bounds.origin.y
+            guard abs(clampedOffset - currentOffset) > 1 else { return }
+
+            scrollView.contentView.scroll(to: NSPoint(x: 0, y: clampedOffset))
+            scrollView.reflectScrolledClipView(scrollView.contentView)
         }
 
         #if compiler(>=6.0)
