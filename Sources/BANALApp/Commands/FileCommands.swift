@@ -97,6 +97,11 @@ public struct FileCommands: Commands {
                 model.saveScaledCopy()
             }
             .disabled(model.needsVault || model.selectedID == nil || model.selectedNote?.language != .cooklang || model.recipeScale == .one)
+
+            Button("Convert to Markdown") {
+                model.convertTextileToMarkdown()
+            }
+            .disabled(model.needsVault || model.selectedID == nil || model.selectedNote?.language != .textile)
         }
 
         CommandGroup(replacing: .printItem) {

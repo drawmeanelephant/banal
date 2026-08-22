@@ -1157,6 +1157,58 @@ public final class AppModel: ObservableObject {
             statusMessage = "Save failed: \(error.localizedDescription)"
         }
     }
+
+    // MARK: - Convert Textile to Markdown
+
+    /// Convert the selected `.textile` note to `.md` via Oliver + HTMLToMarkdown.
+    /// The original is moved to Trash. Only on explicit user request.
+    public func convertTextileToMarkdown() {
+        guard let note = selectedNote,
+              note.language == .textile else { return }
+        guard let client = oliverClient else {
+            statusMessage = "Oliver is not installed."
+            return
+        }
+        let source = note.body
+        let html: String
+        do {
+            html = try client.render(source, frontend: .textile).html
+        } catch {
+            statusMessage = "Textile render failed: \(error.localizedDescription)"
+            return
+        }
+        let markdown = HTMLToMarkdown.convert(html)
+        let directory = note.fileURL.deletingLastPathComponent()
+        let stem = note.fileURL.deletingPathExtension().lastPathComponent
+        let newURL = directory.appendingPathComponent("\(stem).md")
+        do {
+            // Write the new .md file
+            try Data(markdown.utf8).write(to: newURL, options: .atomic)
+            // Move the original .textile to Trash
+            let trashURL = FileManager.default.urls(for: .trashDirectory, in: .userDomainMask).first
+                ?? directory.appendingPathComponent(".trash")
+            try FileManager.default.createDirectory(at: trashURL, withIntermediateDirectories: true)
+            let trashedURL = trashURL.appendingPathComponent(note.fileURL.lastPathComponent)
+            // Handle name collision in trash
+            var finalTrashURL = trashedURL
+            var suffix = 2
+            while FileManager.default.fileExists(atPath: finalTrashURL.path) {
+                finalTrashURL = trashURL.appendingPathComponent("\(stem)-\(suffix).textile")
+                suffix += 1
+            }
+            try FileManager.default.moveItem(at: note.fileURL, to: finalTrashURL)
+            // Let the file monitor pick up the changes
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                guard let self else { return }
+                if let newNote = self.store.notes.first(where: { $0.fileURL == newURL }) {
+                    self.select(newNote.id)
+                }
+            }
+            statusMessage = "Converted \(stem).textile to \(stem).md"
+        } catch {
+            statusMessage = "Conversion failed: \(error.localizedDescription)"
+        }
+    }
 }
 
 public enum ViewMode: String, Equatable, Hashable, Sendable {
