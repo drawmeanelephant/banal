@@ -241,14 +241,31 @@ private struct PublishSettingsPane: View {
                 Text("Names and IDs travel with the notes folder. The token stays in Keychain.")
             }
             Section {
-                Text(wranglerPreview)
+                Text(wranglerTOMLPreview)
                     .font(.system(.caption, design: .monospaced))
                     .textSelection(.enabled)
-                    .accessibilityLabel("Wrangler command: \(wranglerPreview)")
+                    .accessibilityLabel("Wrangler configuration: \(wranglerTOMLPreview)")
+                HStack {
+                    Button("Copy wrangler.toml") {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(wranglerTOMLPreview, forType: .string)
+                    }
+                    .accessibilityLabel("Copy wrangler.toml configuration")
+                }
+            } header: {
+                Text("wrangler.toml")
+            } footer: {
+                Text("Written to the artifact folder on publish. Copy this to customize before deploy.")
+            }
+            Section {
+                Text(wranglerCommandPreview)
+                    .font(.system(.caption, design: .monospaced))
+                    .textSelection(.enabled)
+                    .accessibilityLabel("Wrangler command: \(wranglerCommandPreview)")
                 HStack {
                     Button("Copy command") {
                         NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(wranglerPreview, forType: .string)
+                        NSPasteboard.general.setString(wranglerCommandPreview, forType: .string)
                     }
                     .accessibilityLabel("Copy wrangler deployment command")
                     Button("Deploy to Cloudflare") {
@@ -383,15 +400,22 @@ private struct PublishSettingsPane: View {
         )
     }
 
-    private var wranglerPreview: String {
+    private var deployPlan: CloudflareDeployPlan {
         let vault = model.store.configuration
-        let plan = CloudflareDeployer.plan(
+        return CloudflareDeployer.plan(
             artifactDirectory: vault.publishURL,
             projectName: vault.cloudflareProjectName,
             accountID: vault.cloudflareAccountID,
             dryRun: true
         )
-        return plan.command.joined(separator: " ")
+    }
+
+    private var wranglerTOMLPreview: String {
+        deployPlan.wranglerTOML
+    }
+
+    private var wranglerCommandPreview: String {
+        deployPlan.command.joined(separator: " ")
     }
 
     private func saveToken() {
