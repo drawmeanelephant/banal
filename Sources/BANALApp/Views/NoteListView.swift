@@ -75,7 +75,13 @@ struct NoteListView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .overlay(alignment: .bottom) {
-            Divider()
+            if contrast == .increased {
+                Rectangle()
+                    .fill(Color(nsColor: .separatorColor))
+                    .frame(height: 1)
+            } else {
+                Divider()
+            }
         }
     }
 

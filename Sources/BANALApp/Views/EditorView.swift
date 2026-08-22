@@ -7,6 +7,7 @@ import SwiftUI
 struct EditorView: View {
     @ObservedObject var model: AppModel
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
         GeometryReader { geo in
@@ -173,6 +174,13 @@ struct EditorView: View {
         }
         .padding(.horizontal, EditorTypography.horizontalInset)
         .padding(.bottom, 8)
+        .overlay(alignment: .bottom) {
+            if contrast == .increased {
+                Rectangle()
+                    .fill(Color(nsColor: .separatorColor))
+                    .frame(height: 1)
+            }
+        }
     }
 
     private var visibleTags: String {
