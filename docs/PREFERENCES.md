@@ -29,7 +29,7 @@ No Accounts pane. No Themes store. No Plugins.
 
 | Key | Type | Default | Notes |
 | --- | --- | --- | --- |
-| Font | size 13–22 | SF Pro 16 | Sans. Stylesheets later. No serif toggle. |
+| Font | size 13–22 | SF Pro 16 | One global pairing (SF Pro + SF Mono via `BanalTypography`) — system-honest, not per-note, no serif toggle (issue #160). |
 | Line height | enum: `tight`, `normal`, `loose` | `normal` | Maps to 1.35 / 1.5 / 1.7 |
 | Limit line length | bool | true | Caps measure in the editor |
 | Spell check | bool | system default | |

@@ -23,7 +23,7 @@ BANAL should feel like a finished Mac app that happens to be small — not a sca
 
 ## Typography
 
-- System sans (SF Pro) for chrome, lists, title, and body. No serif. Stylesheets later.
+- System sans (SF Pro) for chrome, lists, title, and body. No serif. One global pairing, system-honest — SF Pro + SF Mono via `Sources/BANALCore/BanalTypography.swift`; `review/themes/boris/assets/css/boris.css` mirrors it (`system-ui`, mono `ui-monospace`). Not per-note, no theme store, no serif personality (issue #160).
 - Body ~15–17 pt, line height ~1.45–1.55, measure capped (about 66 characters) so a huge window does not become a lawn of text.
 - Title is larger and heavier, same family as the body.
 - No rainbow syntax theme in the editor. If Markdown highlighting exists later, it is *whispered* (headings, emphasis) and never a code-editor skin.

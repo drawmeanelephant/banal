@@ -1,4 +1,8 @@
-/* Starter theme for a Boris site. Replace or extend freely. */
+/* BANAL — single global pairing, system-honest (issue #160).
+   SF Pro + SF Mono via system-ui. Not per-note, no theme store,
+   no serif personality. This is the one stylesheet. App pairing is
+   `Sources/BANALCore/BanalTypography.swift`; this CSS must not diverge.
+   Measure ~42rem ≈ 672pt mirrors the app's 680pt capped column. */
 :root {
   --ink: #1f2328;
   --paper: #ffffff;
@@ -9,14 +13,18 @@
 
 * { box-sizing: border-box; }
 
+html { -webkit-font-smoothing: antialiased; }
+
 body {
   margin: 0 auto;
-  max-width: 64rem;
+  max-width: 42rem;
   padding: 1rem 1.5rem 3rem;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-family: system-ui, -apple-system, "SF Pro Text", "SF Pro Display", "Segoe UI", sans-serif;
   line-height: 1.6;
   color: var(--ink);
   background: var(--paper);
+  font-feature-settings: "ss01" 0;
+  text-rendering: optimizeLegibility;
 }
 
 .site-header {
@@ -36,7 +44,9 @@ body {
 .site-toc:empty { display: none; }
 
 .site-content h1 { font-size: 1.8rem; margin-top: 0; }
-.site-content code { background: #f6f8fa; border-radius: 4px; padding: 0.1em 0.35em; }
-.site-content pre { background: #f6f8fa; border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; }
+.site-content h2 { font-size: 1.35rem; font-weight: 600; margin-top: 1.75rem; }
+.site-content h3 { font-size: 1.15rem; font-weight: 600; margin-top: 1.35rem; }
+.site-content code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92em; background: #f6f8fa; border-radius: 4px; padding: 0.1em 0.35em; }
+.site-content pre { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #f6f8fa; border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; }
 
 .site-footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--rule); color: var(--muted); font-size: 0.9rem; }
