@@ -1,5 +1,8 @@
 # Changelog
 
+## [Unreleased]
+- One stylesheet — single global pairing, system-honest (issue #160): `BanalTypography` (SF Pro + SF Mono via system fonts, no bundled fonts) is the one stylesheet for editor, Prose/Recipe Read, Quick Look, Print, and `boris.css` (`system-ui` + `ui-monospace`). Not per-note, no theme store, no serif personality. `EditorTypography` now delegates to it; `boris.css` measure stays 42rem ≈ 680pt.
+
 ## [1.0] — 2026
 
 BANAL is a notes app. You open a folder, you write, you file notes into folders, and once in a while you publish the marked ones to a static site on Cloudflare Pages.

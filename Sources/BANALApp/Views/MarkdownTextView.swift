@@ -4,16 +4,20 @@ import SwiftUI
 
 enum EditorTypography {
     /// ~66 characters of SF 16pt, including page insets.
-    static let measureWidth: CGFloat = 680
-    static let horizontalInset: CGFloat = 32
-    static let titleSize: CGFloat = 26
+    /// Single global pairing — see `BanalTypography` (BANALCore) for the
+    /// canonical values. This enum stays as a thin App-layer alias so
+    /// existing views (`EditorView`, `ProseReadView`, `RecipeReadView`) do
+    /// not churn, but it must not diverge from the stylesheet.
+    static let measureWidth: CGFloat = BanalTypography.measureWidth
+    static let horizontalInset: CGFloat = BanalTypography.horizontalInset
+    static let titleSize: CGFloat = BanalTypography.titleSize
 
     static func nsFont(size: CGFloat, weight: NSFont.Weight = .regular) -> NSFont {
-        NSFont.systemFont(ofSize: size, weight: weight)
+        BanalTypography.nsFont(size: size, weight: weight)
     }
 
     static func swiftUIFont(size: CGFloat, weight: Font.Weight) -> Font {
-        .system(size: size, weight: weight)
+        BanalTypography.swiftUIFont(size: size, weight: weight)
     }
 }
 
