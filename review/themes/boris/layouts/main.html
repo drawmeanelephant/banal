@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="{{asset-url assets/css/boris.css}}">
+  {{head}}
+  <style>
+    :root { --ink:#1a1d23; --paper:#fff; --muted:#667085; --accent:#0a66ff; --rule:#e8ecf0; --warm:#ffefe6; }
+    body { max-width: 880px; }
+    .hero { background: #fcfaf8; border:1px solid var(--rule); border-radius:12px; padding:28px 32px; margin:0 0 32px; }
+    .hero h1 { font-size: 28px; line-height:1.15; margin:0 0 10px; letter-spacing:-0.02em; }
+    .hero p { color: var(--muted); font-size:15px; line-height:1.6; margin:0; }
+    .kicker { text-transform:uppercase; letter-spacing:0.12em; font-size:11px; color:var(--muted); margin:0 0 8px; }
+    figure { margin:24px 0; background:#f8f9fb; border:1px solid var(--rule); border-radius:10px; overflow:hidden; }
+    figure img { display:block; width:100%; height:auto; }
+    figcaption { padding:10px 16px 12px; font-size:13px; color:var(--muted); border-top:1px solid var(--rule); background:#fff; }
+    h2 { margin-top:40px; padding-top:20px; border-top:1px solid var(--rule); }
+    h3 { margin-top:28px; }
+    .small { font-size:13px; color:var(--muted); }
+    .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+    @media(max-width:640px){ .grid2{ grid-template-columns:1fr; } }
+    .callout { background:var(--warm); border:1px solid #ffd2b8; border-radius:8px; padding:14px 16px; font-size:14px; }
+    .site-header .site-title { font-weight:650; }
+    .site-content code { font-size:0.92em; }
+  </style>
+</head>
+<body>
+<header class="site-header">
+  <p class="site-title">BANAL — a tour</p>
+  <nav class="site-nav">{{nav}}</nav>
+</header>
+<main class="site-body">
+  <div class="site-breadcrumb">{{breadcrumb}}</div>
+  <div class="site-toc">{{toc}}</div>
+  <article class="site-content">{{content}}</article>
+</main>
+<footer class="site-footer">BANAL is notes in folders on disk — including recipes. <a href="https://github.com/drawmeanelephant/banal">github.com/drawmeanelephant/banal</a> · Built with <a href="https://github.com/drawmeanelephant/boris">Boris</a>. <span class="small">Review build Aug 22 2026 · ad-hoc, free-tier.</span> {{footer}}</footer>
+</body>
+</html>
