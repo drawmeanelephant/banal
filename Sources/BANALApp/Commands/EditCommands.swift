@@ -57,6 +57,18 @@ public struct EditCommands: Commands {
                 model.translateSelection()
             }
             .disabled(!model.canTranslate)
+
+            Divider()
+
+            Button("Enrich Markup") {
+                model.enrichMarkup()
+            }
+            .disabled(model.needsVault || model.selectedID == nil || model.editorText.isEmpty)
+
+            Button("Suggest Title") {
+                model.suggestTitle()
+            }
+            .disabled(model.needsVault || model.selectedID == nil || model.editorText.isEmpty)
         }
     }
 }
