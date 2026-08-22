@@ -19,19 +19,25 @@ public enum RSSFeed {
             if base.isEmpty { return "index.html" }
             return base
         }
+        func feedURL() -> String {
+            if base.isEmpty { return "feed.xml" }
+            return "\(base)/feed.xml"
+        }
 
         var items = ""
         for note in BorisAdapter.publishedNotes(from: notes) {
             let title = XML.escape(note.displayTitle)
             let url = XML.escape(link(for: note))
             let date = RFC822.string(from: note.updated)
-            let description = XML.escape(note.snippet)
+            let description = XML.cdata(note.snippet)
+            let categories = note.tags.map { "<category>\(XML.escape($0))</category>" }.joined(separator: "\n        ")
+            let categoriesBlock = categories.isEmpty ? "" : "\n        \(categories)"
             items += """
               <item>
                 <title>\(title)</title>
                 <link>\(url)</link>
-                <guid>\(url)</guid>
-                <pubDate>\(date)</pubDate>
+                <guid isPermaLink="true">\(url)</guid>
+                <pubDate>\(date)</pubDate>\(categoriesBlock)
                 <description>\(description)</description>
               </item>
 
@@ -40,12 +46,14 @@ public enum RSSFeed {
 
         return """
         <?xml version="1.0" encoding="UTF-8"?>
-        <rss version="2.0">
+        <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
           <channel>
             <title>\(XML.escape(siteTitle))</title>
             <link>\(XML.escape(home()))</link>
-            <description>Published notes from BANAL</description>
+            <description>\(XML.escape(siteTitle))</description>
+            <language>en-us</language>
             <lastBuildDate>\(RFC822.string(from: now))</lastBuildDate>
+            <atom:link href="\(XML.escape(feedURL()))" rel="self" type="application/rss+xml" />
         \(items)  </channel>
         </rss>
         """
@@ -70,5 +78,10 @@ enum XML {
             .replacingOccurrences(of: ">", with: "&gt;")
             .replacingOccurrences(of: "\"", with: "&quot;")
             .replacingOccurrences(of: "'", with: "&apos;")
+    }
+
+    /// Wrap text in CDATA for rich descriptions that may contain `&` or `<`.
+    static func cdata(_ text: String) -> String {
+        "<![CDATA[\(text)]]>"
     }
 }
