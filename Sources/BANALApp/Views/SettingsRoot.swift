@@ -107,6 +107,9 @@ private struct EditorSettingsPane: View {
                     .accessibilityHint("Restricts editor text column width to optimal measure")
             }
             Section("Editing") {
+                Toggle("Typewriter scrolling", isOn: $model.preferences.typewriter)
+                    .accessibilityLabel("Typewriter scrolling")
+                    .accessibilityHint("Keeps the caret vertically centered while you type")
                 Toggle("Check spelling", isOn: $model.preferences.spellCheck)
                     .accessibilityLabel("Check spelling")
                 Toggle("Smart quotes", isOn: $model.preferences.smartQuotes)

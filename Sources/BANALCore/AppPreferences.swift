@@ -11,6 +11,7 @@ public struct AppPreferences: Equatable, Sendable {
     public var spellCheck: Bool
     public var smartQuotes: Bool
     public var openMostRecentOnLaunch: Bool
+    public var typewriter: Bool
 
     public init(
         sort: NoteSort = .updated,
@@ -21,7 +22,8 @@ public struct AppPreferences: Equatable, Sendable {
         limitLineLength: Bool = true,
         spellCheck: Bool = true,
         smartQuotes: Bool = true,
-        openMostRecentOnLaunch: Bool = true
+        openMostRecentOnLaunch: Bool = true,
+        typewriter: Bool = false
     ) {
         self.sort = sort
         self.newNoteLocation = newNoteLocation
@@ -32,6 +34,7 @@ public struct AppPreferences: Equatable, Sendable {
         self.spellCheck = spellCheck
         self.smartQuotes = smartQuotes
         self.openMostRecentOnLaunch = openMostRecentOnLaunch
+        self.typewriter = typewriter
     }
 
     public static let `default` = AppPreferences()
@@ -72,6 +75,7 @@ public enum AppPreferencesStore {
         var spellCheck: Bool
         var smartQuotes: Bool
         var openMostRecentOnLaunch: Bool
+        var typewriter: Bool
 
         init(_ prefs: AppPreferences) {
             sort = prefs.sort
@@ -83,6 +87,7 @@ public enum AppPreferencesStore {
             spellCheck = prefs.spellCheck
             smartQuotes = prefs.smartQuotes
             openMostRecentOnLaunch = prefs.openMostRecentOnLaunch
+            typewriter = prefs.typewriter
         }
 
         func make() -> AppPreferences {
@@ -95,7 +100,8 @@ public enum AppPreferencesStore {
                 limitLineLength: limitLineLength,
                 spellCheck: spellCheck,
                 smartQuotes: smartQuotes,
-                openMostRecentOnLaunch: openMostRecentOnLaunch
+                openMostRecentOnLaunch: openMostRecentOnLaunch,
+                typewriter: typewriter
             )
         }
     }
