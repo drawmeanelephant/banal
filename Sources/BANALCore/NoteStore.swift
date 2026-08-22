@@ -27,6 +27,9 @@ public final class NoteStore: ObservableObject {
     @Published public private(set) var configuration: VaultConfiguration
     @Published public private(set) var lastError: String?
     @Published public private(set) var rootMissing = false
+    /// Folder paths that were in the tree but no longer exist on disk
+    /// (renamed/moved in Finder). Cleared on vault reload.
+    @Published public private(set) var vanishedFolderPaths: Set<String> = []
 
     /// When false, FSEvents still detect a vanished notes folder but do not reload note files.
     public var watchesExternalEdits = true
@@ -157,6 +160,7 @@ public final class NoteStore: ObservableObject {
 
     public func reloadAll() throws {
         isReloading = true
+        clearAllVanishedFolders()
         defer { isReloading = false }
         let urls = try collectNoteURLs()
         var loaded: [Note] = []
@@ -665,7 +669,24 @@ public final class NoteStore: ObservableObject {
     }
 
     private func refreshFolders() {
+        let oldPaths = Set(FolderTree.flatten(folderTree).map(\.id))
         folderTree = FolderTree.build(paths: collectFolderPaths())
+        let newPaths = Set(FolderTree.flatten(folderTree).map(\.id))
+        // Track folders that disappeared from disk (renamed/moved in Finder).
+        let vanished = oldPaths.subtracting(newPaths)
+        if !vanished.isEmpty {
+            vanishedFolderPaths.formUnion(vanished)
+        }
+    }
+
+    /// Clear a vanished folder badge (e.g. after user acknowledges it).
+    public func clearVanishedFolder(_ path: String) {
+        vanishedFolderPaths.remove(path)
+    }
+
+    /// Clear all vanished folder badges.
+    public func clearAllVanishedFolders() {
+        vanishedFolderPaths.removeAll()
     }
 
     private func collectFolderPaths() -> [String] {
