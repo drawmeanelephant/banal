@@ -15,6 +15,7 @@ public protocol EnrichmentClient: Sendable {
 
 // MARK: - Foundation Models (macOS 26+)
 
+#if canImport(FoundationModels)
 /// Uses Apple's on-device Foundation Models framework when available.
 /// Falls back to nil (silent) on older macOS.
 public struct FoundationModelsEnricher: EnrichmentClient {
@@ -30,6 +31,50 @@ public struct FoundationModelsEnricher: EnrichmentClient {
         return try await FoundationModelsSession.enrich(source, task: .suggestTitle)
     }
 }
+
+@available(macOS 26.0, *)
+private enum FoundationModelsSession {
+    enum Task {
+        case enrichMarkup
+        case suggestTitle
+    }
+
+    static func enrich(_ source: String, task: Task) async throws -> String? {
+        let prompt: String
+        switch task {
+        case .enrichMarkup:
+            prompt = """
+            Improve the Markdown formatting of this text. Fix heading levels, \
+            add emphasis where appropriate, clean up list formatting, and \
+            ensure proper paragraph spacing. Do not change the content or \
+            meaning. Return only the improved Markdown, no explanation.
+
+            \(source)
+            """
+        case .suggestTitle:
+            prompt = """
+            Suggest a concise, descriptive title for this text. Return only \
+            the title, no quotes, no explanation, no markdown.
+
+            \(source)
+            """
+        }
+
+        let session = try LanguageModelSession()
+        let response = try await session.respond(to: prompt)
+        let text = response.content
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return text.isEmpty ? nil : text
+    }
+}
+#else
+/// Stub when FoundationModels is not available.
+public struct FoundationModelsEnricher: EnrichmentClient {
+    public init() {}
+    public func enrichMarkup(_ source: String) async throws -> String? { nil }
+    public func suggestTitle(_ source: String) async throws -> String? { nil }
+}
+#endif
 
 // MARK: - User Binary on PATH
 
@@ -107,42 +152,4 @@ public struct CompositeEnricher: EnrichmentClient {
     }
 }
 
-// MARK: - Foundation Models Session (macOS 26+)
 
-#if canImport(FoundationModels)
-@available(macOS 26.0, *)
-private enum FoundationModelsSession {
-    enum Task {
-        case enrichMarkup
-        case suggestTitle
-    }
-
-    static func enrich(_ source: String, task: Task) async throws -> String? {
-        let prompt: String
-        switch task {
-        case .enrichMarkup:
-            prompt = """
-            Improve the Markdown formatting of this text. Fix heading levels, \
-            add emphasis where appropriate, clean up list formatting, and \
-            ensure proper paragraph spacing. Do not change the content or \
-            meaning. Return only the improved Markdown, no explanation.
-
-            \(source)
-            """
-        case .suggestTitle:
-            prompt = """
-            Suggest a concise, descriptive title for this text. Return only \
-            the title, no quotes, no explanation, no markdown.
-
-            \(source)
-            """
-        }
-
-        let session = try LanguageModelSession()
-        let response = try await session.respond(to: prompt)
-        let text = response.content
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        return text.isEmpty ? nil : text
-    }
-}
-#endif
