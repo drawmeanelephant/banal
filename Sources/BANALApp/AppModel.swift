@@ -1111,6 +1111,52 @@ public final class AppModel: ObservableObject {
         recipeError = nil
         recipeIssues = []
     }
+
+    // MARK: - Save Scaled Copy
+
+    /// Write a scaled copy of the current recipe to disk.
+    /// The original is never mutated. The new file is named
+    /// `<title> (<scale>).<ext>` in the same directory.
+    public func saveScaledCopy() {
+        guard let note = selectedNote,
+              note.language == .cooklang,
+              recipeScale != .one else { return }
+        guard let client = oliverClient else {
+            statusMessage = "Oliver is not installed."
+            return
+        }
+        let source = note.body
+        let directory = note.fileURL.deletingLastPathComponent()
+        let scaled: String
+        do {
+            let inlined = RecipeInliner.inline(
+                source: source,
+                relativeTo: directory,
+                scaler: { try client.scaleSource($0, percent: $1) }
+            )
+            scaled = try client.scaleSource(inlined.source, percent: recipeScale.percent)
+        } catch {
+            statusMessage = "Scale failed: \(error.localizedDescription)"
+            return
+        }
+        let baseName = note.fileURL.deletingPathExtension().lastPathComponent
+        let ext = note.fileURL.pathExtension
+        let scaleLabel = recipeScale.label
+        let newURL = directory.appendingPathComponent("\(baseName) (\(scaleLabel)).\(ext)")
+        do {
+            try Data(scaled.utf8).write(to: newURL, options: .atomic)
+            // Let the file monitor pick it up, then select it.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                guard let self else { return }
+                if let newNote = self.store.notes.first(where: { $0.fileURL == newURL }) {
+                    self.select(newNote.id)
+                }
+            }
+            statusMessage = "Saved scaled copy: \(newURL.lastPathComponent)"
+        } catch {
+            statusMessage = "Save failed: \(error.localizedDescription)"
+        }
+    }
 }
 
 public enum ViewMode: String, Equatable, Hashable, Sendable {
