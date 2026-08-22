@@ -90,6 +90,13 @@ public struct FileCommands: Commands {
                 model.deployToCloudflare()
             }
             .disabled(model.needsVault || !model.canDeploy)
+
+            Divider()
+
+            Button("Save Scaled Copy…") {
+                model.saveScaledCopy()
+            }
+            .disabled(model.needsVault || model.selectedID == nil || model.selectedNote?.language != .cooklang || model.recipeScale == .one)
         }
 
         CommandGroup(replacing: .printItem) {

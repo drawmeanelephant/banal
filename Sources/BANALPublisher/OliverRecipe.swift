@@ -28,6 +28,16 @@ public enum RecipeScale: String, CaseIterable, Equatable, Sendable, Identifiable
         case .three: return "3×"
         }
     }
+
+    /// Scale as a percentage for `OliverClient.scaleSource`.
+    public var percent: Int {
+        switch self {
+        case .half: return 50
+        case .one: return 100
+        case .two: return 200
+        case .three: return 300
+        }
+    }
 }
 
 /// Oliver's typed Recipe as dumped by `serialize --from cooklang --json`.
