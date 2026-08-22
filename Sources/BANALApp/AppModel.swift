@@ -76,6 +76,7 @@ public final class AppModel: ObservableObject {
     private var oliverClient: OliverClient?
     private var oliver: OliverDebounce
     private let recipeQueue = DispatchQueue(label: "dev.drawmeanelephant.banal.recipe", qos: .userInitiated)
+    private var enrichClient: CompositeEnricher
     /// Files opened (Finder double-click, Dock drag) before a vault exists.
     /// Imported once `bootstrap()` opens a notes folder.
     private var pendingImports: [URL] = []
@@ -100,6 +101,7 @@ public final class AppModel: ObservableObject {
         }
         self.oliverClient = nil
         self.oliver = OliverDebounce(client: nil)
+        self.enrichClient = CompositeEnricher()
         bindStore()
     }
 
@@ -1207,6 +1209,49 @@ public final class AppModel: ObservableObject {
             statusMessage = "Converted \(stem).textile to \(stem).md"
         } catch {
             statusMessage = "Conversion failed: \(error.localizedDescription)"
+        }
+    }
+
+    // MARK: - Enrich Markup / Suggest Title
+
+    /// Enrich the current note's body via on-device Foundation Models.
+    /// Explicit user action only. Undo via NSTextView undo manager.
+    public func enrichMarkup() {
+        guard selectedNote != nil, !editorText.isEmpty else { return }
+        let source = editorText
+        Task { @MainActor in
+            do {
+                guard let enriched = try await enrichClient.enrichMarkup(source) else {
+                    statusMessage = "No enrichment available."
+                    return
+                }
+                // The editor's undo manager captures the change automatically.
+                editorText = enriched
+                applyEditorChanges()
+                statusMessage = "Markup enriched."
+            } catch {
+                statusMessage = "Enrichment failed: \(error.localizedDescription)"
+            }
+        }
+    }
+
+    /// Suggest a title for the current note via on-device Foundation Models.
+    /// Explicit user action only. Undo via NSTextView undo manager.
+    public func suggestTitle() {
+        guard selectedNote != nil, !editorText.isEmpty else { return }
+        let source = editorText
+        Task { @MainActor in
+            do {
+                guard let title = try await enrichClient.suggestTitle(source) else {
+                    statusMessage = "No title suggestion available."
+                    return
+                }
+                editorTitle = title
+                applyEditorChanges()
+                statusMessage = "Title suggested: \(title)"
+            } catch {
+                statusMessage = "Suggestion failed: \(error.localizedDescription)"
+            }
         }
     }
 }
