@@ -31,7 +31,7 @@ swift run banal-cli
 make app
 ```
 
-That writes `dist/BANAL.app` (version 0.1.0), sandbox on, and signs it. This machine has no Developer ID certificate, so the signature is **ad-hoc** (`codesign -s -`). Drag it to `/Applications`. Gatekeeper will warn; right-click → Open the first time, or `xattr -cr dist/BANAL.app`.
+That writes `dist/BANAL.app` (version 1.0), sandbox on, and signs it. This machine has no Developer ID certificate, so the signature is **ad-hoc** (`codesign -s -`). Drag it to `/Applications`. Gatekeeper will warn; right-click → Open the first time, or `xattr -cr dist/BANAL.app`.
 
 It is not notarized. To sign with a Developer ID you have locally:
 

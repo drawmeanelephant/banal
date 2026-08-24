@@ -10,7 +10,7 @@
 set -euo pipefail
 
 APP="${1:-dist/BANAL.app}"
-VERSION="${2:-0.1.0}"
+VERSION="${2:-1.0}"
 DIST="${3:-dist}"
 SIGN_IDENTITY="${SIGN_IDENTITY:--}"
 

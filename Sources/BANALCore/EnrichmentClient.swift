@@ -60,7 +60,7 @@ private enum FoundationModelsSession {
             """
         }
 
-        let session = try LanguageModelSession()
+        let session = LanguageModelSession()
         let response = try await session.respond(to: prompt)
         let text = response.content
             .trimmingCharacters(in: .whitespacesAndNewlines)

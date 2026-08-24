@@ -58,33 +58,33 @@ struct EditorView: View {
                             focusToken: model.editorFocus,
                             style: EditorStyle(from: model.preferences),
                             vaultURL: model.store.configuration.rootURL,
-                            onEscape: { [weak model] in model?.focusNoteList() },
-                            onTab: { [weak model] in model?.focusSidebar() },
-                            onBacktab: { [weak model] in model?.focusNoteList() },
-                            onWritingToolsActiveChange: { [weak model] active in
-                                model?.isWritingToolsActive = active
+                            onEscape: { model.focusNoteList() },
+                            onTab: { model.focusSidebar() },
+                            onBacktab: { model.focusNoteList() },
+                            onWritingToolsActiveChange: { active in
+                                model.isWritingToolsActive = active
                             },
-                            onSelectionChange: { [weak model] selected, range in
-                                model?.selectedText = selected
-                                model?.selectedRange = range
+                            onSelectionChange: { selected, range in
+                                model.selectedText = selected
+                                model.selectedRange = range
                             },
-                            onTranslate: { [weak model] text, range in
-                                model?.selectedText = text
-                                model?.selectedRange = range
-                                model?.translateSelection()
+                            onTranslate: { text, range in
+                                model.selectedText = text
+                                model.selectedRange = range
+                                model.translateSelection()
                             },
-                            onAttachInsertHandler: { [weak model] handler in
-                                model?.insertAtCaretHandler = handler
+                            onAttachInsertHandler: { handler in
+                                model.insertAtCaretHandler = handler
                             },
-                            onInsertContact: { [weak model] in
-                                model?.insertContact()
+                            onInsertContact: {
+                                model.insertContact()
                             },
-                            onInsertFile: { [weak model] in
-                                model?.insertFile()
+                            onInsertFile: {
+                                model.insertFile()
                             },
-                            onAssetError: { [weak model] message in
-                                model?.statusMessage = message
-                                model?.dismissStatusLater()
+                            onAssetError: { message in
+                                model.statusMessage = message
+                                model.dismissStatusLater()
                             }
                         )
                         .onChange(of: model.editorText) { _, _ in
