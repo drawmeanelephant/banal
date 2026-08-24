@@ -50,41 +50,88 @@ struct VaultPicker: View {
     @ObservedObject var model: AppModel
 
     var body: some View {
-        VStack(spacing: 14) {
-            Text(model.missingNotesFolder ? "This notes folder is missing." : "Choose a notes folder.")
-                .font(.body)
-                .foregroundStyle(.secondary)
-            if model.missingNotesFolder {
-                Text(model.store.configuration.rootURL.path)
-                    .font(.callout)
-                    .foregroundStyle(.tertiary)
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-                    .frame(maxWidth: 360)
-                    .accessibilityLabel(model.store.configuration.rootURL.path)
-            }
-            HStack(spacing: 10) {
-                Button("Documents/BANAL Notes") {
-                    let url = VaultBookmark.defaultVaultURL()
-                    if let allowed = VaultBookmark.createFolderIfAllowed(url) {
-                        model.openVault(allowed)
-                    } else if let picked = NotesFolderPicker.run(startingAt: url.deletingLastPathComponent()) {
-                        model.openVault(picked)
-                    }
+        VStack(spacing: 0) {
+            Spacer()
+            VStack(spacing: 18) {
+                Image(nsImage: appIcon)
+                    .resizable()
+                    .frame(width: 72, height: 72)
+                    .accessibilityHidden(true)
+                VStack(spacing: 6) {
+                    Text("BANAL")
+                        .font(.title2.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    Text(model.missingNotesFolder
+                         ? "This notes folder is missing."
+                         : "Notes are plain files in a folder you own.")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
                 }
-                .accessibilityLabel("Documents/BANAL Notes")
-                Button("Choose…") {
-                    if let url = NotesFolderPicker.run() {
-                        model.openVault(url)
-                    }
+                if model.missingNotesFolder {
+                    Text(model.store.configuration.rootURL.path)
+                        .font(.callout)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .frame(maxWidth: 360)
+                        .accessibilityLabel(model.store.configuration.rootURL.path)
                 }
-                .keyboardShortcut(.defaultAction)
-                .accessibilityLabel("Choose…")
+                HStack(spacing: 10) {
+                    Button(useDefaultTitle) {
+                        useDefaultFolder()
+                    }
+                    .keyboardShortcut(model.missingNotesFolder ? nil : .defaultAction)
+                    .accessibilityLabel(useDefaultTitle)
+                    Button("Choose…") {
+                        if let url = NotesFolderPicker.run() {
+                            model.openVault(url)
+                        }
+                    }
+                    .keyboardShortcut(model.missingNotesFolder ? .defaultAction : nil)
+                    .accessibilityLabel("Choose…")
+                }
             }
+            .padding(.horizontal, 40)
+            Spacer()
+            Text("Any folder works. Move it, sync it, back it up — the files are yours.")
+                .font(.caption)
+                .foregroundStyle(.tertiary)
+                .padding(.bottom, 22)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(nsColor: .windowBackgroundColor))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(model.missingNotesFolder ? "This notes folder is missing." : "Choose a notes folder.")
+    }
+
+    private let useDefaultTitle = "Use Documents/BANAL Notes"
+
+    private var appIcon: NSImage {
+        NSApp.applicationIconImage
+    }
+
+    private func useDefaultFolder() {
+        let url = VaultBookmark.defaultVaultURL()
+        // Seed only when we just created the folder ourselves. An existing
+        // folder — even an empty one the user made earlier, or a trashed
+        // welcome note left behind — is never touched again.
+        let created = !FileManager.default.fileExists(atPath: url.path)
+        if let allowed = VaultBookmark.createFolderIfAllowed(url) {
+            if created {
+                VaultSeed.seedWelcomeIfNeeded(in: allowed)
+            }
+            model.openVault(allowed, thenSelect: created ? VaultSeed.welcomeFileName : nil)
+            return
+        }
+        // Sandboxed: the powerbox decides. A folder the user just chose in
+        // a first-run moment gets the welcome note only when it holds no
+        // notes at all — the guards in VaultSeed do the rest.
+        guard let picked = NotesFolderPicker.run(
+            startingAt: url.deletingLastPathComponent(),
+            message: "Your notes will be plain files in this folder."
+        ) else { return }
+        let seeded = VaultSeed.seedWelcomeIfNeeded(in: picked)
+        model.openVault(picked, thenSelect: seeded ? VaultSeed.welcomeFileName : nil)
     }
 }

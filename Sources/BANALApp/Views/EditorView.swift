@@ -13,12 +13,20 @@ struct EditorView: View {
         GeometryReader { geo in
             let mw = measure(availableWidth: geo.size.width)
             if model.selectedNote == nil {
-                Text("Create a note with ⌘N.")
-                    .font(.body)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color(nsColor: .textBackgroundColor))
-                    .accessibilityLabel("No note selected. Create a note with ⌘N.")
+                VStack(spacing: 12) {
+                    Text("Create a note with ⌘N.")
+                        .font(.body)
+                        .foregroundStyle(.secondary)
+                    Button("New Note") {
+                        model.createNote()
+                    }
+                    .accessibilityLabel("New Note")
+                    .accessibilityHint("Creates a note and puts the caret in it")
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color(nsColor: .textBackgroundColor))
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("No note selected. Create a note with ⌘N or the New Note button.")
             } else {
                 VStack(spacing: 0) {
                     titleField
