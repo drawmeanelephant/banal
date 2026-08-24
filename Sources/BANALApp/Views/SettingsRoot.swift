@@ -28,7 +28,7 @@ private struct GeneralSettingsPane: View {
 
     var body: some View {
         Form {
-            Section("Notes folder") {
+            Section {
                 LabeledContent("Location") {
                     Text(model.store.configuration.rootURL.path)
                         .lineLimit(2)
@@ -47,6 +47,10 @@ private struct GeneralSettingsPane: View {
                 }
                 Toggle("Open this folder when BANAL launches", isOn: $model.preferences.openMostRecentOnLaunch)
                     .accessibilityLabel("Open this folder when BANAL launches")
+            } header: {
+                Text("Notes folder")
+            } footer: {
+                Text("Your notes are ordinary files. This folder works in Finder, iCloud Drive, or git — BANAL never locks them up.")
             }
             Section("Organization") {
                 Picker("Sort notes by", selection: $model.preferences.sort) {

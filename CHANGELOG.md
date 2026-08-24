@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Warm first run (issue #177): the vault picker greets you with the app icon, one honest sentence — "Notes are plain files in a folder you own" — and, on a true first run, "Use Documents/BANAL Notes" as the default button so Return starts you writing. A brand-new vault is seeded with a single deletable `Welcome.md` (only at creation, only when the folder holds no notes; never recreated), which opens selected with the caret ready. The powerbox path seeds an empty picked folder too — sandboxed first runs always go through it. Editor empty state gains a quiet New Note button beside the ⌘N sentence; Settings → General explains that the notes folder works in Finder, iCloud Drive, or git.
 - One stylesheet — single global pairing, system-honest (issue #160): `BanalTypography` (SF Pro + SF Mono via system fonts, no bundled fonts) is the one stylesheet for editor, Prose/Recipe Read, Quick Look, Print, and `boris.css` (`system-ui` + `ui-monospace`). Not per-note, no theme store, no serif personality. `EditorTypography` now delegates to it; `boris.css` measure stays 42rem ≈ 680pt.
 
 ## [1.0] — 2026

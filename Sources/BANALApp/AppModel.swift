@@ -824,7 +824,7 @@ public final class AppModel: ObservableObject {
         }
     }
 
-    public func openVault(_ url: URL) {
+    public func openVault(_ url: URL, thenSelect fileName: String? = nil) {
         flushEditor()
         store.flush()
         store.monitorStopForReplacement()
@@ -840,6 +840,13 @@ public final class AppModel: ObservableObject {
         missingNotesFolder = false
         VaultBookmark.save(url)
         bootstrap()
+        if let fileName {
+            if let note = store.notes.first(where: { $0.fileURL.lastPathComponent == fileName }) {
+                filter = .all
+                select(note.id)
+                editorFocus.request()
+            }
+        }
     }
 
     public var canDeploy: Bool {
