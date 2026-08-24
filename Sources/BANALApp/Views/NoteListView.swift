@@ -6,12 +6,11 @@ import SwiftUI
 struct NoteListView: View {
     @ObservedObject var model: AppModel
     @Environment(\.colorSchemeContrast) private var contrast
+    /// The toolbar search field (`.searchable`). ⌘F focuses it via `searchFocusToken`.
     @FocusState private var searchFieldFocused: Bool
 
     var body: some View {
-        VStack(spacing: 0) {
-            searchField
-
+        Group {
             if model.visibleNotes.isEmpty {
                 emptyState
             } else {
@@ -41,6 +40,15 @@ struct NoteListView: View {
         .background(Color(nsColor: .controlBackgroundColor))
         .background(NoteListFocusHelper(model: model))
         .navigationTitle(title)
+        // The folder name rides in the title bar, inline — the list starts
+        // at the same height as the sidebar instead of under a header row.
+        .toolbarTitleDisplayMode(.inline)
+        .searchable(
+            text: $model.searchQuery,
+            placement: .toolbar,
+            prompt: "Search notes"
+        )
+        .modifier(ToolbarSearchFocus(focused: $searchFieldFocused))
         .navigationSplitViewColumnWidth(min: 240, ideal: 280, max: 360)
         .overlay(alignment: .trailing) {
             if contrast == .increased {
@@ -56,31 +64,6 @@ struct NoteListView: View {
             if searchFieldFocused || !model.searchQuery.isEmpty {
                 model.searchQuery = ""
                 searchFieldFocused = false
-            }
-        }
-    }
-
-    private var searchField: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(.tertiary)
-                .accessibilityHidden(true)
-            TextField("Search", text: $model.searchQuery)
-                .textFieldStyle(.plain)
-                .focused($searchFieldFocused)
-                .accessibilityLabel("Search notes")
-                .accessibilityHint("Filter notes by title, body, tags, or ingredients")
-                .onSubmit { searchFieldFocused = false }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .overlay(alignment: .bottom) {
-            if contrast == .increased {
-                Rectangle()
-                    .fill(Color(nsColor: .separatorColor))
-                    .frame(height: 1)
-            } else {
-                Divider()
             }
         }
     }
@@ -109,6 +92,20 @@ struct NoteListView: View {
         if case .published = model.filter { return "Nothing published." }
         if case .tag = model.filter { return "No notes with this tag." }
         return "Create a note with ⌘N."
+    }
+}
+
+/// `.searchFocused` is macOS 15+; on 14 the ⌘F token still clears and
+/// filters, the field just does not take focus.
+private struct ToolbarSearchFocus: ViewModifier {
+    let focused: FocusState<Bool>.Binding
+
+    func body(content: Content) -> some View {
+        if #available(macOS 15.0, *) {
+            content.searchFocused(focused)
+        } else {
+            content
+        }
     }
 }
 
