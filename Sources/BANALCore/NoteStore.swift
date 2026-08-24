@@ -19,6 +19,10 @@ public enum NoteStoreError: Error, Equatable, Sendable {
     case unsupportedFileType(String)
 }
 
+/// Loads a note file from disk. Injectable so tests can count re-reads (#186);
+/// mirrors `NoteIO.load(url:vaultURL:fileManager:)`.
+public typealias NoteLoader = (URL, URL, FileManager) throws -> Note
+
 /// Loads, indexes, debounced-writes, and watches a vault of notes.
 @MainActor
 public final class NoteStore: ObservableObject {
@@ -41,6 +45,7 @@ public final class NoteStore: ObservableObject {
 
     private let fileManager: FileManager
     private let monitor: DirectoryMonitor?
+    private let loadNote: NoteLoader
     private var pendingWrites: [String: Note] = [:]
     private var writeTasks: [String: Task<Void, Never>] = [:]
     private var recentlyWritten: [String: (fingerprint: String, until: Date)] = [:]
@@ -54,13 +59,15 @@ public final class NoteStore: ObservableObject {
         monitor: DirectoryMonitor? = DirectoryMonitor(),
         writeDebounceNanoseconds: UInt64 = 400_000_000,
         fileManager: FileManager = .default,
-        spotlightIndexer: (any NoteSpotlightIndexing)? = nil
+        spotlightIndexer: (any NoteSpotlightIndexing)? = nil,
+        noteLoader: @escaping NoteLoader = NoteIO.load(url:vaultURL:fileManager:)
     ) {
         self.configuration = configuration
         self.monitor = monitor
         self.writeDebounceNanoseconds = writeDebounceNanoseconds
         self.fileManager = fileManager
         self.spotlightIndexer = spotlightIndexer
+        self.loadNote = noteLoader
     }
 
     deinit {
@@ -163,16 +170,45 @@ public final class NoteStore: ObservableObject {
         clearAllVanishedFolders()
         defer { isReloading = false }
         let urls = try collectNoteURLs()
+        // #186: stat each file and reuse the in-memory note when mtime +
+        // size are unchanged, so a Finder folder rename does not re-read
+        // every note in the vault. Notes under a renamed folder get new
+        // ids and are read once; untouched notes keep their objects.
+        var cachedByID: [String: Note] = [:]
+        cachedByID.reserveCapacity(notes.count)
+        for note in notes where cachedByID[note.id] == nil {
+            cachedByID[note.id] = note
+        }
         var loaded: [Note] = []
         loaded.reserveCapacity(urls.count)
         for url in urls {
+            let id = NoteIdentity.id(for: url, vaultURL: configuration.rootURL)
+            if let cached = cachedByID[id],
+               let stat = NoteFileStat(url: url, fileManager: fileManager),
+               stat.matches(cached) {
+                loaded.append(cached)
+                continue
+            }
             do {
-                loaded.append(try NoteIO.load(url: url, vaultURL: configuration.rootURL, fileManager: fileManager))
+                loaded.append(try loadNote(url, configuration.rootURL, fileManager))
             } catch {
                 lastError = error.localizedDescription
             }
         }
-        notes = loaded.sorted { $0.updated > $1.updated }
+        // updated desc, then title: a deterministic total order is what
+        // makes the `sorted != notes` check below sound — with an unstable
+        // tie order, equal-`updated` notes would shuffle on every rescan
+        // and republish anyway.
+        let sorted = loaded.sorted { lhs, rhs in
+            if lhs.updated == rhs.updated {
+                return lhs.displayTitle.localizedStandardCompare(rhs.displayTitle) == .orderedAscending
+            }
+            return lhs.updated > rhs.updated
+        }
+        // An unchanged rescan must not republish the list at all.
+        if sorted != notes {
+            notes = sorted
+        }
         // J-14a/d: directory-level rescan must not keep stale disposable caches for vanished ids.
         let currentIDs = Set(notes.map(\.id))
         ingredientCache = ingredientCache.filter { currentIDs.contains($0.key) }
@@ -483,7 +519,7 @@ public final class NoteStore: ObservableObject {
             return
         }
         do {
-            let loaded = try NoteIO.load(url: url, vaultURL: configuration.rootURL, fileManager: fileManager)
+            let loaded = try loadNote(url, configuration.rootURL, fileManager)
             if shouldIgnoreExternalWrite(loaded) {
                 return
             }
