@@ -115,7 +115,7 @@ final class AccessibilityAuditUITests: XCTestCase {
 
         selectNote(titled: "Groceries")
 
-        let search = anyElement(withLabel: "Search notes")
+        let search = searchField()
         XCTAssertTrue(search.exists, "note list search field missing at minimum size")
         XCTAssertTrue(search.isHittable, "note list search field not hittable at minimum size")
 
@@ -153,12 +153,22 @@ final class AccessibilityAuditUITests: XCTestCase {
             pickerText.waitForExistence(timeout: 4),
             "the fixture vault did not resolve; the vault picker appeared instead of the window"
         )
-        let search = anyElement(withLabel: "Search notes")
+        let search = searchField()
         guard search.waitForExistence(timeout: Config.readyTimeout) else {
             print("AX HIERARCHY DUMP (window never became ready):\n\(app.debugDescription)")
             XCTFail("main window never became ready")
             return
         }
+    }
+
+    /// The toolbar search field (`.searchable`). The prompt rides as
+    /// `placeholderValue`; the native element carries no label of its own.
+    private func searchField() -> XCUIElement {
+        let field = app.descendants(matching: .searchField).firstMatch
+        if field.exists { return field }
+        return app.descendants(matching: .any).matching(
+            NSPredicate(format: "placeholderValue == %@", "Search notes")
+        ).firstMatch
     }
 
     private func anyElement(withLabel label: String) -> XCUIElement {
