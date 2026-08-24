@@ -37,11 +37,13 @@ public struct FileCommands: Commands {
             Button("New Textile") {
                 model.createNote(language: .textile)
             }
+            .keyboardShortcut("t", modifiers: [.command, .shift])
             .disabled(model.needsVault)
 
             Button("New Recipe") {
                 model.createNote(language: .cooklang)
             }
+            .keyboardShortcut("r", modifiers: [.command, .shift])
             .disabled(model.needsVault)
 
             Button("Move to Trash") {
