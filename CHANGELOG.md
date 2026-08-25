@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- AppleScript support: BANAL now has a scripting dictionary. Scripts can list and read notes, create notes (plain names, real folders, `.md`/`.textile`/`.cook`), edit bodies, flip Published, and run the publish pipeline — all through the same store the app uses, so every change lands as an ordinary file on disk.
 - Agent CLI (issue #204): `banal vault|notes|show|publish|doctor` — a thin read-mostly command over the same vault resolution, note store, and publish pipeline as the app, with plain text or `--json` output and honest exit codes. For scripts, tests, and agents that were burning tokens UI-scripting the window. It never creates or changes notes; the editor stays the app.
 - Publish survives plain names (issue #202): a note titled with spaces (`Published Note.md`) no longer fails the real Boris compile with `InvalidPath`. Entity ids handed to Boris are made Boris-shaped at the publish boundary — whitespace runs become `-`, `#?%` are rewritten — while files in your vault keep their plain names untouched.
 - Retitle renames stay quiet (issue #192): renaming a note's file after an in-app retitle is one clean event — the store swallows the filesystem echo of its own rename, so the note list never blips and stale delete-echoes fire nothing at all.

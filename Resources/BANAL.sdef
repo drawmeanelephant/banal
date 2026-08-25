@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
+<dictionary xmlns="http://www.apple.com/schema/sdef" xmlns:x="http://www.apple.com/schema/sdef">
+  <suite name="BANAL Scripting" code="BNAL" description="Read and write the notes in BANAL's folder. Notes are ordinary files on disk; every command goes through the same store the app uses.">
+
+    <command name="list notes" code="BNALlist" description="Every note in the notes folder, newest change first. Each record has id, title, folder, published, tags, and updated.">
+      <cocoa class="ListNotesScriptCommand"/>
+      <result type="text" description="A JSON array of note records."/>
+    </command>
+
+    <command name="read note" code="BNALread" description="One note as a record: id, title, folder, published, tags, updated, and body (frontmatter already parsed).">
+      <cocoa class="ReadNoteScriptCommand"/>
+      <direct-parameter type="text" description="The note's id — its vault-relative file name, e.g. &quot;Recipes/risotto.cook&quot;."/>
+      <result type="text" description="The note record."/>
+    </command>
+
+    <command name="create note" code="BNALcrea" description="Create a note file in the folder. The file is named after the title, exactly like ⌘N in the app. Returns the new note record.">
+      <cocoa class="CreateNoteScriptCommand"/>
+      <parameter name="title" code="titl" type="text" optional="yes" description="The note title. Defaults to Untitled."/>
+      <parameter name="body" code="bod1" type="text" optional="yes" description="The note body, without frontmatter."/>
+      <parameter name="folder" code="fold" type="text" optional="yes" description="A folder inside the notes folder, e.g. Recipes. A real directory — created on disk if missing."/>
+      <parameter name="language" code="lang" type="text" optional="yes" description="markdown (default), textile, or cooklang — this chooses the file extension."/>
+      <parameter name="published" code="pub1" type="boolean" optional="yes" description="Mark the note Published. Default false."/>
+      <result type="text" description="The new note record."/>
+    </command>
+
+    <command name="update note" code="BNALupdt" description="Replace a note's body. Frontmatter (title, tags, published) is preserved.">
+      <cocoa class="UpdateNoteBodyScriptCommand"/>
+      <direct-parameter type="text" description="The note's id."/>
+      <parameter name="body" code="bod2" type="text" description="The new body text."/>
+      <result type="text" description="The updated note record."/>
+    </command>
+
+    <command name="set published" code="BNALspub" description="Flip a note's Published flag — the same flag File → Publish Site uses.">
+      <cocoa class="SetPublishedScriptCommand"/>
+      <direct-parameter type="text" description="The note's id."/>
+      <parameter name="to" code="pval" type="boolean" description="true to publish, false to unpublish."/>
+      <result type="text" description="The updated note record."/>
+    </command>
+
+    <command name="publish site" code="BNALpubl" description="Run the same publish pipeline as File → Publish Site (⇧⌘P) and return its status sentence. Only notes marked Published leave the folder.">
+      <cocoa class="PublishSiteScriptCommand"/>
+      <result type="text" description="The status sentence, e.g. Published 3 notes with Boris."/>
+    </command>
+
+  </suite>
+</dictionary>

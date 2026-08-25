@@ -77,6 +77,10 @@
 	<true/>
 	<key>NSHumanReadableCopyright</key>
 	<string>© 2026 draw me an elephant</string>
+	<key>NSAppleScriptEnabled</key>
+	<true/>
+	<key>OSAScriptingDefinition</key>
+	<string>BANAL.sdef</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>UTExportedTypeDeclarations</key>

@@ -79,6 +79,23 @@ swift run banal doctor                # vault, Boris/Oliver presence, identity c
 
 `banal` is a read-mostly window for scripts and agents over the same code paths as the app (`--vault DIR` to point at any folder). It never creates or edits notes — the editor is the app. `banal-cli` remains the GUI launcher.
 
+## Scripting
+
+BANAL has an AppleScript dictionary (`Resources/BANAL.sdef`). Writes go through the same store the app uses and land as ordinary files on disk:
+
+```applescript
+tell application "BANAL"
+  create note given title:"Risotto Bianco", body:"Toast the rice.", folder:"Recipes", published:true
+  list notes                                   -- JSON array of records
+  read note "Recipes/Risotto Bianco.md"        -- JSON record incl. body
+  update note "Risotto Bianco.md" given body:"Stir, add stock."
+  set published "Risotto Bianco.md" to true
+  publish site                                 -- "Published 1 note with builtin."
+end tell
+```
+
+Record-shaped answers come back as JSON text. There is no second database behind the dictionary — the folder is still the truth.
+
 ## Docs
 
 | File | Role |
