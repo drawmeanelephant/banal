@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Retitle renames stay quiet (issue #192): renaming a note's file after an in-app retitle is one clean event — the store swallows the filesystem echo of its own rename, so the note list never blips and stale delete-echoes fire nothing at all.
 - Internal (issue #181): `AppModel` no longer implements every domain itself. Editor session, recipes/Oliver, folders, imports, publishing, enrichment, and translation now live in focused types under a new `BANALAppModel` target with their own unit tests; `AppModel` coordinates them. No behavior change.
 - No more list flicker on Finder renames (issue #186): directory-level filesystem events no longer reload every note in the vault. The store diffs disk against memory and updates only what actually moved, so notes outside the renamed folder keep their place — and a folder that returns to disk clears its own "moved or renamed" badge.
 - Menus stay live when Settings is key (issue #191): Publish Site…, New Note, Import…, and friends no longer gray out while the Settings window has focus, or after the last notes window closes. Menu commands now act on the most recent notes window instead of a stale launch-time fallback.

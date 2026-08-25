@@ -571,4 +571,111 @@ final class NoteStoreTests: XCTestCase {
         XCTAssertEqual(renamed.id, "Paella 2.md")
         XCTAssertTrue(FileManager.default.fileExists(atPath: renamed.fileURL.path))
     }
+
+    /// Collisions are judged case-insensitively, the way the filesystem
+    /// sees them: `risotto.md` blocks `Risotto.md`, which numbers up.
+    func testCreateCollisionsAreCaseInsensitive() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let first = try store.createNote(title: "risotto")
+        let second = try store.createNote(title: "Risotto")
+
+        XCTAssertNotEqual(first.id.lowercased(), second.id.lowercased())
+        XCTAssertEqual(second.id, "Risotto 2.md")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: second.fileURL.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: first.fileURL.path), "both files exist — nothing was clobbered")
+    }
+
+    /// Frontmatter precedence: a file whose name is NOT its display title
+    /// (`sauce.md` carrying `title: Risotto`) keeps its name when
+    /// retitled. The filename follows only when it was the display source.
+    func testFrontmatterTitleBeatsFilenameForRenameEligibility() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let now = Date()
+        let document = FrontmatterCodec.serialize(
+            frontmatter: Frontmatter(title: "Risotto", created: now, updated: now, tags: [], published: false),
+            body: "\nNamed by frontmatter, not by file.\n"
+        )
+        let url = vault.rootURL.appendingPathComponent("sauce.md")
+        try Data(document.utf8).write(to: url)
+        store.applyExternalChange(at: url)
+
+        let note = try XCTUnwrap(store.note(id: "sauce.md"))
+        XCTAssertEqual(note.displayTitle, "Risotto", "the explicit title wins for display")
+
+        var edited = note
+        edited.title = "Paella"
+        store.update(edited, debounce: false)
+
+        let renamed = try store.renameNote(id: "sauce.md", previousTitle: "Risotto", to: "Paella")
+        XCTAssertNil(renamed, "the file was never named after its title; it must not follow now")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+        XCTAssertEqual(store.note(id: "sauce.md")?.displayTitle, "Paella", "display follows the frontmatter edit")
+        XCTAssertEqual(try NoteIO.load(url: url, vaultURL: vault.rootURL).title, "Paella", "the explicit title still updates on disk")
+    }
+
+    /// A Finder rename of an open note re-keys it: the old id is gone,
+    /// the same content lives under the new id, and nothing is lost.
+    func testFinderNoteRenameWhileOpenRekeysTheNote() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let created = try store.createNote(title: "Risotto", body: "\nArborio.\n")
+        let newURL = vault.rootURL.appendingPathComponent("Sunday Sauce.md")
+        try FileManager.default.moveItem(at: created.fileURL, to: newURL)
+
+        // FSEvents delivers the move as both sides of the rename.
+        store.applyExternalChanges(at: [created.fileURL, newURL])
+
+        XCTAssertNil(store.note(id: created.id), "the old id is gone")
+        let rekeyed = try XCTUnwrap(store.note(id: "Sunday Sauce.md"))
+        XCTAssertEqual(rekeyed.body, "\nArborio.\n", "content rides along untouched")
+        XCTAssertLessThan(
+            abs(rekeyed.created.timeIntervalSince(created.created)),
+            1.0,
+            "frontmatter survives a Finder rename (at its whole-second serialized precision)"
+        )
+    }
+
+    /// Retitling in-app performs one clean event: the delete + write echo
+    /// of our own rename is swallowed (recentlyWritten window), so the
+    /// list never republishes and the note is not disturbed.
+    func testRetitleRenameEchoIsSwallowedAsOneCleanEvent() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        var publishes = 0
+        var cancellables: Set<AnyCancellable> = []
+        store.$notes.dropFirst().sink { _ in publishes += 1 }.store(in: &cancellables)
+
+        let created = try store.createNote(title: "Risotto", body: "\nArborio.\n")
+        var edited = created
+        edited.title = "Paella"
+        store.update(edited, debounce: false)
+        _ = try store.renameNote(id: created.id, previousTitle: "Risotto", to: "Paella")
+        let settled = try XCTUnwrap(store.note(id: "Paella.md"))
+        let baseline = publishes
+
+        // What FSEvents hands back for our own move: old path deleted,
+        // new path written. Delivered as one coalesced batch.
+        store.applyExternalChanges(at: [
+            vault.rootURL.appendingPathComponent("Risotto.md"),
+            settled.fileURL,
+        ])
+
+        XCTAssertEqual(publishes, baseline, "our own rename echo must not republish the list")
+        XCTAssertEqual(store.note(id: "Paella.md"), settled, "the open note object is undisturbed")
+        XCTAssertEqual(store.notes.filter { $0.title == "Paella" }.count, 1, "no duplicate from the write side of the echo")
+    }
 }
