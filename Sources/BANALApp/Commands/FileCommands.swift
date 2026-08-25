@@ -3,11 +3,12 @@ import SwiftUI
 
 public struct FileCommands: Commands {
     @FocusedObject private var focusedModel: AppModel?
+    @ObservedObject private var trackedModels = WindowModelTracker.shared
     private var fallbackModel: AppModel
     @Environment(\.openWindow) private var openWindow
 
     private var model: AppModel {
-        focusedModel ?? fallbackModel
+        focusedModel ?? trackedModels.latest ?? fallbackModel
     }
 
     public init(model: AppModel) {

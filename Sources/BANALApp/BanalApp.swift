@@ -187,6 +187,7 @@ struct WindowRootView: View {
             .focusedObject(model)
             .onAppear {
                 appDelegate.model = model
+                WindowModelTracker.shared.activate(model)
                 appDelegate.flushPendingOpens()
             }
             .onOpenURL { url in
