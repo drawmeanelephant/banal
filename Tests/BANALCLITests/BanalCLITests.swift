@@ -100,6 +100,15 @@ final class BanalCLITests: XCTestCase {
         XCTAssertTrue(result.out.contains("Draft.md"), result.out)
     }
 
+    func testNotesPublishedFlagFilters() throws {
+        let result = invoke("notes", "--vault", vaultURL.path, "--published", "--json")
+        XCTAssertEqual(result.code, 0)
+        let data = try XCTUnwrap(result.out.data(using: .utf8))
+        let rows = try XCTUnwrap(try JSONSerialization.jsonObject(with: data) as? [[String: Any]])
+        XCTAssertTrue(rows.allSatisfy { ($0["published"] as? Bool) == true }, "\(rows)")
+        XCTAssertEqual(rows.count, 1)
+    }
+
     // MARK: - show
 
     func testShowPrintsRawFileBytes() {
@@ -166,22 +175,38 @@ final class BanalCLITests: XCTestCase {
 
     func testDoctorReportsHealthyVault() throws {
         let result = invoke("doctor", "--vault", vaultURL.path, "--json")
-        XCTAssertEqual(result.code, 0, result.out + result.err)
+        // Absent-but-unconfigured engines warn (exit 64) rather than fail;
+        // a machine with both engines gets a clean 0.
+        XCTAssertTrue([0, 64].contains(result.code), result.out + result.err)
         let data = try XCTUnwrap(result.out.data(using: .utf8))
         let report = try JSONDecoder().decode(DoctorReport.self, from: data)
         XCTAssertTrue(report.ok)
         XCTAssertEqual(report.checks.first?.name, "vault")
         XCTAssertEqual(report.checks.first?.status, "ok")
         XCTAssertTrue(report.checks.contains { $0.name == "contract" && $0.status == "ok" }, "\(report.checks)")
-        // This machine (and CI) may lack the engines — that is a warning, not a failure.
         for check in report.checks where check.name == "boris" || check.name == "oliver" {
-            XCTAssertEqual(check.status, processExists(check.detail) ? "ok" : "warn")
+            XCTAssertTrue(["ok", "warn"].contains(check.status), "\(check)")
         }
+    }
+
+    func testDoctorFailsWhenConfiguredEngineIsMissing() throws {
+        var configuration = VaultBootstrap.load(from: vaultURL)
+        configuration.borisBinaryPath = "/nonexistent/boris-binary"
+        try VaultBootstrap.save(configuration)
+
+        let result = invoke("doctor", "--vault", vaultURL.path, "--json")
+        XCTAssertEqual(result.code, 1)
+        let data = try XCTUnwrap(result.out.data(using: .utf8))
+        let report = try JSONDecoder().decode(DoctorReport.self, from: data)
+        XCTAssertFalse(report.ok)
+        let boris = try XCTUnwrap(report.checks.first { $0.name == "boris" })
+        XCTAssertEqual(boris.status, "fail")
+        XCTAssertTrue(boris.detail.contains("configured"), boris.detail)
     }
 
     func testDoctorTextModeAlignsRows() {
         let result = invoke("doctor", "--vault", vaultURL.path)
-        XCTAssertEqual(result.code, 0, result.err)
+        XCTAssertTrue([0, 64].contains(result.code), result.err)
         XCTAssertTrue(result.out.contains("vault"), result.out)
         XCTAssertTrue(result.out.contains("contract"), result.out)
         let contractRow = result.out.split(separator: "\n").first { $0.hasPrefix("contract") }
@@ -231,9 +256,5 @@ final class BanalCLITests: XCTestCase {
         try Data(script.utf8).write(to: binary)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: binary.path)
         return binary
-    }
-
-    private func processExists(_ detail: String) -> Bool {
-        !detail.hasPrefix("not found")
     }
 }

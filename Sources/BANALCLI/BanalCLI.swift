@@ -14,7 +14,8 @@ public enum BanalCLI {
 
     USAGE
       banal vault [--vault DIR] [--json]     resolved vault + note count
-      banal notes [--vault DIR] [--json]     id, title, language, published, tags, updated
+      banal notes [--vault DIR] [--json] [--published]
+                                            id, title, language, published, tags, updated
       banal show <id> [--vault DIR] [--json] note file to stdout; --json parses it
       banal publish [--vault DIR] [--json]   run the real publish pipeline
       banal doctor [--vault DIR] [--json]    vault, engines, Boris identity contract
@@ -25,7 +26,7 @@ public enum BanalCLI {
       -h, --help    this text
 
     EXIT CODES
-      0 ok   1 operation failed   2 usage error
+      0 ok   64 ran with warnings (degraded but working)   1 operation failed   2 usage error
 
     The editor is the app. This CLI does not create or change notes;
     `publish` writes only the disposable `.banal/stage` and `.publish` trees.
@@ -35,6 +36,7 @@ public enum BanalCLI {
         var command = ""
         var positional: [String] = []
         var json = false
+        var publishedOnly = false
         var vaultPath: String?
         var help = false
     }
@@ -55,6 +57,8 @@ public enum BanalCLI {
                 invocation.help = true
             case "--json":
                 invocation.json = true
+            case "--published":
+                invocation.publishedOnly = true
             case "--vault":
                 let next = index + 1
                 guard next < arguments.count else { throw ParseError(message: "--vault needs a directory") }
@@ -162,9 +166,12 @@ public enum BanalCLI {
     }
 
     private static func notes(_ invocation: Invocation, out: (String) -> Void) throws -> Int32 {
-        let storeNotes = try MainActor.assumeIsolated { () -> [Note] in
+        var storeNotes = try MainActor.assumeIsolated { () -> [Note] in
             try openStore(resolveVault(invocation.vaultPath)).notes
                 .sorted { $0.updated > $1.updated }
+        }
+        if invocation.publishedOnly {
+            storeNotes = storeNotes.filter(\.published)
         }
         if invocation.json {
             out(json(storeNotes.map(NoteSummary.init)))
@@ -200,6 +207,10 @@ public enum BanalCLI {
 
     private static func publish(_ invocation: Invocation, out: (String) -> Void) throws -> Int32 {
         let configuration = try resolveVault(invocation.vaultPath)
+        // Refresh security-scoped access to configured engines — the same
+        // courtesy the app extends before publishing.
+        _ = CompilerBookmark.access(path: configuration.borisBinaryPath, name: "boris")
+        _ = CompilerBookmark.access(path: configuration.oliverBinaryPath, name: "oliver")
         let publishConfiguration = PublishConfiguration.default(for: configuration)
         let publisher = BANALPublisher.make(configuration: publishConfiguration)
         let result = try MainActor.assumeIsolated { () -> PublishResult in
@@ -242,8 +253,10 @@ public enum BanalCLI {
             }
             checks.append(DoctorCheck(name: "vault", status: "ok", detail: "\(configuration.rootURL.path) (\(snapshot.count) notes)"))
 
-            checks.append(binaryCheck(name: "boris", url: BorisLocator.resolve(configured: configuration.borisBinaryPath), fallback: "builtin HTML will be used"))
-            checks.append(binaryCheck(name: "oliver", url: OliverLocator.resolve(configured: configuration.oliverBinaryPath), fallback: "recipes stay source when published"))
+            // A configured-but-broken engine is a config error; an engine that
+            // was never configured is a healthy choice of the builtin path.
+            checks.append(binaryCheck(name: "boris", configured: configuration.borisBinaryPath, resolve: { BorisLocator.resolve(configured: $0) }, fallback: "builtin HTML will be used"))
+            checks.append(binaryCheck(name: "oliver", configured: configuration.oliverBinaryPath, resolve: { OliverLocator.resolve(configured: $0) }, fallback: "recipes stay source when published"))
 
             if let offender = snapshot.entities.first(where: { !BorisIdentity.isValid($1) }) {
                 checks.append(DoctorCheck(name: "contract", status: "fail", detail: "note \(offender.key) maps to invalid entity id \"\(offender.value)\""))
@@ -254,9 +267,10 @@ public enum BanalCLI {
             checks.append(DoctorCheck(name: "vault", status: "fail", detail: error.localizedDescription))
         }
 
-        let healthy = !checks.contains { $0.status == "fail" }
+        let failed = checks.contains { $0.status == "fail" }
+        let warned = checks.contains { $0.status == "warn" }
         if invocation.json {
-            out(json(DoctorReport(ok: healthy, checks: checks)))
+            out(json(DoctorReport(ok: !failed, checks: checks)))
         } else {
             for check in checks {
                 let name = check.name.padding(toLength: 10, withPad: " ", startingAt: 0)
@@ -264,14 +278,23 @@ public enum BanalCLI {
                 out("\(name)\(status)\(check.detail)\n")
             }
         }
-        return healthy ? 0 : 1
+        // 0 clean · 64 degraded but working (a warning) · 1 broken.
+        return failed ? 1 : (warned ? 64 : 0)
     }
 
     // MARK: - Pieces
 
-    private static func binaryCheck(name: String, url: URL?, fallback: String) -> DoctorCheck {
-        if let url {
+    private static func binaryCheck(
+        name: String,
+        configured: String?,
+        resolve: (String?) -> URL?,
+        fallback: String
+    ) -> DoctorCheck {
+        if let url = resolve(configured) {
             return DoctorCheck(name: name, status: "ok", detail: url.path)
+        }
+        if let configured, !configured.isEmpty {
+            return DoctorCheck(name: name, status: "fail", detail: "configured at \"\(configured)\" but not executable")
         }
         return DoctorCheck(name: name, status: "warn", detail: "not found — \(fallback)")
     }
@@ -350,6 +373,7 @@ struct NoteSummary: Encodable {
     var tags: [String]
     var created: Date
     var updated: Date
+    var bytes: Int
     var body: String
 
     init(_ note: Note) {
@@ -361,6 +385,7 @@ struct NoteSummary: Encodable {
         tags = note.tags
         created = note.created
         updated = note.updated
+        bytes = note.fileSize ?? 0
         body = note.body
     }
 }
