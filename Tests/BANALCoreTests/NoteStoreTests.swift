@@ -1,3 +1,4 @@
+import Combine
 import XCTest
 @testable import BANALCore
 
@@ -315,6 +316,103 @@ final class NoteStoreTests: XCTestCase {
         XCTAssertEqual(imported.id, "Recipes/risotto.cook")
         XCTAssertEqual(imported.language, .cooklang)
         XCTAssertTrue(store.folders.contains("Recipes"))
+    }
+
+    // MARK: - Reload reconciliation (#186)
+
+    /// Counts the loads routed through the store so tests can prove
+    /// `reloadAll` reuses untouched notes instead of re-reading them.
+    private final class NoteLoadCounter {
+        private(set) var urls: [URL] = []
+        var count: Int { urls.count }
+        func reset() { urls.removeAll() }
+        var loader: NoteLoader {
+            { [self] url, vaultURL, fileManager in
+                urls.append(url)
+                return try NoteIO.load(url: url, vaultURL: vaultURL, fileManager: fileManager)
+            }
+        }
+    }
+
+    /// A directory-level event after one file changed externally must
+    /// re-read exactly the changed file — untouched notes are reused from
+    /// memory with their objects and ids intact.
+    func testDirectoryEventRereadsOnlyTheChangedFile() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let counter = NoteLoadCounter()
+        let store = NoteStore(configuration: vault, monitor: nil, noteLoader: counter.loader)
+        try store.open()
+        _ = try store.createNote(title: "Alpha")
+        _ = try store.createNote(title: "Beta", folder: "Things")
+        let alpha = try XCTUnwrap(store.notes.first { $0.title == "Alpha" })
+        let beta = try XCTUnwrap(store.notes.first { $0.title == "Beta" })
+        counter.reset()
+
+        let now = Date()
+        let document = FrontmatterCodec.serialize(
+            frontmatter: Frontmatter(title: "Beta", created: beta.created, updated: now, tags: ["changed"], published: false),
+            body: "\nRewritten outside the app.\n"
+        )
+        try Data(document.utf8).write(to: beta.fileURL)
+        store.applyExternalChange(at: vault.rootURL.appendingPathComponent("Things", isDirectory: true))
+
+        XCTAssertEqual(counter.count, 1, "only the changed file may be re-read; untouched notes are reused from memory")
+        XCTAssertEqual(counter.urls.first?.lastPathComponent, beta.fileURL.lastPathComponent)
+        XCTAssertEqual(store.note(id: beta.id)?.tags, ["changed"], "the changed file must reload from disk")
+        XCTAssertEqual(store.note(id: alpha.id), alpha, "the untouched note keeps its in-memory values")
+    }
+
+    /// The #186 headline: renaming a folder in Finder re-keys the notes
+    /// under it (their ids are relative paths) but must not re-read any
+    /// other note in the vault.
+    func testFinderFolderRenameRekeysMovedNotesWithoutRereadingOthers() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let counter = NoteLoadCounter()
+        let store = NoteStore(configuration: vault, monitor: nil, noteLoader: counter.loader)
+        try store.open()
+        let moved = try store.createNote(title: "Moved", folder: "Alpha")
+        _ = try store.createNote(title: "Stays")
+        counter.reset()
+
+        try FileManager.default.moveItem(
+            at: vault.rootURL.appendingPathComponent("Alpha", isDirectory: true),
+            to: vault.rootURL.appendingPathComponent("Gamma", isDirectory: true)
+        )
+        store.applyExternalChange(at: vault.rootURL.appendingPathComponent("Gamma", isDirectory: true))
+
+        XCTAssertEqual(counter.count, 1, "only the moved note (new id) may be re-read")
+        XCTAssertEqual(counter.urls.first?.lastPathComponent, moved.fileURL.lastPathComponent)
+        XCTAssertNil(store.note(id: moved.id), "the old id must be gone")
+        let newID = "Gamma/" + moved.id.dropFirst("Alpha/".count)
+        XCTAssertNotNil(store.note(id: newID), "the note must be re-keyed under the renamed folder")
+        XCTAssertTrue(store.folders.contains("Gamma"))
+        XCTAssertFalse(store.folders.contains("Alpha"))
+        XCTAssertEqual(store.vanishedFolderPaths, ["Alpha"], "the vanished-folder badge still fires")
+    }
+
+    /// An unchanged rescan must not republish the notes array at all —
+    /// that is the full-list flicker from #186.
+    func testReloadAllWithoutChangesDoesNotRepublishNotes() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+        _ = try store.createNote(title: "Stable")
+        try store.reloadAll() // normalize the stored order (updated desc, title asc)
+
+        var publishes = 0
+        var cancellables: Set<AnyCancellable> = []
+        store.$notes.dropFirst().sink { _ in publishes += 1 }.store(in: &cancellables)
+
+        try store.reloadAll()
+        XCTAssertEqual(publishes, 0, "an unchanged rescan must not republish the notes array")
+
+        let url = try XCTUnwrap(store.note(id: "Welcome.md")?.fileURL)
+        try Data("different bytes entirely\n".utf8).write(to: url)
+        try store.reloadAll()
+        XCTAssertEqual(publishes, 1, "a real change still publishes once")
     }
 
     private func makeVault() throws -> VaultConfiguration {

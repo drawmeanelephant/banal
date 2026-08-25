@@ -54,6 +54,10 @@ public struct Note: Identifiable, Equatable, Sendable {
     public var published: Bool
     /// Filesystem modification timestamp (`mtime`).
     public var modifiedAt: Date
+    /// File size in bytes at the last load or write; `nil` for notes that
+    /// were never read from disk or persisted. Together with `modifiedAt`
+    /// it lets `reloadAll` reuse a note without re-reading its bytes (#186).
+    public var fileSize: Int?
     /// Unknown frontmatter keys preserved for round-trip (Markdown/Textile only).
     public var extras: [FrontmatterExtra]
     /// SHA-256 of the last bytes we wrote or successfully loaded.
@@ -69,6 +73,7 @@ public struct Note: Identifiable, Equatable, Sendable {
         tags: [String] = [],
         published: Bool = false,
         modifiedAt: Date,
+        fileSize: Int? = nil,
         extras: [FrontmatterExtra] = [],
         contentFingerprint: String = ""
     ) {
@@ -81,6 +86,7 @@ public struct Note: Identifiable, Equatable, Sendable {
         self.tags = tags
         self.published = published
         self.modifiedAt = modifiedAt
+        self.fileSize = fileSize
         self.extras = extras
         self.contentFingerprint = contentFingerprint
     }
