@@ -10,6 +10,7 @@ let package = Package(
     products: [
         .library(name: "BANALCore", targets: ["BANALCore"]),
         .library(name: "BANALPublisher", targets: ["BANALPublisher"]),
+        .library(name: "BANALAppModel", targets: ["BANALAppModel"]),
         .executable(name: "banal-cli", targets: ["BANALApp"]),
     ],
     targets: [
@@ -22,9 +23,14 @@ let package = Package(
             dependencies: ["BANALCore"],
             path: "Sources/BANALPublisher"
         ),
+        .target(
+            name: "BANALAppModel",
+            dependencies: ["BANALCore", "BANALPublisher"],
+            path: "Sources/BANALAppModel"
+        ),
         .executableTarget(
             name: "BANALApp",
-            dependencies: ["BANALCore", "BANALPublisher"],
+            dependencies: ["BANALCore", "BANALPublisher", "BANALAppModel"],
             path: "Sources/BANALApp"
         ),
         .testTarget(
@@ -36,6 +42,11 @@ let package = Package(
             name: "BANALPublisherTests",
             dependencies: ["BANALCore", "BANALPublisher"],
             path: "Tests/BANALPublisherTests"
+        ),
+        .testTarget(
+            name: "BANALAppModelTests",
+            dependencies: ["BANALCore", "BANALAppModel"],
+            path: "Tests/BANALAppModelTests"
         ),
     ],
     swiftLanguageModes: [.v6]

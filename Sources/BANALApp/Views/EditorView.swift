@@ -2,6 +2,7 @@
 import Translation
 #endif
 import BANALCore
+import BANALAppModel
 import SwiftUI
 
 struct EditorView: View {

@@ -1,5 +1,6 @@
 import BANALCore
 import BANALPublisher
+import BANALAppModel
 import SwiftUI
 
 struct RecipeReadView: View {

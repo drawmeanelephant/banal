@@ -1,4 +1,5 @@
 import BANALCore
+import BANALAppModel
 import SwiftUI
 
 public struct ViewCommands: Commands {
