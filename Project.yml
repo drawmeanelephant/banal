@@ -31,6 +31,8 @@ targets:
         product: BANALCore
       - package: BanalPackage
         product: BANALPublisher
+      - package: BanalPackage
+        product: BANALAppModel
     resources:
       - path: Resources/BANAL.help
     settings:
