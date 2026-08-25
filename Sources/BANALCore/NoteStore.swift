@@ -162,7 +162,7 @@ public final class NoteStore: ObservableObject {
         isReloading = true
         clearAllVanishedFolders()
         defer { isReloading = false }
-        let urls = try collectNoteURLs()
+        let urls = collectNoteURLs()
         var loaded: [Note] = []
         loaded.reserveCapacity(urls.count)
         for url in urls {
@@ -478,7 +478,15 @@ public final class NoteStore: ObservableObject {
 
     /// Apply an observed filesystem change. Tests can call this without FSEvents.
     public func applyExternalChange(at url: URL) {
-        if isReloading { return }
+        applyExternalChanges(at: [url])
+    }
+
+    /// Apply a coalesced batch of observed filesystem changes. Note-file
+    /// events reload just their own file; directory-level events run one
+    /// structural reconciliation against disk instead of a full reload,
+    /// so notes whose paths did not change are never re-read or replaced (#186).
+    public func applyExternalChanges(at urls: [URL]) {
+        if isReloading || urls.isEmpty { return }
         if !rootExists() {
             rootMissing = true
             notes = []
@@ -489,25 +497,24 @@ public final class NoteStore: ObservableObject {
             rootMissing = false
         }
         if !watchesExternalEdits { return }
-        let standardized = url.standardizedFileURL
-        if standardized.hasDirectoryPath || configuration.isReservedDirectory(standardized) {
+        var structural = false
+        for url in urls {
+            let standardized = url.standardizedFileURL
             if standardized == configuration.rootURL || configuration.isReservedDirectory(standardized) {
-                return
+                continue
+            }
+            if configuration.isNoteFile(standardized) {
+                handleNoteURLChange(standardized)
+                continue
+            }
+            // A live directory (Finder rename target, external mkdir):
+            // reconcile structure once for the whole batch, not per URL.
+            if standardized.hasDirectoryPath {
+                structural = true
             }
         }
-        if configuration.isNoteFile(standardized) {
-            handleNoteURLChange(standardized)
-            return
-        }
-        if !standardized.hasDirectoryPath && standardized != configuration.rootURL {
-            return
-        }
-        // Directory-level events (renames, mass edits): rescan cheaply.
-        do {
-            try reloadAll()
-        } catch {
-            lastError = error.localizedDescription
-        }
+        guard structural else { return }
+        reconcileStructure()
     }
 
     // MARK: - Private
@@ -520,10 +527,7 @@ public final class NoteStore: ObservableObject {
     private func startMonitor() {
         monitor?.start(url: configuration.rootURL) { [weak self] urls in
             Task { @MainActor in
-                guard let self else { return }
-                for url in urls {
-                    self.applyExternalChange(at: url)
-                }
+                self?.applyExternalChanges(at: urls)
             }
         }
     }
@@ -716,10 +720,59 @@ public final class NoteStore: ObservableObject {
         return uniqueRelativePath(forLeaf: leaf, folder: folder)
     }
 
-    private func refreshFolders() {
+    /// One structural reconciliation against disk: diff note paths and
+    /// folder paths, then touch only what actually changed. Kept notes
+    /// are neither re-read nor replaced — a Finder rename redraws the
+    /// moved rows instead of blanking and repopulating the list (#186).
+    private func reconcileStructure() {
+        let diskFolders = collectFolderPaths()
+        var diskByID: [String: URL] = [:]
+        diskByID.reserveCapacity(64)
+        for url in collectNoteURLs() {
+            diskByID[NoteIdentity.id(for: url, vaultURL: configuration.rootURL)] = url
+        }
+        let memoryIDs = Set(notes.map(\.id))
+        let gone = memoryIDs.subtracting(diskByID.keys)
+
+        var loaded: [Note] = []
+        loaded.reserveCapacity(diskByID.count - memoryIDs.count)
+        for (id, url) in diskByID where !memoryIDs.contains(id) {
+            do {
+                loaded.append(try NoteIO.load(url: url, vaultURL: configuration.rootURL, fileManager: fileManager))
+            } catch {
+                lastError = error.localizedDescription
+            }
+        }
+
+        refreshFolders(precomputedDiskPaths: diskFolders)
+
+        guard !gone.isEmpty || !loaded.isEmpty else { return }
+        if !gone.isEmpty {
+            notes.removeAll { gone.contains($0.id) }
+            ingredientCache = ingredientCache.filter { !gone.contains($0.key) }
+            recentlyWritten = recentlyWritten.filter { !gone.contains($0.key) }
+            deindexSpotlight(ids: Array(gone))
+        }
+        for note in loaded {
+            notes.append(note)
+            donateSpotlight(note)
+        }
+        if !loaded.isEmpty {
+            notes.sort { $0.updated > $1.updated }
+        }
+    }
+
+    private func refreshFolders(precomputedDiskPaths: [String]? = nil) {
+        let diskPaths = precomputedDiskPaths ?? collectFolderPaths()
         let oldPaths = Set(FolderTree.flatten(folderTree).map(\.id))
-        folderTree = FolderTree.build(paths: collectFolderPaths())
-        let newPaths = Set(FolderTree.flatten(folderTree).map(\.id))
+        let newPaths = Set(diskPaths)
+        // A folder that is back on disk clears its own vanished badge.
+        let reappeared = vanishedFolderPaths.intersection(newPaths)
+        if !reappeared.isEmpty {
+            vanishedFolderPaths.subtract(reappeared)
+        }
+        guard oldPaths != newPaths else { return }
+        folderTree = FolderTree.build(paths: diskPaths)
         // Track folders that disappeared from disk (renamed/moved in Finder).
         let vanished = oldPaths.subtracting(newPaths)
         if !vanished.isEmpty {
@@ -812,7 +865,7 @@ public final class NoteStore: ObservableObject {
         ingredientCache = nextCache
     }
 
-    private func collectNoteURLs() throws -> [URL] {
+    private func collectNoteURLs() -> [URL] {
         guard let enumerator = fileManager.enumerator(
             at: configuration.rootURL,
             includingPropertiesForKeys: [.isRegularFileKey, .isDirectoryKey],
