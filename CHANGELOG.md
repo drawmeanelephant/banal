@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Publish survives plain names (issue #202): a note titled with spaces (`Published Note.md`) no longer fails the real Boris compile with `InvalidPath`. Entity ids handed to Boris are made Boris-shaped at the publish boundary — whitespace runs become `-`, `#?%` are rewritten — while files in your vault keep their plain names untouched.
 - Retitle renames stay quiet (issue #192): renaming a note's file after an in-app retitle is one clean event — the store swallows the filesystem echo of its own rename, so the note list never blips and stale delete-echoes fire nothing at all.
 - Internal (issue #181): `AppModel` no longer implements every domain itself. Editor session, recipes/Oliver, folders, imports, publishing, enrichment, and translation now live in focused types under a new `BANALAppModel` target with their own unit tests; `AppModel` coordinates them. No behavior change.
 - No more list flicker on Finder renames (issue #186): directory-level filesystem events no longer reload every note in the vault. The store diffs disk against memory and updates only what actually moved, so notes outside the renamed folder keep their place — and a folder that returns to disk clears its own "moved or renamed" badge.
