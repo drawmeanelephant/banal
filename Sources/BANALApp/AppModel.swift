@@ -60,7 +60,6 @@ public final class AppModel: ObservableObject {
         }
         recipe.context = self
         bindStore()
-        bindControllers()
     }
 
     /// Honor the notes folder's Oliver path without a relaunch.
@@ -89,6 +88,7 @@ public final class AppModel: ObservableObject {
                 self.missingNotesFolder = true
             }
             .store(in: &cancellables)
+        bindControllers()
     }
 
     /// Child state changes must re-render views that read it through
@@ -417,13 +417,13 @@ public final class AppModel: ObservableObject {
     }
 
     private func drainPendingImports() {
-        let decisions = imports.drainPendingImports(
+        let drained = imports.drainPendingImports(
             vaultRoot: store.configuration.rootURL,
             importer: { try store.importFile(from: $0) },
             noteExists: { store.note(id: $0) != nil }
         )
-        for decision in decisions {
-            handle(decision, openedFile: nil)
+        for (url, decision) in drained {
+            handle(decision, openedFile: url.lastPathComponent)
         }
     }
 

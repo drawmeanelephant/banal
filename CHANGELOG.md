@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Internal (issue #181): `AppModel` no longer implements every domain itself. Editor session, recipes/Oliver, folders, imports, publishing, enrichment, and translation now live in focused types under a new `BANALAppModel` target with their own unit tests; `AppModel` coordinates them. No behavior change.
 - No more list flicker on Finder renames (issue #186): directory-level filesystem events no longer reload every note in the vault. The store diffs disk against memory and updates only what actually moved, so notes outside the renamed folder keep their place — and a folder that returns to disk clears its own "moved or renamed" badge.
 - Menus stay live when Settings is key (issue #191): Publish Site…, New Note, Import…, and friends no longer gray out while the Settings window has focus, or after the last notes window closes. Menu commands now act on the most recent notes window instead of a stale launch-time fallback.
 - Plain names (issue #192): new notes land as `<Title>.md` — `Risotto.md`, not `2026-08-25-risotto.md` — with Finder-style collision numbering (`Risotto 2.md`) and titles that keep their case and accents. Retitling a plain-named note renames its file on disk the moment the buffer settles; legacy date-stamped files stay exactly as they are until you rename them yourself.

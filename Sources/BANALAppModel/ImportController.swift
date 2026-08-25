@@ -81,17 +81,23 @@ public final class ImportController {
         }
     }
 
-    /// Imported every queued URL once a vault opened. Returns the
-    /// decisions in order for the coordinator to act on.
-    public func drainPendingImports(vaultRoot: URL, importer: (URL) throws -> Note, noteExists: (String) -> Bool) -> [OpenDecision] {
+    /// Import every queued URL once a vault opened. Returns each URL
+    /// with its decision, in order, for the coordinator to act on.
+    public func drainPendingImports(
+        vaultRoot: URL,
+        importer: (URL) throws -> Note,
+        noteExists: (String) -> Bool
+    ) -> [(url: URL, decision: OpenDecision)] {
         let urls = pendingImports
         pendingImports.removeAll()
-        return urls.map { openImportedNote(at: $0, vaultRoot: vaultRoot, importer: importer, noteExists: noteExists) }
+        return urls.map { url in
+            (url, openImportedNote(at: url, vaultRoot: vaultRoot, importer: importer, noteExists: noteExists))
+        }
     }
 
     // MARK: - Services text
 
-    public enum ServiceNoteOutcome {
+    public enum ServiceNoteOutcome: Equatable {
         case created(note: Note, destinationFolder: String?)
         case emptyText
         case failed(String)
