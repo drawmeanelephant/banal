@@ -172,6 +172,49 @@ public enum NoteIdentity {
         }
         return "\(day)-\(slug)"
     }
+
+    /// Plain names: a note is called what it is called. The file keeps
+    /// the title's case and accents; only what cannot be a single path
+    /// component gets rewritten. Finder-style numbering ("Risotto 2.md")
+    /// happens at collision time in the store, not here.
+    public static func filenameLeaf(from title: String, ext: String) -> String {
+        var name = title
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+            .replacingOccurrences(of: "\\", with: "-")
+            .components(separatedBy: CharacterSet.newlines)
+            .joined(separator: " ")
+        while name.hasPrefix(".") {
+            name.removeFirst()
+        }
+        while name.contains("  ") {
+            name = name.replacingOccurrences(of: "  ", with: " ")
+        }
+        if name.count > 80 {
+            name = String(name.prefix(80))
+        }
+        while name.hasSuffix("-") {
+            name.removeLast()
+        }
+        name = name.trimmingCharacters(in: .whitespaces)
+        if name.isEmpty {
+            name = "Untitled"
+        }
+        return "\(name).\(ext)"
+    }
+
+    /// The comparable form of a filename stem or title: case-, accent-,
+    /// and width-insensitive, with separators already folded. Used to
+    /// decide whether a file's name follows its title.
+    public static func canonicalName(_ value: String) -> String {
+        value
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: ":", with: "-")
+            .replacingOccurrences(of: "\\", with: "-")
+            .folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: nil)
+    }
 }
 
 public enum DayStamp {

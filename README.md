@@ -11,7 +11,7 @@ BANAL is not Solipsist, not a knowledge graph, and not a hosting dashboard.
 ## Requirements
 
 - macOS 14+
-- Xcode 16+ / Swift 6 (`swift --version`)
+- Full Xcode 16+ / Swift 6 (`swift --version`). The standalone Command Line Tools toolchain is not enough — without a full Xcode selected (`xcode-select -s /Applications/Xcode.app`), the build dies with an obscure `SwiftUIMacros plugin not found` error.
 - Optional: a `boris` binary on `PATH` (or `BANAL_BORIS_BIN`) for the real SSG
 - Optional: an `oliver` binary on `PATH` (or `BANAL_OLIVER_BIN`) for Markdown parse/render and recipe Read (`serialize --json`). The app still edits without it.
 
@@ -20,7 +20,7 @@ BANAL is not Solipsist, not a knowledge graph, and not a hosting dashboard.
 ```bash
 swift test
 swift build
-swift run banal-cli
+swift run banal-cli   # despite the name, this launches the GUI app and blocks while it runs
 ```
 
 `swift test` is the source of truth for the storage contract and the publisher. The app target is a native SwiftUI + AppKit executable; it does not use Electron or a webview for editing.
