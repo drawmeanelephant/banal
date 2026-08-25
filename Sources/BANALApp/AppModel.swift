@@ -490,6 +490,7 @@ public final class AppModel: ObservableObject {
               editorSessionID == loadedSessionID,
               let id,
               var note = store.note(id: id) else { return }
+        let previousTitle = note.title
         note.title = editorTitle
         note.body = editorText
         note.tags = editorTags
@@ -502,6 +503,25 @@ public final class AppModel: ObservableObject {
             loadedFingerprint = saved.contentFingerprint
             loadedExtras = saved.extras
             editorDirty = false
+        }
+        // Plain names: once the buffer has settled, let a file that was
+        // named after its title follow the retitle. The store declines
+        // anything that should not move (empty title, legacy date-stamp
+        // names, sanitization-only differences). The session stays put —
+        // this is the same buffer, not a note switch.
+        if let renamed = (try? store.renameNote(
+            id: id,
+            previousTitle: previousTitle,
+            to: editorTitle
+        )) ?? nil {
+            loadedForID = renamed.id
+            if selectedID == id {
+                selectedID = renamed.id
+            }
+            if let settled = store.note(id: renamed.id) {
+                loadedFingerprint = settled.contentFingerprint
+                loadedExtras = settled.extras
+            }
         }
     }
 

@@ -197,7 +197,7 @@ public final class NoteStore: ObservableObject {
         if let folder {
             try ensureFolderExists(folder)
         }
-        let relative = uniqueRelativePath(from: title, now: now, folder: folder, language: language)
+        let relative = uniqueRelativePath(from: title, folder: folder, language: language)
         let url = configuration.rootURL.appendingPathComponent(relative)
         let initialBody: String
         if let body {
@@ -317,7 +317,7 @@ public final class NoteStore: ObservableObject {
         while fileManager.fileExists(atPath: configuration.rootURL.appendingPathComponent(dest).path) {
             let stem = (leaf as NSString).deletingPathExtension
             let ext = note.language.pathExtension
-            let numbered = "\(stem)-\(suffix).\(ext)"
+            let numbered = "\(stem) \(suffix).\(ext)"
             dest = folder.map { "\($0)/\(numbered)" } ?? numbered
             suffix += 1
         }
@@ -329,6 +329,60 @@ public final class NoteStore: ObservableObject {
         pendingWrites.removeValue(forKey: id)
         ingredientCache.removeValue(forKey: id)
         notes.removeAll { $0.id == id }
+        note.id = dest
+        note.fileURL = destURL
+        note = try persistImmediately(note)
+        upsert(note)
+        refreshFolders()
+        deindexSpotlight(oldID)
+        donateSpotlight(note)
+        return note
+    }
+
+    /// Plain names: when a file is named after its title, retitling
+    /// renames the file on disk. `previousTitle` is the title the note
+    /// had before this edit landed — the stem is judged against it,
+    /// because by call time the stored title may already carry the new
+    /// value. Returns nil — no rename — when either title is empty,
+    /// when the leaf does not match the previous title (a legacy
+    /// date-stamped name never migrates behind the user's back), or
+    /// when the new name differs only by characters the sanitizer
+    /// would fold anyway. The caller owns remapping any selection it
+    /// holds; the returned note carries the new id.
+    @discardableResult
+    public func renameNote(
+        id: String,
+        previousTitle: String,
+        to title: String
+    ) throws -> Note? {
+        guard var note = note(id: id) else { return nil }
+        let oldTrimmed = previousTitle.trimmingCharacters(in: .whitespacesAndNewlines)
+        let newTrimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !oldTrimmed.isEmpty, !newTrimmed.isEmpty else { return nil }
+        let oldLeaf = (note.id as NSString).lastPathComponent
+        let oldStem = (oldLeaf as NSString).deletingPathExtension
+        guard NoteIdentity.canonicalName(oldStem) == NoteIdentity.canonicalName(oldTrimmed) else {
+            return nil
+        }
+        let newLeaf = NoteIdentity.filenameLeaf(from: newTrimmed, ext: note.language.pathExtension)
+        let newStem = (newLeaf as NSString).deletingPathExtension
+        guard NoteIdentity.canonicalName(newStem) != NoteIdentity.canonicalName(oldStem) else {
+            return nil
+        }
+        flush()
+        let oldID = id
+        let dest = uniqueRelativePath(forLeaf: newLeaf, folder: note.folder)
+        if dest == oldID {
+            return note
+        }
+        let destURL = configuration.rootURL.appendingPathComponent(dest)
+        try fileManager.createDirectory(at: destURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try fileManager.moveItem(at: note.fileURL, to: destURL)
+        writeTasks[oldID]?.cancel()
+        writeTasks.removeValue(forKey: oldID)
+        pendingWrites.removeValue(forKey: oldID)
+        ingredientCache.removeValue(forKey: oldID)
+        notes.removeAll { $0.id == oldID }
         note.id = dest
         note.fileURL = destURL
         note = try persistImmediately(note)
@@ -648,24 +702,18 @@ public final class NoteStore: ObservableObject {
         let ext = (leaf as NSString).pathExtension
         let existing = Set(notes.map(\.id))
         while existing.contains(candidate) || fileManager.fileExists(atPath: configuration.rootURL.appendingPathComponent(candidate).path) {
-            candidate = folder.map { "\($0)/\(stem)-\(suffix).\(ext)" } ?? "\(stem)-\(suffix).\(ext)"
+            candidate = folder.map { "\($0)/\(stem) \(suffix).\(ext)" } ?? "\(stem) \(suffix).\(ext)"
             suffix += 1
         }
         return candidate
     }
 
-    private func uniqueRelativePath(from title: String, now: Date, folder: String?, language: NoteLanguage) -> String {
-        let leaf = NoteIdentity.slug(from: title, now: now)
-        let ext = language.pathExtension
-        let base = folder.map { "\($0)/\(leaf)" } ?? leaf
-        var candidate = "\(base).\(ext)"
-        var suffix = 2
-        let existing = Set(notes.map(\.id))
-        while existing.contains(candidate) || fileManager.fileExists(atPath: configuration.rootURL.appendingPathComponent(candidate).path) {
-            candidate = "\(base)-\(suffix).\(ext)"
-            suffix += 1
-        }
-        return candidate
+    /// Plain names: the file is born as `<Title>.<ext>`, Finder-style
+    /// numbering on collision (`Risotto 2.md`). No date prefix — the
+    /// creation date lives in frontmatter, not in the name.
+    private func uniqueRelativePath(from title: String, folder: String?, language: NoteLanguage) -> String {
+        let leaf = NoteIdentity.filenameLeaf(from: title, ext: language.pathExtension)
+        return uniqueRelativePath(forLeaf: leaf, folder: folder)
     }
 
     private func refreshFolders() {
