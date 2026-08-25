@@ -53,6 +53,13 @@
 - Heading space-after & Writing Tools guard (E-5, issue #24): Heading lines (`# `, `## `, `### `, `#### `, `##### `, `###### ` and Textile `h1.`–`h6.`) apply distinct paragraph spacing (`paragraphSpacingBefore` 10pt with top-of-file exception, `paragraphSpacing` 4pt to hug following text cleanly) while keeping standard SF Pro typography. Writing Tools sessions (macOS 15+) guard against background idle styling passes, external file reload wipes, and midway flushes. Card: [`E-5-heading-tools.md`](cards/E-5-heading-tools.md).
 - Automated accessibility audit (I-2 prep, `make ui-test`): an XCUITest target runs Apple's `performAccessibilityAudit` against the real app in CI — main window light, minimum size (720×520) dark, wide window (1400×900) with a recipe in Read — asserting the list, editor, and Edit | Read switcher stay present and hittable. The app gains env-only test hooks mirroring `BANAL_SMOKE_TEST`: `BANAL_UI_TEST_VAULT=fixture` seeds a sample vault inside the app's own container and `BANAL_UI_TEST_WINDOW_SIZE=w,h` sizes the window (persisted frames cleared for the run). Known-noise findings are allowlisted explicitly in `Tests/BANALUITests/AccessibilityAuditUITests.swift`: contrast flags on platform-standard secondary/tertiary text (typography decisions belong to the I-2 visual sit), unlabeled system layout containers (split-view groups, list backing, TouchBar, menubar pop-up), and one structural Parent/Child mismatch. Any other finding fails CI.
 
+### Exception to the product table: verification tooling
+
+The product table stays as written. Two surfaces exist outside it as *verification* tooling, not features, and grow only with restraint (issue #204):
+
+- `banal` CLI (`Sources/BANALCLI`): read-mostly — `vault`, `notes`, `show`, `publish`, `doctor`. Same resolvers, store, and publish pipeline as the app. No editing, no folder ops, no watch/daemon.
+- AppleScript dictionary on the app: scripted read/write of notes through the same `NoteStore` verbs. No second database, no chat surface.
+
 ## Still open (Close)
 
 | Gap | Card | Notes |
