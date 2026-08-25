@@ -10,11 +10,10 @@ final class MenuFocusUITests: XCTestCase {
         continueAfterFailure = false
     }
 
-    override func tearDown() {
+    private func shutdownApp() {
         if let app, app.state == .runningForeground {
             app.terminate()
         }
-        super.tearDown()
     }
 
     /// #191 — File commands must act on the vault while the Settings
@@ -25,6 +24,7 @@ final class MenuFocusUITests: XCTestCase {
         app.launchEnvironment["BANAL_UI_TEST_VAULT"] = "fixture"
         app.launchArguments += ["-NSDisablePersistence", "YES"]
         app.launch()
+        defer { shutdownApp() }
 
         assertReady()
         XCTAssertTrue(fileMenuItem("Publish Site…").isEnabled, "Publish Site… disabled while the main window is key")
@@ -44,6 +44,7 @@ final class MenuFocusUITests: XCTestCase {
         app.launchEnvironment["BANAL_UI_TEST_VAULT"] = "fixture"
         app.launchArguments += ["-NSDisablePersistence", "YES"]
         app.launch()
+        defer { shutdownApp() }
 
         assertReady()
 
