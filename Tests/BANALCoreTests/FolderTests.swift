@@ -1,3 +1,4 @@
+import Combine
 import XCTest
 @testable import BANALCore
 
@@ -166,6 +167,116 @@ final class FolderStoreTests: XCTestCase {
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         store.applyExternalChange(at: url)
         XCTAssertTrue(store.folders.contains("FromFinder"))
+    }
+
+    /// Issue #186: a Finder rename must reconcile structure without
+    /// reloading the whole vault — the moved note is remapped, and
+    /// notes outside the moved folder are neither re-read nor re-indexed.
+    func testFinderRenameRefreshesWithoutReloadingUnrelatedNotes() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let spy = MockNoteSpotlightIndexer()
+        let store = NoteStore(configuration: vault, monitor: nil, spotlightIndexer: spy)
+        try store.open()
+
+        _ = try store.createFolder(name: "A")
+        _ = try store.createFolder(name: "B")
+        let alpha = try store.createNote(title: "Alpha", folder: "A")
+        let beta = try store.createNote(title: "Beta", folder: "B")
+        spy.indexedNotes = []
+        spy.deindexedIDs = []
+        spy.reindexedNotes = []
+
+        try FileManager.default.moveItem(
+            at: vault.rootURL.appendingPathComponent("A", isDirectory: true),
+            to: vault.rootURL.appendingPathComponent("C", isDirectory: true)
+        )
+        store.applyExternalChange(at: vault.rootURL.appendingPathComponent("C", isDirectory: true))
+
+        XCTAssertTrue(store.folders.contains("C"))
+        XCTAssertFalse(store.folders.contains("A"))
+        XCTAssertNil(store.note(id: alpha.id), "the old path must not survive the rename")
+        let moved = try XCTUnwrap(store.notes.first { $0.title == "Alpha" })
+        XCTAssertEqual(moved.id, "C/Alpha.md")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: moved.fileURL.path))
+
+        let kept = try XCTUnwrap(store.note(id: beta.id))
+        XCTAssertEqual(kept.folder, "B")
+        XCTAssertEqual(Set(spy.deindexedIDs), [alpha.id], "only the moved note is deindexed")
+        XCTAssertEqual(spy.indexedNotes.map(\.id), ["C/Alpha.md"], "only the moved note is indexed")
+        XCTAssertTrue(spy.reindexedNotes.isEmpty, "a rename must not trigger a full spotlight rebuild")
+    }
+
+    /// A directory event that changes nothing must not publish anything:
+    /// no note reload, no tree rebuild, no objectWillChange (#186).
+    func testNoopDirectoryEventDoesNotPublish() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+        _ = try store.createFolder(name: "Quiet")
+
+        var publishes = 0
+        let cancellable = store.objectWillChange.sink { _ in publishes += 1 }
+        defer { cancellable.cancel() }
+
+        store.applyExternalChange(at: vault.rootURL.appendingPathComponent("Quiet", isDirectory: true))
+        store.applyExternalChanges(at: [
+            vault.rootURL.appendingPathComponent("Quiet", isDirectory: true),
+            vault.rootURL.appendingPathComponent("Also-Quiet", isDirectory: true),
+        ])
+
+        XCTAssertEqual(publishes, 0, "an empty structural diff must stay silent")
+        XCTAssertEqual(store.notes.count, 1)
+    }
+
+    /// An external mkdir carrying notes adds exactly those notes.
+    func testExternalMkdirWithNoteAddsOnlyNewNote() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let spy = MockNoteSpotlightIndexer()
+        let store = NoteStore(configuration: vault, monitor: nil, spotlightIndexer: spy)
+        try store.open()
+        let existing = try store.createNote(title: "Root note")
+        spy.indexedNotes = []
+        spy.deindexedIDs = []
+        spy.reindexedNotes = []
+
+        let folder = vault.rootURL.appendingPathComponent("FromFinder", isDirectory: true)
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let now = Date()
+        let document = FrontmatterCodec.serialize(
+            frontmatter: Frontmatter(title: "Dropped", created: now, updated: now, tags: [], published: false),
+            body: "\nDragged in from Finder.\n"
+        )
+        try Data(document.utf8).write(to: folder.appendingPathComponent("Dropped.md"))
+        store.applyExternalChange(at: folder)
+
+        XCTAssertTrue(store.folders.contains("FromFinder"))
+        let dropped = try XCTUnwrap(store.note(id: "FromFinder/Dropped.md"))
+        XCTAssertEqual(dropped.title, "Dropped")
+        XCTAssertEqual(spy.indexedNotes.map(\.id), ["FromFinder/Dropped.md"])
+        XCTAssertTrue(spy.deindexedIDs.isEmpty)
+        XCTAssertTrue(spy.reindexedNotes.isEmpty)
+        XCTAssertEqual(store.note(id: existing.id)?.folder, nil, "existing notes keep their place")
+    }
+
+    /// A folder that comes back on disk clears its own vanished badge.
+    func testReappearingFolderClearsVanishedBadge() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+        _ = try store.createFolder(name: "X")
+
+        try FileManager.default.removeItem(at: vault.rootURL.appendingPathComponent("X", isDirectory: true))
+        _ = try store.createFolder(name: "Y") // triggers a rescan; X is gone
+        XCTAssertTrue(store.vanishedFolderPaths.contains("X"))
+
+        try FileManager.default.createDirectory(at: vault.rootURL.appendingPathComponent("X", isDirectory: true), withIntermediateDirectories: false)
+        store.applyExternalChange(at: vault.rootURL.appendingPathComponent("X", isDirectory: true))
+        XCTAssertFalse(store.vanishedFolderPaths.contains("X"), "a returned folder clears its badge")
+        XCTAssertTrue(store.folders.contains("X"))
     }
 
     func testPreferencesRoundTripAndNewNoteLocation() {
