@@ -1,6 +1,7 @@
 import AppKit
 import BANALCore
 import BANALPublisher
+import BANALAppModel
 import Foundation
 
 /// Coordinates native macOS printing operations for BANAL notes and recipes.
