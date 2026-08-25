@@ -190,7 +190,7 @@ final class PublisherTests: XCTestCase {
         )
         XCTAssertEqual(BorisAdapter.entityID(for: essay), "hello")
         XCTAssertEqual(BorisAdapter.entityID(for: essay, among: [essay, recipe]), "hello")
-        XCTAssertEqual(BorisAdapter.entityID(for: recipe, among: [essay, recipe]), "hello.cook")
+        XCTAssertEqual(BorisAdapter.entityID(for: recipe, among: [essay, recipe]), "hello-2")
         XCTAssertEqual(BorisAdapter.sourceRelativePath(for: essay, entityID: "hello"), "hello.md")
         XCTAssertEqual(BorisAdapter.sourceRelativePath(for: recipe, entityID: "hello"), "hello.cook")
     }

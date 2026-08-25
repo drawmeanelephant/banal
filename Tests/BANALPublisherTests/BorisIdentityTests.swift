@@ -26,6 +26,8 @@ final class BorisIdentityTests: XCTestCase {
         XCTAssertTrue(BorisIdentity.isValid("hello"))
         XCTAssertTrue(BorisIdentity.isValid("Recipes/Tom Kha".replacingOccurrences(of: " ", with: "-")))
         XCTAssertTrue(BorisIdentity.isValid("café-viennois"))
+        XCTAssertTrue(BorisIdentity.isValid(String(repeating: "a", count: 255)))
+        XCTAssertTrue(BorisIdentity.isValid(String(repeating: "€", count: 85))) // 85 × 3 bytes = 255
         XCTAssertFalse(BorisIdentity.isValid(""))
         XCTAssertFalse(BorisIdentity.isValid("Tom Kha"))
         XCTAssertFalse(BorisIdentity.isValid("tab\tid"))
@@ -33,6 +35,13 @@ final class BorisIdentityTests: XCTestCase {
         XCTAssertFalse(BorisIdentity.isValid("c#-notes"))
         XCTAssertFalse(BorisIdentity.isValid("what?"))
         XCTAssertFalse(BorisIdentity.isValid("100%"))
+        XCTAssertFalse(BorisIdentity.isValid("back\\slash"))
+        XCTAssertFalse(BorisIdentity.isValid(String(repeating: "x", count: 256)))
+        XCTAssertFalse(BorisIdentity.isValid(String(repeating: "€", count: 86))) // 258 bytes
+        for segment in [".", "..", "", "a//b", "a/./b", "a/../b"] {
+            let id = segment.isEmpty ? "/" : (segment.contains("/") ? segment : "a/\(segment)")
+            XCTAssertFalse(BorisIdentity.isValid(id), "expected rejection: \(id)")
+        }
     }
 
     // MARK: - Sanitization
@@ -44,6 +53,7 @@ final class BorisIdentityTests: XCTestCase {
         XCTAssertEqual(BorisIdentity.sanitizedEntityID(from: "C# Notes"), "C-Notes")
         XCTAssertEqual(BorisIdentity.sanitizedEntityID(from: "What? Why?"), "What-Why")
         XCTAssertEqual(BorisIdentity.sanitizedEntityID(from: "50% Off"), "50-Off")
+        XCTAssertEqual(BorisIdentity.sanitizedEntityID(from: "back\\slash"), "back-slash")
     }
 
     func testSanitizeKeepsCaseAccentsFoldersAndDots() {
@@ -81,11 +91,19 @@ final class BorisIdentityTests: XCTestCase {
         for entity in assigned.values {
             XCTAssertTrue(BorisIdentity.isValid(entity), entity)
         }
-        // Markdown claims the bare stem; a second claimant takes the filename form.
+        // Markdown claims the bare stem; any other claimant takes Finder-style
+        // numbering — ids never carry file extensions.
         XCTAssertEqual(assigned["A B.md"], "A-B")
-        XCTAssertEqual(assigned["A-B.md"], "A-B.md")
+        XCTAssertEqual(assigned["A-B.md"], "A-B-2")
         XCTAssertEqual(assigned["Hello World.cook"], "Hello-World")
         XCTAssertEqual(assigned["Essays/My Note.md"], "Essays/My-Note")
+
+        // Staged paths therefore never double up extensions.
+        let cook = notes.first { $0.id == "Hello World.cook" }!
+        XCTAssertEqual(
+            BorisAdapter.sourceRelativePath(for: cook, entityID: assigned[cook.id]!),
+            "Hello-World.cook"
+        )
     }
 
     func testAssignmentIsOrderIndependent() {
@@ -98,7 +116,7 @@ final class BorisIdentityTests: XCTestCase {
         let essay = note(id: "hello.md", title: "Hello")
         let recipe = note(id: "hello.cook", title: "Hello")
         XCTAssertEqual(BorisAdapter.entityIDs(for: [essay, recipe])["hello.md"], "hello")
-        XCTAssertEqual(BorisAdapter.entityIDs(for: [essay, recipe])["hello.cook"], "hello.cook")
+        XCTAssertEqual(BorisAdapter.entityIDs(for: [essay, recipe])["hello.cook"], "hello-2")
     }
 
     func testNumberingBreaksResidualTies() {
@@ -113,6 +131,9 @@ final class BorisIdentityTests: XCTestCase {
         for entity in assigned.values {
             XCTAssertTrue(BorisIdentity.isValid(entity), entity)
         }
+        XCTAssertTrue(assigned.values.contains("Q"), "\(assigned)")
+        XCTAssertTrue(assigned.values.contains("Q-2"), "\(assigned)")
+        XCTAssertTrue(assigned.values.contains("Q-3"), "\(assigned)")
     }
 
     // MARK: - Staging end to end (builtin compiler)
