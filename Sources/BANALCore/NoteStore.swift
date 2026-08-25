@@ -567,8 +567,13 @@ public final class NoteStore: ObservableObject {
         if !fileManager.fileExists(atPath: url.path) {
             let id = NoteIdentity.id(for: url, vaultURL: configuration.rootURL)
             ingredientCache.removeValue(forKey: id)
-            notes.removeAll { $0.id == id || $0.fileURL.standardizedFileURL == url }
-            deindexSpotlight(id)
+            // Only republish when something actually went away — a stale
+            // echo (our own rename's delete event, already applied) must
+            // not fire the list.
+            if notes.contains(where: { $0.id == id || $0.fileURL.standardizedFileURL == url }) {
+                notes.removeAll { $0.id == id || $0.fileURL.standardizedFileURL == url }
+                deindexSpotlight(id)
+            }
             return
         }
         do {
