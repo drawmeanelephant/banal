@@ -189,10 +189,57 @@ final class PublisherTests: XCTestCase {
             modifiedAt: now
         )
         XCTAssertEqual(BorisAdapter.entityID(for: essay), "hello")
-        XCTAssertEqual(BorisAdapter.entityID(for: essay, among: [essay, recipe]), "hello.md")
-        XCTAssertEqual(BorisAdapter.entityID(for: recipe, among: [essay, recipe]), "hello.cook")
+        // Space-free slugs keep the base id; the collision numbers
+        // deterministically in published order (#202).
+        XCTAssertEqual(BorisAdapter.entityID(for: essay, among: [essay, recipe]), "hello")
+        XCTAssertEqual(BorisAdapter.entityID(for: recipe, among: [essay, recipe]), "hello-2")
         XCTAssertEqual(BorisAdapter.sourceRelativePath(for: essay, entityID: "hello"), "hello.md")
         XCTAssertEqual(BorisAdapter.sourceRelativePath(for: recipe, entityID: "hello"), "hello.cook")
+    }
+
+    func testPlainNamesSlugToBorisConformingIDs() {
+        let now = Date()
+        func note(_ id: String, updated: Date = now) -> Note {
+            Note(id: id, fileURL: URL(fileURLWithPath: "/tmp/\(id)"),
+                 title: id, body: "Body.", created: now, updated: updated,
+                 published: true, modifiedAt: now)
+        }
+        // Spaces collapse to a single dash; case and accents preserved (#202).
+        XCTAssertEqual(BorisAdapter.entityID(for: note("Published Note.md")), "Published-Note")
+        XCTAssertEqual(BorisAdapter.entityID(for: note("Café Notes.md")), "Café-Notes")
+        XCTAssertEqual(
+            BorisAdapter.sourceRelativePath(for: note("Published Note.md"), entityID: "Published-Note"),
+            "Published-Note.md")
+        XCTAssertEqual(
+            BorisAdapter.sourceRelativePath(for: note("Sunday Sauce.cook"), entityID: "Sunday-Sauce"),
+            "Sunday-Sauce.cook")
+        // URL-significant characters conform too: runs collapse, trailing dash drops.
+        XCTAssertEqual(BorisAdapter.entityID(for: note("What? Really #1 (100%).md")),
+                       "What-Really-1-(100-)")
+        // Folder paths keep their structure; each segment conforms.
+        XCTAssertEqual(BorisAdapter.entityID(for: note("Recipes/Sunday Sauce.md")),
+                       "Recipes/Sunday-Sauce")
+        // A stem that slugs away entirely falls back rather than going empty.
+        XCTAssertEqual(BorisAdapter.entityID(for: note("???.md")), "untitled")
+    }
+
+    func testPlainNameSlugCollisionsNumberInPublishedOrder() {
+        let now = Date()
+        let older = now.addingTimeInterval(-60)
+        func note(_ id: String, updated: Date) -> Note {
+            Note(id: id, fileURL: URL(fileURLWithPath: "/tmp/\(id)"),
+                 title: id, body: "Body.", created: older, updated: updated,
+                 published: true, modifiedAt: updated)
+        }
+        let spaced = note("My Note.md", updated: now)
+        let hyphened = note("My-Note.md", updated: older)
+        let published = BorisAdapter.publishedNotes(from: [hyphened, spaced])
+        XCTAssertEqual(BorisAdapter.entityID(for: spaced, among: published), "My-Note")
+        XCTAssertEqual(BorisAdapter.entityID(for: hyphened, among: published), "My-Note-2")
+        // A note asked about outside the published list still disambiguates
+        // (double space slugs to the same id as the hyphen variant).
+        let outsider = note("My  Note.md", updated: older)
+        XCTAssertEqual(BorisAdapter.entityID(for: outsider, among: published), "My-Note-3")
     }
 
     func testCookStagesAsCooklangNotYAML() {

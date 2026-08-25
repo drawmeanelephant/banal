@@ -14,19 +14,63 @@ public enum BorisAdapter {
     }
 
     public static func entityID(for note: Note, among published: [Note] = []) -> String {
-        let stem = NoteIdentity.droppingLanguageExtension(note.id)
-        let trimmed = stem.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        let base = trimmed.isEmpty ? "untitled" : trimmed
-        let clash = published.contains {
-            $0.id != note.id && NoteIdentity.droppingLanguageExtension($0.id) == stem
+        let slug = borisConformingID(fromStem: NoteIdentity.droppingLanguageExtension(note.id))
+        let orderedSlugs = published.map {
+            borisConformingID(fromStem: NoteIdentity.droppingLanguageExtension($0.id))
         }
-        return clash ? note.id : base
+        let collisions = orderedSlugs.filter { $0 == slug }.count
+        let listed = published.contains { $0.id == note.id }
+        guard collisions > 1 || (!listed && collisions > 0) else { return slug }
+        // Deterministic numbering: the n-th slug-colliding note in published
+        // order (newest first) keeps the base slug; later ones take -2, -3…
+        var rank = 1
+        for (other, otherSlug) in zip(published, orderedSlugs) where otherSlug == slug {
+            if other.id == note.id { break }
+            rank += 1
+        }
+        if rank == 1 { return slug }
+        var n = rank
+        let taken = Set(orderedSlugs)
+        while taken.contains("\(slug)-\(n)") { n += 1 }
+        return "\(slug)-\(n)"
+    }
+
+    /// Entity ids and staged source paths must satisfy Boris's identity
+    /// contract (`docs/contracts/identity-and-paths.md`, rule 2): no whitespace,
+    /// no URL-significant `#`, `?`, `%`, no `\`, no empty / `.` / `..`
+    /// segments. Note filenames themselves stay plain (plain names, #192) —
+    /// only the publish boundary conforms. Case and accents are preserved;
+    /// each run of forbidden characters collapses to one `-`.
+    static func borisConformingID(fromStem stem: String) -> String {
+        let segments = stem
+            .split(separator: "/")
+            .map(borisConformingSegment)
+            .filter { !$0.isEmpty }
+        let joined = segments.joined(separator: "/")
+        return joined.isEmpty ? "untitled" : joined
+    }
+
+    private static func borisConformingSegment(_ raw: some StringProtocol) -> String {
+        var out = ""
+        var pendingDash = false
+        for ch in raw {
+            if ch.isWhitespace || ch == "#" || ch == "?" || ch == "%" || ch == "\\" {
+                pendingDash = true
+            } else {
+                if pendingDash && !out.isEmpty { out.append("-") }
+                pendingDash = false
+                out.append(ch)
+            }
+        }
+        while out.hasSuffix("-") { out.removeLast() }
+        if out == "." || out == ".." { return "untitled" }
+        return out
     }
 
     public static func sourceRelativePath(for note: Note, entityID: String) -> String {
-        if NoteLanguage(pathExtension: (note.id as NSString).pathExtension) != nil {
-            return note.id
-        }
+        // The staged source filename must satisfy the same identity contract
+        // the scanner enforces, so stage under the conforming id — plain note
+        // filenames (spaces and all) never reach Boris's content root.
         return "\(entityID).\(note.language.pathExtension)"
     }
 
