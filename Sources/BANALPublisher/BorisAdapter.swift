@@ -22,9 +22,10 @@ public enum BorisAdapter {
 
     /// One entity id per note, unique across the set and valid under the Boris
     /// identity contract (#202). Ids are the sanitized plain names — local
-    /// filenames stay untouched. Markdown notes claim the bare stem; other
-    /// languages disambiguate with their full filename form; any remaining tie
-    /// gets Finder-style numbering. Deterministic regardless of input order.
+    /// filenames stay untouched, and ids never carry a file extension (so
+    /// staged paths and page URLs never double up). Markdown notes claim the
+    /// bare stem first; any collision gets Finder-style numbering (`-2`,
+    /// `-3`, …). Deterministic regardless of input order.
     public static func entityIDs(for notes: [Note]) -> [String: String] {
         let ordered = notes.sorted { lhs, rhs in
             let left = lhs.language == .markdown ? 0 : 1
@@ -34,9 +35,7 @@ public enum BorisAdapter {
         var assigned: [String: String] = [:]
         var taken = Set<String>()
         for note in ordered {
-            let stemForm = BorisIdentity.sanitizedEntityID(from: NoteIdentity.droppingLanguageExtension(note.id))
-            let fullForm = BorisIdentity.sanitizedEntityID(from: note.id)
-            var candidate = taken.contains(stemForm) ? fullForm : stemForm
+            var candidate = BorisIdentity.sanitizedEntityID(from: NoteIdentity.droppingLanguageExtension(note.id))
             if candidate.isEmpty {
                 candidate = "untitled"
             }
@@ -56,10 +55,7 @@ public enum BorisAdapter {
     /// Where a page's source lands inside the staging tree. Derived from the
     /// entity id (Boris-shaped, no whitespace) rather than the local filename.
     public static func sourceRelativePath(for note: Note, entityID: String) -> String {
-        if NoteLanguage(pathExtension: (entityID as NSString).pathExtension) != nil {
-            return entityID
-        }
-        return "\(entityID).\(note.language.pathExtension)"
+        "\(entityID).\(note.language.pathExtension)"
     }
 
     public static func page(from note: Note, among published: [Note] = []) -> BorisPage {
