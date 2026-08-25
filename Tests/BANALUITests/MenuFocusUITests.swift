@@ -30,7 +30,6 @@ final class MenuFocusUITests: XCTestCase {
         XCTAssertTrue(fileMenuItem("Publish Site…").isEnabled, "Publish Site… disabled while the main window is key")
 
         openSettings()
-        XCTAssertEqual(app.windows.firstMatch.title, "Publish", "Settings window did not become key")
 
         XCTAssertTrue(fileMenuItem("Publish Site…").isEnabled, "#191 regression: Publish Site… goes dead while Settings is key")
         XCTAssertTrue(fileMenuItem("New Note").isEnabled, "#191 regression: New Note goes dead while Settings is key")
@@ -61,9 +60,17 @@ final class MenuFocusUITests: XCTestCase {
         app.menuBars.menuItems[title]
     }
 
+    /// ⌘, opens Settings and this waits until it is actually up. Which
+    /// pane the window shows is machine state — SwiftUI persists the
+    /// last-selected tab (`com_apple_SwiftUI_Settings_selectedTabIndex`)
+    /// and `-NSDisablePersistence` does not clear it — so tests must
+    /// never assert on the pane title.
     private func openSettings() {
         app.typeKey(",", modifierFlags: .command)
-        usleep(800_000)
+        let settings = app.descendants(matching: .any).matching(
+            identifier: "settings-root"
+        ).firstMatch
+        XCTAssertTrue(settings.waitForExistence(timeout: 8), "Settings window did not open")
     }
 
     private func assertReady() {

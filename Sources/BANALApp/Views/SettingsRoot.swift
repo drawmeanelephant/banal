@@ -20,6 +20,7 @@ struct SettingsRoot: View {
         }
         .frame(width: 520, height: 720)
         .accessibilityLabel("Settings")
+        .accessibilityIdentifier("settings-root")
     }
 }
 
