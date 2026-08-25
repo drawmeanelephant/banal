@@ -57,7 +57,7 @@
 
 The product table stays as written. Two surfaces exist outside it as *verification* tooling, not features, and grow only with restraint (issue #204 thread):
 
-- `banal` CLI (lands with the agent-CLI PR): read-mostly — `vault`, `notes`, `show`, `publish`, `doctor`. Same resolvers, store, and publish pipeline as the app. No editing, no folder ops, no watch/daemon.
+- `banal` CLI (`Sources/BANALCLI`): read-mostly — `vault`, `notes`, `show`, `publish`, `doctor`. Same resolvers, store, and publish pipeline as the app. No editing, no folder ops, no watch/daemon.
 - AppleScript dictionary on the app (`Resources/BANAL.sdef` + `Sources/BANALScripting`): scripted list/read/create/update/publish through the same `NoteStore` verbs. Results are JSON text. No second database, no chat surface.
 
 ## Still open (Close)

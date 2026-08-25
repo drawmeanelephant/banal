@@ -67,6 +67,18 @@ Mark notes **Published**, then File → Publish Site….
 - If `boris` is available it compiles HTML. Otherwise the builtin compiler writes HTML + `feed.xml`.
 - A dry-run `wrangler.toml` is written next to the artifact. Cloudflare credentials are never required for local notes.
 
+## Command line
+
+```bash
+swift run banal vault [--json]        # resolved notes folder + count
+swift run banal notes [--json]        # every note: id, title, language, published, tags
+swift run banal show <id> [--json]    # one note file to stdout (--json parses it)
+swift run banal publish               # the same pipeline as ⇧⌘P, no pixels
+swift run banal doctor                # vault, Boris/Oliver presence, identity contract
+```
+
+`banal` is a read-mostly window for scripts and agents over the same code paths as the app (`--vault DIR` to point at any folder). It never creates or edits notes — the editor is the app. `banal-cli` remains the GUI launcher.
+
 ## Scripting
 
 BANAL has an AppleScript dictionary (`Resources/BANAL.sdef`). Writes go through the same store the app uses and land as ordinary files on disk:

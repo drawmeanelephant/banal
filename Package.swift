@@ -13,6 +13,7 @@ let package = Package(
         .library(name: "BANALAppModel", targets: ["BANALAppModel"]),
         .library(name: "BANALScripting", targets: ["BANALScripting"]),
         .executable(name: "banal-cli", targets: ["BANALApp"]),
+        .executable(name: "banal", targets: ["BANALCLI"]),
     ],
     targets: [
         .target(
@@ -39,6 +40,11 @@ let package = Package(
             dependencies: ["BANALCore", "BANALPublisher", "BANALAppModel", "BANALScripting"],
             path: "Sources/BANALApp"
         ),
+        .executableTarget(
+            name: "BANALCLI",
+            dependencies: ["BANALCore", "BANALPublisher"],
+            path: "Sources/BANALCLI"
+        ),
         .testTarget(
             name: "BANALCoreTests",
             dependencies: ["BANALCore"],
@@ -48,6 +54,11 @@ let package = Package(
             name: "BANALPublisherTests",
             dependencies: ["BANALCore", "BANALPublisher"],
             path: "Tests/BANALPublisherTests"
+        ),
+        .testTarget(
+            name: "BANALCLITests",
+            dependencies: ["BANALCore", "BANALCLI"],
+            path: "Tests/BANALCLITests"
         ),
         .testTarget(
             name: "BANALAppModelTests",

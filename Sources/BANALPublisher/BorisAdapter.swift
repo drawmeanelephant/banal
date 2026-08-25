@@ -13,21 +13,49 @@ public enum BorisAdapter {
         notes.filter(\.published).sorted { $0.updated > $1.updated }
     }
 
+    /// The Boris entity id for one published note. Delegates to
+    /// `entityIDs(for:)` so every caller agrees on the whole assignment.
     public static func entityID(for note: Note, among published: [Note] = []) -> String {
-        let stem = NoteIdentity.droppingLanguageExtension(note.id)
-        let trimmed = stem.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
-        let base = trimmed.isEmpty ? "untitled" : trimmed
-        let clash = published.contains {
-            $0.id != note.id && NoteIdentity.droppingLanguageExtension($0.id) == stem
-        }
-        return clash ? note.id : base
+        let group = published.contains(where: { $0.id == note.id }) ? published : published + [note]
+        return entityIDs(for: group)[note.id] ?? "untitled"
     }
 
-    public static func sourceRelativePath(for note: Note, entityID: String) -> String {
-        if NoteLanguage(pathExtension: (note.id as NSString).pathExtension) != nil {
-            return note.id
+    /// One entity id per note, unique across the set and valid under the Boris
+    /// identity contract (#202). Ids are the sanitized plain names — local
+    /// filenames stay untouched, and ids never carry a file extension (so
+    /// staged paths and page URLs never double up). Markdown notes claim the
+    /// bare stem first; any collision gets Finder-style numbering (`-2`,
+    /// `-3`, …). Deterministic regardless of input order.
+    public static func entityIDs(for notes: [Note]) -> [String: String] {
+        let ordered = notes.sorted { lhs, rhs in
+            let left = lhs.language == .markdown ? 0 : 1
+            let right = rhs.language == .markdown ? 0 : 1
+            return left != right ? left < right : lhs.id < rhs.id
         }
-        return "\(entityID).\(note.language.pathExtension)"
+        var assigned: [String: String] = [:]
+        var taken = Set<String>()
+        for note in ordered {
+            var candidate = BorisIdentity.sanitizedEntityID(from: NoteIdentity.droppingLanguageExtension(note.id))
+            if candidate.isEmpty {
+                candidate = "untitled"
+            }
+            if taken.contains(candidate) {
+                var number = 2
+                while taken.contains("\(candidate)-\(number)") {
+                    number += 1
+                }
+                candidate = "\(candidate)-\(number)"
+            }
+            assigned[note.id] = candidate
+            taken.insert(candidate)
+        }
+        return assigned
+    }
+
+    /// Where a page's source lands inside the staging tree. Derived from the
+    /// entity id (Boris-shaped, no whitespace) rather than the local filename.
+    public static func sourceRelativePath(for note: Note, entityID: String) -> String {
+        "\(entityID).\(note.language.pathExtension)"
     }
 
     public static func page(from note: Note, among published: [Note] = []) -> BorisPage {
