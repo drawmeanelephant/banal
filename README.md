@@ -67,6 +67,23 @@ Mark notes **Published**, then File → Publish Site….
 - If `boris` is available it compiles HTML. Otherwise the builtin compiler writes HTML + `feed.xml`.
 - A dry-run `wrangler.toml` is written next to the artifact. Cloudflare credentials are never required for local notes.
 
+## Scripting
+
+BANAL has an AppleScript dictionary (`Resources/BANAL.sdef`). Writes go through the same store the app uses and land as ordinary files on disk:
+
+```applescript
+tell application "BANAL"
+  create note given title:"Risotto Bianco", body:"Toast the rice.", folder:"Recipes", published:true
+  list notes                                   -- JSON array of records
+  read note "Recipes/Risotto Bianco.md"        -- JSON record incl. body
+  update note "Risotto Bianco.md" given body:"Stir, add stock."
+  set published "Risotto Bianco.md" to true
+  publish site                                 -- "Published 1 note with builtin."
+end tell
+```
+
+Record-shaped answers come back as JSON text. There is no second database behind the dictionary — the folder is still the truth.
+
 ## Docs
 
 | File | Role |

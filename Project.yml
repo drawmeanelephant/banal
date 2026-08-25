@@ -33,8 +33,11 @@ targets:
         product: BANALPublisher
       - package: BanalPackage
         product: BANALAppModel
+      - package: BanalPackage
+        product: BANALScripting
     resources:
       - path: Resources/BANAL.help
+      - path: Resources/BANAL.sdef
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.drawmeanelephant.banal
@@ -71,6 +74,14 @@ targets:
             exit 0
           fi
           hiutil -I corespotlight -Caf "${help_book_locale}/BANAL.cshelpindex" -g -s en -l en_US "${help_book_locale}"
+      - name: Enable AppleScript dictionary
+        basedOnDependencyAnalysis: false
+        script: |
+          set -euo pipefail
+          INFOPLIST_PATH_FULL="${TARGET_BUILD_DIR}/${INFOPLIST_PATH}"
+          /usr/libexec/PlistBuddy -c "Add :NSAppleScriptEnabled bool true" "$INFOPLIST_PATH_FULL" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Add :OSAScriptingDefinition string BANAL.sdef" "$INFOPLIST_PATH_FULL" 2>/dev/null || true
+          /usr/libexec/PlistBuddy -c "Print :OSAScriptingDefinition" "$INFOPLIST_PATH_FULL" >/dev/null
   BANALCoreTests:
     type: bundle.unit-test
     platform: macOS

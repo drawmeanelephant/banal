@@ -39,6 +39,7 @@ app:
 	cp .build/release/banal-cli "$(APP)/Contents/MacOS/BANAL"
 	chmod +x "$(APP)/Contents/MacOS/BANAL"
 	cp Resources/AppIcon.icns "$(APP)/Contents/Resources/AppIcon.icns"
+	cp Resources/BANAL.sdef "$(APP)/Contents/Resources/BANAL.sdef"
 	cp -R "$(HELP_BOOK)" "$(APP)/Contents/Resources/"
 	cp Supporting/Info.plist "$(APP)/Contents/Info.plist"
 	/usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $(VERSION)" "$(APP)/Contents/Info.plist"
