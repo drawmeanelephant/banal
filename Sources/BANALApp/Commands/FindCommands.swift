@@ -3,10 +3,11 @@ import SwiftUI
 
 public struct FindCommands: Commands {
     @FocusedObject private var focusedModel: AppModel?
+    @ObservedObject private var trackedModels = WindowModelTracker.shared
     private var fallbackModel: AppModel
 
     private var model: AppModel {
-        focusedModel ?? fallbackModel
+        focusedModel ?? trackedModels.latest ?? fallbackModel
     }
 
     public init(model: AppModel) {
