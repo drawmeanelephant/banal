@@ -89,7 +89,7 @@ func printJSON(_ object: Any) {
 
 extension BanalCLI {
     struct Vault: ParsableCommand {
-        static let configuration = CommandConfiguration(abstract: "Resolved notes folder and note count.")
+        static let configuration = CommandConfiguration(abstract: "Resolved notes folder and note count. Omitting --vault follows the app's own resolution (its bookmark); an empty --vault folder is seeded on first open, like the app.")
 
         @OptionGroup var options: VaultOptions
         @Flag(name: .long, help: "Machine-readable output.") var json = false
@@ -168,7 +168,7 @@ extension BanalCLI {
 
     /// One line per subsystem; first failing contract check wins.
     struct Doctor: ParsableCommand {
-        static let configuration = CommandConfiguration(abstract: "Vault + toolchain + publish-contract health.")
+        static let configuration = CommandConfiguration(abstract: "Vault + toolchain + publish-contract health. Reads the app's own vault when --vault is omitted; a --vault folder that is empty gets seeded like a first app run (Welcome.md).")
 
         @OptionGroup var options: VaultOptions
         @Flag(name: .long, help: "Machine-readable output.") var json = false
@@ -185,14 +185,16 @@ extension BanalCLI {
 
             func toolRow(_ name: String, configured: String?, locator: (String?) -> URL?) {
                 if let url = locator(configured) {
-                    rows.append(["check": name, "value": url.path, "ok": true,
+                    rows.append(["check": name, "value": url.path, "ok": true, "state": "ok",
                                  "detail": "discovered"])
                 } else if let configured, !configured.isEmpty {
-                    rows.append(["check": name, "value": configured, "ok": false,
+                    rows.append(["check": name, "value": configured, "ok": false, "state": "fail",
                                  "detail": "configured but not executable"])
                 } else {
-                    rows.append(["check": name, "value": "", "ok": false,
-                                 "detail": "not found (builtin compiler will be used for \(name))"])
+                    // Absent + unconfigured is a healthy config: the builtin
+                    // compiler covers it. Warn, don't fail.
+                    rows.append(["check": name, "value": "", "ok": true, "state": "warn",
+                                 "detail": "not found — builtin compiler will be used"])
                 }
             }
             toolRow("boris", configured: store.configuration.borisBinaryPath,
@@ -217,20 +219,24 @@ extension BanalCLI {
             }
             rows.append(contract)
 
+            let failed = rows.contains { !($0["ok"] as? Bool ?? true) }
+            let warned = rows.contains { ($0["state"] as? String) == "warn" }
             if jsonFlag {
                 printJSON(rows)
             } else {
                 for row in rows {
-                    let mark = (row["ok"] as? Bool ?? false) ? "ok  " : "FAIL"
+                    let ok = row["ok"] as? Bool ?? false
+                    let state = row["state"] as? String
+                    let mark = !ok ? "FAIL" : (state == "warn" ? "warn" : "ok  ")
                     let value = row["value"] as? String ?? ""
                     let truncated = value.count > 36 ? "…" + value.suffix(35) : value
                     let padded = truncated.padding(toLength: 36, withPad: " ", startingAt: 0)
                     let name = (row["check"] as? String ?? "?").padding(toLength: 9, withPad: " ", startingAt: 0)
                     print("\(name) \(padded) \(mark)  \(row["detail"] ?? "")")
                 }
-                let failed = rows.contains { !($0["ok"] as? Bool ?? true) }
-                throw CleanExit.message(failed ? "" : "")
             }
+            if failed { throw ExitCode.failure }
+            if warned { throw ExitCode(64) }
         
         }
     }
