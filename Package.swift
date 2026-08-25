@@ -12,6 +12,10 @@ let package = Package(
         .library(name: "BANALPublisher", targets: ["BANALPublisher"]),
         .library(name: "BANALAppModel", targets: ["BANALAppModel"]),
         .executable(name: "banal-cli", targets: ["BANALApp"]),
+        .executable(name: "banal", targets: ["BANALCLI"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.5.0"),
     ],
     targets: [
         .target(
@@ -33,6 +37,15 @@ let package = Package(
             dependencies: ["BANALCore", "BANALPublisher", "BANALAppModel"],
             path: "Sources/BANALApp"
         ),
+        .executableTarget(
+            name: "BANALCLI",
+            dependencies: [
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                "BANALCore",
+                "BANALPublisher",
+            ],
+            path: "Sources/BANALCLI"
+        ),
         .testTarget(
             name: "BANALCoreTests",
             dependencies: ["BANALCore"],
@@ -42,6 +55,11 @@ let package = Package(
             name: "BANALPublisherTests",
             dependencies: ["BANALCore", "BANALPublisher"],
             path: "Tests/BANALPublisherTests"
+        ),
+        .testTarget(
+            name: "BANALCLITests",
+            dependencies: ["BANALCLI"],
+            path: "Tests/BANALCLITests"
         ),
         .testTarget(
             name: "BANALAppModelTests",
