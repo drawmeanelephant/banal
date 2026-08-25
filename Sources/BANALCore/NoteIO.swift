@@ -22,7 +22,7 @@ public enum NoteIO {
         } else {
             parsed = CookMetadata.parse(source)
         }
-        let values = try url.resourceValues(forKeys: [.contentModificationDateKey, .creationDateKey])
+        let values = try url.resourceValues(forKeys: [.contentModificationDateKey, .creationDateKey, .fileSizeKey])
         let modified = values.contentModificationDate ?? Date()
         let created = parsed.frontmatter.created ?? values.creationDate ?? modified
         let updated = parsed.frontmatter.updated ?? modified
@@ -42,6 +42,7 @@ public enum NoteIO {
             tags: parsed.frontmatter.tags,
             published: parsed.frontmatter.published,
             modifiedAt: modified,
+            fileSize: values.fileSize,
             extras: parsed.frontmatter.extras,
             contentFingerprint: ContentFingerprint.sha256(of: data)
         )
@@ -83,6 +84,41 @@ public enum NoteIO {
         var saved = note
         saved.contentFingerprint = ContentFingerprint.sha256(of: data)
         saved.modifiedAt = values.contentModificationDate ?? Date()
+        saved.fileSize = data.count
         return saved
+    }
+}
+
+/// Cheap on-disk identity of a note file: mtime + size (#186).
+/// `NoteStore.reloadAll` stats each URL before reading and reuses the
+/// in-memory note when the signature matches, so unchanged files are
+/// never re-read and their list rows keep their identity.
+public struct NoteFileStat: Equatable, Sendable {
+    public let modifiedAt: Date
+    public let fileSize: Int
+
+    public init(modifiedAt: Date, fileSize: Int) {
+        self.modifiedAt = modifiedAt
+        self.fileSize = fileSize
+    }
+
+    /// `nil` when the file cannot be stat'd (it vanished mid-scan); the
+    /// caller falls back to reading.
+    public init?(url: URL, fileManager: FileManager = .default) {
+        guard
+            let values = try? url.resourceValues(forKeys: [.contentModificationDateKey, .fileSizeKey]),
+            let modifiedAt = values.contentModificationDate,
+            let fileSize = values.fileSize
+        else { return nil }
+        self.init(modifiedAt: modifiedAt, fileSize: fileSize)
+    }
+
+    /// True when `note` was loaded from a file with exactly this stat —
+    /// the bytes cannot have changed without moving the mtime or the
+    /// size. A note with no recorded size (never loaded or written) is
+    /// never a match.
+    public func matches(_ note: Note) -> Bool {
+        guard let size = note.fileSize else { return false }
+        return size == fileSize && modifiedAt == note.modifiedAt
     }
 }

@@ -19,6 +19,10 @@ public enum NoteStoreError: Error, Equatable, Sendable {
     case unsupportedFileType(String)
 }
 
+/// Loads a note file from disk. Injectable so tests can count re-reads (#186);
+/// mirrors `NoteIO.load(url:vaultURL:fileManager:)`.
+public typealias NoteLoader = (URL, URL, FileManager) throws -> Note
+
 /// Loads, indexes, debounced-writes, and watches a vault of notes.
 @MainActor
 public final class NoteStore: ObservableObject {
@@ -41,6 +45,7 @@ public final class NoteStore: ObservableObject {
 
     private let fileManager: FileManager
     private let monitor: DirectoryMonitor?
+    private let loadNote: NoteLoader
     private var pendingWrites: [String: Note] = [:]
     private var writeTasks: [String: Task<Void, Never>] = [:]
     private var recentlyWritten: [String: (fingerprint: String, until: Date)] = [:]
@@ -54,13 +59,15 @@ public final class NoteStore: ObservableObject {
         monitor: DirectoryMonitor? = DirectoryMonitor(),
         writeDebounceNanoseconds: UInt64 = 400_000_000,
         fileManager: FileManager = .default,
-        spotlightIndexer: (any NoteSpotlightIndexing)? = nil
+        spotlightIndexer: (any NoteSpotlightIndexing)? = nil,
+        noteLoader: @escaping NoteLoader = NoteIO.load(url:vaultURL:fileManager:)
     ) {
         self.configuration = configuration
         self.monitor = monitor
         self.writeDebounceNanoseconds = writeDebounceNanoseconds
         self.fileManager = fileManager
         self.spotlightIndexer = spotlightIndexer
+        self.loadNote = noteLoader
     }
 
     deinit {
@@ -163,16 +170,40 @@ public final class NoteStore: ObservableObject {
         clearAllVanishedFolders()
         defer { isReloading = false }
         let urls = collectNoteURLs()
+        // #186: stat each file and reuse the in-memory note when mtime +
+        // size are unchanged, so a Finder folder rename does not re-read
+        // every note in the vault. Notes under a renamed folder get new
+        // ids and are read once; untouched notes keep their objects.
+        var cachedByID: [String: Note] = [:]
+        cachedByID.reserveCapacity(notes.count)
+        for note in notes where cachedByID[note.id] == nil {
+            cachedByID[note.id] = note
+        }
         var loaded: [Note] = []
         loaded.reserveCapacity(urls.count)
         for url in urls {
+            let id = NoteIdentity.id(for: url, vaultURL: configuration.rootURL)
+            if let cached = cachedByID[id],
+               let stat = NoteFileStat(url: url, fileManager: fileManager),
+               stat.matches(cached) {
+                loaded.append(cached)
+                continue
+            }
             do {
-                loaded.append(try NoteIO.load(url: url, vaultURL: configuration.rootURL, fileManager: fileManager))
+                loaded.append(try loadNote(url, configuration.rootURL, fileManager))
             } catch {
                 lastError = error.localizedDescription
             }
         }
-        notes = loaded.sorted { $0.updated > $1.updated }
+        // updated desc, then title: a deterministic total order is what
+        // makes the `sorted != notes` check below sound — with an unstable
+        // tie order, equal-`updated` notes would shuffle on every rescan
+        // and republish anyway.
+        let sorted = loaded.sorted(by: Self.updatedDescendingThenTitle)
+        // An unchanged rescan must not republish the list at all.
+        if sorted != notes {
+            notes = sorted
+        }
         // J-14a/d: directory-level rescan must not keep stale disposable caches for vanished ids.
         let currentIDs = Set(notes.map(\.id))
         ingredientCache = ingredientCache.filter { currentIDs.contains($0.key) }
@@ -541,7 +572,7 @@ public final class NoteStore: ObservableObject {
             return
         }
         do {
-            let loaded = try NoteIO.load(url: url, vaultURL: configuration.rootURL, fileManager: fileManager)
+            let loaded = try loadNote(url, configuration.rootURL, fileManager)
             if shouldIgnoreExternalWrite(loaded) {
                 return
             }
@@ -721,9 +752,11 @@ public final class NoteStore: ObservableObject {
     }
 
     /// One structural reconciliation against disk: diff note paths and
-    /// folder paths, then touch only what actually changed. Kept notes
-    /// are neither re-read nor replaced — a Finder rename redraws the
-    /// moved rows instead of blanking and repopulating the list (#186).
+    /// folder paths, then touch only what actually changed. Kept notes are
+    /// neither re-read nor replaced — a Finder rename redraws the moved
+    /// rows instead of blanking and repopulating the list (#186) — but a
+    /// kept file whose mtime + size changed is re-read once, so external
+    /// edits that surface only as a directory event still land.
     private func reconcileStructure() {
         let diskFolders = collectFolderPaths()
         var diskByID: [String: URL] = [:]
@@ -731,14 +764,28 @@ public final class NoteStore: ObservableObject {
         for url in collectNoteURLs() {
             diskByID[NoteIdentity.id(for: url, vaultURL: configuration.rootURL)] = url
         }
-        let memoryIDs = Set(notes.map(\.id))
-        let gone = memoryIDs.subtracting(diskByID.keys)
+        let memoryByID = Dictionary(notes.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        let gone = Set(memoryByID.keys).subtracting(diskByID.keys)
 
         var loaded: [Note] = []
-        loaded.reserveCapacity(diskByID.count - memoryIDs.count)
-        for (id, url) in diskByID where !memoryIDs.contains(id) {
+        loaded.reserveCapacity(diskByID.count - memoryByID.count)
+        var changed: [Note] = []
+        for (id, url) in diskByID {
+            if let current = memoryByID[id] {
+                // #186: stat before load — same mtime + size means the
+                // note on disk is the one we already hold in memory.
+                if let stat = NoteFileStat(url: url, fileManager: fileManager), stat.matches(current) {
+                    continue
+                }
+                do {
+                    changed.append(try loadNote(url, configuration.rootURL, fileManager))
+                } catch {
+                    lastError = error.localizedDescription
+                }
+                continue
+            }
             do {
-                loaded.append(try NoteIO.load(url: url, vaultURL: configuration.rootURL, fileManager: fileManager))
+                loaded.append(try loadNote(url, configuration.rootURL, fileManager))
             } catch {
                 lastError = error.localizedDescription
             }
@@ -746,20 +793,32 @@ public final class NoteStore: ObservableObject {
 
         refreshFolders(precomputedDiskPaths: diskFolders)
 
-        guard !gone.isEmpty || !loaded.isEmpty else { return }
+        guard !gone.isEmpty || !loaded.isEmpty || !changed.isEmpty else { return }
         if !gone.isEmpty {
             notes.removeAll { gone.contains($0.id) }
             ingredientCache = ingredientCache.filter { !gone.contains($0.key) }
             recentlyWritten = recentlyWritten.filter { !gone.contains($0.key) }
             deindexSpotlight(ids: Array(gone))
         }
+        for note in changed {
+            ingredientCache.removeValue(forKey: note.id)
+            upsert(note)
+            donateSpotlight(note)
+        }
         for note in loaded {
             notes.append(note)
             donateSpotlight(note)
         }
-        if !loaded.isEmpty {
-            notes.sort { $0.updated > $1.updated }
+        if !loaded.isEmpty || !changed.isEmpty {
+            notes.sort(by: NoteStore.updatedDescendingThenTitle)
         }
+    }
+
+    private static func updatedDescendingThenTitle(_ lhs: Note, _ rhs: Note) -> Bool {
+        if lhs.updated == rhs.updated {
+            return lhs.displayTitle.localizedStandardCompare(rhs.displayTitle) == .orderedAscending
+        }
+        return lhs.updated > rhs.updated
     }
 
     private func refreshFolders(precomputedDiskPaths: [String]? = nil) {
