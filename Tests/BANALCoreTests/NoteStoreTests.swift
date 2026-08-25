@@ -260,7 +260,8 @@ final class NoteStoreTests: XCTestCase {
         let second = try store.importFile(from: source)
 
         XCTAssertEqual(first.id, "draft.md")
-        XCTAssertEqual(second.id, "draft-2.md")
+        // K-1 plain names: collisions number Finder-style, not with dashes.
+        XCTAssertEqual(second.id, "draft 2.md")
         XCTAssertNotEqual(first.fileURL.path, second.fileURL.path)
         XCTAssertTrue(FileManager.default.fileExists(atPath: second.fileURL.path))
     }
@@ -321,5 +322,155 @@ final class NoteStoreTests: XCTestCase {
         let configuration = VaultConfiguration(rootURL: root)
         try VaultBootstrap.prepare(configuration)
         return configuration
+    }
+
+    // MARK: - Plain names (K-1, #192)
+
+    /// A new note is born as `<Title>.<ext>` — no date prefix, case and
+    /// accents preserved.
+    func testCreateUsesPlainNames() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let created = try store.createNote(title: "Risotto alla Milanese")
+        XCTAssertEqual(created.id, "Risotto alla Milanese.md")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: created.fileURL.path))
+    }
+
+    /// Collisions number up the way Finder does: `Risotto.md`,
+    /// `Risotto 2.md`, `Risotto 3.md`.
+    func testPlainNameCollisionsNumberFinderStyle() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        _ = try store.createNote(title: "Risotto")
+        let second = try store.createNote(title: "Risotto")
+        let third = try store.createNote(title: "Risotto")
+        XCTAssertEqual(second.id, "Risotto 2.md")
+        XCTAssertEqual(third.id, "Risotto 3.md")
+    }
+
+    /// Titles that cannot be a path component are made safe, not
+    /// mangled into slugs. An empty (or separator-only) title falls
+    /// back to `Untitled`.
+    func testUnsafeTitlesAreSanitizedNotSlugified() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let slashes = try store.createNote(title: "A/B: C")
+        XCTAssertEqual(slashes.id, "A-B- C.md")
+
+        let hidden = try store.createNote(title: ".hidden note")
+        XCTAssertEqual(hidden.id, "hidden note.md")
+
+        let untitled = try store.createNote(title: "   ")
+        XCTAssertEqual(untitled.id, "Untitled.md")
+    }
+
+    /// Plain names work through folders too.
+    func testCreateInFolderUsesPlainNameInsideFolder() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let created = try store.createNote(title: "Sunday Sauce", folder: "Recipes")
+        XCTAssertEqual(created.id, "Recipes/Sunday Sauce.md")
+    }
+
+    /// Retitling a plain-named file renames it on disk; id and file URL
+    /// move together and the content rides along byte-for-byte.
+    func testRenameFollowsTitleWhenFileMatchesTitle() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let created = try store.createNote(title: "Risotto", body: "\nArborio.\n")
+        var edited = created
+        edited.title = "Paella"
+        store.update(edited, debounce: false)
+
+        let renamed = try XCTUnwrap(
+            try store.renameNote(id: created.id, previousTitle: "Risotto", to: "Paella")
+        )
+        XCTAssertEqual(renamed.id, "Paella.md")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: created.fileURL.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: renamed.fileURL.path))
+
+        let reloaded = try NoteIO.load(url: renamed.fileURL, vaultURL: vault.rootURL)
+        XCTAssertEqual(reloaded.title, "Paella")
+        XCTAssertTrue(reloaded.body.contains("Arborio."))
+        XCTAssertNotNil(store.note(id: "Paella.md"))
+        XCTAssertNil(store.note(id: created.id))
+    }
+
+    /// Legacy date-stamped files never migrate behind the user's back:
+    /// their leaf does not match the title, so retitle leaves them be.
+    func testRenameSkipsLegacyDateStampedFiles() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let now = Date()
+        let document = FrontmatterCodec.serialize(
+            frontmatter: Frontmatter(title: "Risotto", created: now, updated: now, tags: [], published: false),
+            body: "\nOld habit.\n"
+        )
+        let url = vault.rootURL.appendingPathComponent("2026-08-25-risotto.md")
+        try Data(document.utf8).write(to: url)
+        store.applyExternalChange(at: url)
+
+        var edited = try XCTUnwrap(store.note(id: "2026-08-25-risotto.md"))
+        edited.title = "Paella"
+        store.update(edited, debounce: false)
+
+        let renamed = try store.renameNote(
+            id: "2026-08-25-risotto.md",
+            previousTitle: "Risotto",
+            to: "Paella"
+        )
+        XCTAssertNil(renamed, "a date-stamped file must not follow its title")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path))
+    }
+
+    /// A difference only in case, accents, or folded separators is not
+    /// worth a rename — no churn. Empty titles never rename either.
+    func testRenameIgnoresSanitizationOnlyDifferences() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        let created = try store.createNote(title: "Risotto")
+        XCTAssertNil(try store.renameNote(id: created.id, previousTitle: "Risotto", to: "RISOTTO"))
+        XCTAssertNil(try store.renameNote(id: created.id, previousTitle: "Risotto", to: "Risotto:"))
+        XCTAssertNil(try store.renameNote(id: created.id, previousTitle: "Risotto", to: ""))
+        XCTAssertNil(try store.renameNote(id: created.id, previousTitle: "", to: "Paella"))
+        XCTAssertEqual(store.note(id: created.id)?.id, "Risotto.md")
+    }
+
+    /// Renaming onto an existing name numbers up instead of clobbering.
+    func testRenameNumbersOnCollision() throws {
+        let vault = try makeVault()
+        defer { try? FileManager.default.removeItem(at: vault.rootURL) }
+        let store = NoteStore(configuration: vault, monitor: nil)
+        try store.open()
+
+        _ = try store.createNote(title: "Paella", body: "\nAlready here.\n")
+        let risotto = try store.createNote(title: "Risotto")
+
+        let renamed = try XCTUnwrap(
+            try store.renameNote(id: risotto.id, previousTitle: "Risotto", to: "Paella")
+        )
+        XCTAssertEqual(renamed.id, "Paella 2.md")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: renamed.fileURL.path))
     }
 }
