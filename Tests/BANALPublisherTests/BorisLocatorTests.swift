@@ -53,6 +53,20 @@ final class BorisLocatorTests: XCTestCase {
         )
         XCTAssertEqual(found?.standardizedFileURL, stub.standardizedFileURL)
     }
+    func testInstalledAppHelperProbesAreMachineGlobalNotBundled() throws {
+        // Installed-app probes are deliberately OUTSIDE executables(): they are
+        // machine-global (any installed BANAL.app), so default-injection tests
+        // must stay isolated from them. Shape: two fixed candidates, user-local
+        // first, never present in the bundle-local list.
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        let probes = BundledHelper.installedAppHelperURLs(named: "boris")
+        XCTAssertEqual(probes.count, 2)
+        XCTAssertTrue(probes[0].path.hasPrefix(home.appendingPathComponent("Applications").path + "/BANAL.app/Contents/Helpers/boris"))
+        XCTAssertTrue(probes[1].path.hasPrefix("/Applications/BANAL.app/Contents/Helpers/boris"))
+        let bundled = BundledHelper.executables(named: "boris")
+        XCTAssertTrue(bundled.allSatisfy { !probes.map(\.standardizedFileURL).contains($0.standardizedFileURL) })
+    }
+
 }
 
 private func isolatedRoot() -> URL {
@@ -63,4 +77,5 @@ private func makeStub(at url: URL) throws {
     try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
     try Data("#!/bin/sh\n".utf8).write(to: url, options: .atomic)
     try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
+
 }

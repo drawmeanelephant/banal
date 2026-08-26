@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- CLI doctor sees installed-app engines (issue #209 follow-up): on a machine with no boris/oliver on PATH and none configured, `banal doctor` now reports the engines bundled inside an installed BANAL.app (`~/Applications`, then `/Applications`) instead of a false "not found" warning. Probes are machine-global by nature, so they live beside — not inside — the locator's injectable bundle list, keeping engine-resolution tests isolated from whatever is installed on the host. Doctor-only by design: `banal publish` keeps the plain locator chain, so a bare-CLI publish matches the app's own engine choice rather than borrowing an installed app's bundle.
 - Prose Read link styling: fixed an attribute traversal issue in `ProseReadView` where non-link text was styled as blue underlined links.
 - CLI doctor check: fixed configured binary check to verify the specified engine path directly rather than falling back to system binaries in PATH.
 - Boris and Oliver ship inside the app (issue #209): `make app` builds universal binaries from their Zig checkouts into `Contents/Helpers`, the locators prefer them, and Settings → Publish loses its binary pickers — recipe Read and Publish Site now work in the sandboxed app on a machine with nothing installed. Debug overrides stay available via `BANAL_OLIVER_BIN` / `BANAL_BORIS_BIN`; legacy paths in `.banal/config.json` still round-trip. AppleScript errors now surface their message instead of returning silently.
