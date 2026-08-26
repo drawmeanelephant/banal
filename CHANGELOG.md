@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 - Settings Publish pane layout (issue #215): expanded Settings window height to fit all Publish pane sections and action buttons (`wrangler.toml` preview, Copy command, Deploy to Cloudflare) comfortably without clipping or requiring vertical scrolling.
+- Settings Publish pane fits all controls (issue #215): streamlined the Deploy section with compact labeled rows and optimized the Settings window frame height so all deployment controls and action buttons fit comfortably without clipping on any Mac display size.
 - Prose Read link styling: fixed an attribute traversal issue in `ProseReadView` where non-link text was styled as blue underlined links.
 - CLI doctor check: fixed configured binary check to verify the specified engine path directly rather than falling back to system binaries in PATH.
 - Boris and Oliver ship inside the app (issue #209): `make app` builds universal binaries from their Zig checkouts into `Contents/Helpers`, the locators prefer them, and Settings → Publish loses its binary pickers — recipe Read and Publish Site now work in the sandboxed app on a machine with nothing installed. Debug overrides stay available via `BANAL_OLIVER_BIN` / `BANAL_BORIS_BIN`; legacy paths in `.banal/config.json` still round-trip. AppleScript errors now surface their message instead of returning silently.
