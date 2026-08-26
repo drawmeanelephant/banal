@@ -90,8 +90,11 @@ enum Scripting {
         do {
             return try MainActor.assumeIsolated(body)
         } catch {
-            command.scriptErrorString = (error as? LocalizedError)?.errorDescription
+            let message = (error as? LocalizedError)?.errorDescription
                 ?? error.localizedDescription
+            command.scriptErrorString = message
+            command.scriptErrorNumber = 1
+            NSLog("script %@ failed: %@ / %@", command.commandDescription.commandName, message, String(describing: error))
             return nil
         }
     }

@@ -3,24 +3,28 @@ import BANALCore
 
 /// Locates the `oliver` CLI the same way we locate `boris`.
 ///
-/// Order: configured path, `BANAL_OLIVER_BIN`, `PATH`, then a sibling
-/// checkout. Oliver’s tree is `oliver/zig-out/bin/oliver` (no `main/`
-/// segment). `oliver/main/…` is also tried in case a checkout uses it.
+/// Order: configured path, the app-bundled helper, `BANAL_OLIVER_BIN`,
+/// `PATH`, then a sibling checkout. Oliver's tree is
+/// `oliver/zig-out/bin/oliver` (no `main/` segment). `oliver/main/…` is
+/// also tried in case a checkout uses it.
 ///
-/// `environment` and `currentDirectory` are injectable so tests can
-/// prove the order without depending on the machine `PATH`.
+/// `environment`, `currentDirectory`, and `auxiliaryExecutables` are
+/// injectable so tests can prove the order without depending on the
+/// machine `PATH` or a real bundle.
 public enum OliverLocator {
     public static func resolve(
         configured: String? = nil,
         environment: [String: String] = ProcessInfo.processInfo.environment,
         currentDirectory: URL? = nil,
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        auxiliaryExecutables: (String) -> [URL] = BundledHelper.executables
     ) -> URL? {
         candidates(
             configured: configured,
             environment: environment,
             currentDirectory: currentDirectory,
-            fileManager: fileManager
+            fileManager: fileManager,
+            auxiliaryExecutables: auxiliaryExecutables
         ).first
     }
 
@@ -30,13 +34,15 @@ public enum OliverLocator {
         configured: String? = nil,
         environment: [String: String] = ProcessInfo.processInfo.environment,
         currentDirectory: URL? = nil,
-        fileManager: FileManager = .default
+        fileManager: FileManager = .default,
+        auxiliaryExecutables: (String) -> [URL] = BundledHelper.executables
     ) -> URL? {
         for url in candidates(
             configured: configured,
             environment: environment,
             currentDirectory: currentDirectory,
-            fileManager: fileManager
+            fileManager: fileManager,
+            auxiliaryExecutables: auxiliaryExecutables
         ) {
             if (try? OliverClient(binaryURL: url).recipe("Add @salt{}.\n")) != nil {
                 return url
@@ -45,11 +51,30 @@ public enum OliverLocator {
         return nil
     }
 
+    /// Where a bundled Oliver lives inside this bundle: whatever
+    /// `forAuxiliaryExecutable` finds, plus the plain `Contents/Helpers`
+    /// path we package into. Empty when running unsandboxed from source —
+    /// resolution then falls through to env/PATH/sibling as before.
+    static func bundledExecutables(_ name: String) -> [URL] {
+        var urls: [URL] = []
+        if let url = Bundle.main.url(forAuxiliaryExecutable: name) {
+            urls.append(url)
+        }
+        urls.append(
+            Bundle.main.bundleURL
+                .appendingPathComponent("Contents", isDirectory: true)
+                .appendingPathComponent("Helpers", isDirectory: true)
+                .appendingPathComponent(name)
+        )
+        return urls
+    }
+
     private static func candidates(
         configured: String?,
         environment: [String: String],
         currentDirectory: URL?,
-        fileManager: FileManager
+        fileManager: FileManager,
+        auxiliaryExecutables: (String) -> [URL]
     ) -> [URL] {
         var urls: [URL] = []
         var seen = Set<String>()
@@ -61,6 +86,9 @@ public enum OliverLocator {
         }
         if let configured, !configured.isEmpty {
             add(URL(fileURLWithPath: configured))
+        }
+        for url in auxiliaryExecutables("oliver") {
+            add(url)
         }
         if let env = environment["BANAL_OLIVER_BIN"], !env.isEmpty {
             add(URL(fileURLWithPath: env))

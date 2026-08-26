@@ -102,6 +102,64 @@ final class OliverClientTests: XCTestCase {
         ))
     }
 
+    func testLocatorPrefersBundledOverEnvironmentAndPath() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let bundled = root.appendingPathComponent("bundled-oliver")
+        let env = root.appendingPathComponent("env-oliver")
+        try makeStub(at: bundled)
+        try makeStub(at: env)
+        let found = OliverLocator.resolve(
+            configured: nil,
+            environment: ["BANAL_OLIVER_BIN": env.path, "PATH": "/usr/bin:/bin"],
+            currentDirectory: root,
+            auxiliaryExecutables: { _ in [bundled] }
+        )
+        XCTAssertEqual(found?.standardizedFileURL, bundled.standardizedFileURL)
+    }
+
+    func testLocatorStillPrefersConfiguredOverBundled() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let configured = root.appendingPathComponent("configured-oliver")
+        let bundled = root.appendingPathComponent("bundled-oliver")
+        try makeStub(at: configured)
+        try makeStub(at: bundled)
+        let found = OliverLocator.resolve(
+            configured: configured.path,
+            environment: ["PATH": ""],
+            currentDirectory: root,
+            auxiliaryExecutables: { _ in [bundled] }
+        )
+        XCTAssertEqual(found?.standardizedFileURL, configured.standardizedFileURL)
+    }
+
+    /// A bundled helper that is not executable (or absent) must be
+    /// skipped — resolution falls through to env/PATH as before.
+    func testLocatorSkipsMissingBundledHelper() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let env = root.appendingPathComponent("env-oliver")
+        try makeStub(at: env)
+        let found = OliverLocator.resolve(
+            configured: nil,
+            environment: ["BANAL_OLIVER_BIN": env.path, "PATH": ""],
+            currentDirectory: root,
+            auxiliaryExecutables: { _ in [] }
+        )
+        XCTAssertEqual(found?.standardizedFileURL, env.standardizedFileURL)
+    }
+
+    func testBundledHelperProbesContentsHelpers() {
+        let urls = BundledHelper.executables(named: "oliver")
+        XCTAssertFalse(urls.isEmpty)
+        XCTAssertTrue(
+            urls.contains {
+                $0.standardizedFileURL.path.hasSuffix("Contents/Helpers/oliver")
+            }
+        )
+    }
+
     func testDebounceIsSilentWhenUnavailable() {
         let ask = OliverDebounce(client: nil, delay: 0)
         let exp = expectation(description: "no fire")
