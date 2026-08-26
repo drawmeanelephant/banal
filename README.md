@@ -12,8 +12,7 @@ BANAL is not Solipsist, not a knowledge graph, and not a hosting dashboard.
 
 - macOS 14+
 - Full Xcode 16+ / Swift 6 (`swift --version`). The standalone Command Line Tools toolchain is not enough — without a full Xcode selected (`xcode-select -s /Applications/Xcode.app`), the build dies with an obscure `SwiftUIMacros plugin not found` error.
-- Optional: a `boris` binary on `PATH` (or `BANAL_BORIS_BIN`) for the real SSG
-- Optional: an `oliver` binary on `PATH` (or `BANAL_OLIVER_BIN`) for Markdown parse/render and recipe Read (`serialize --json`). The app still edits without it.
+- Optional for **building from source**: Oliver and Boris sibling Zig checkouts (`../oliver`, `../boris`, or `~/t3/zig/<name>`). `make app` compiles them into the bundle; without them the app still builds, edits, and publishes with the builtin compiler.
 
 ## Build and test
 
@@ -41,7 +40,7 @@ make app SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)"
 
 Still not notarized unless you run `notarytool` yourself.
 
-`swift run banal-cli` is **not** sandboxed. Use `make app` when you want the real bookmark / picker sit. Boris and Oliver stay on PATH or Settings → Publish (Choose…). They are not inside the bundle.
+`swift run banal-cli` is **not** sandboxed. Use `make app` when you want the real bookmark / picker sit. Oliver and Boris are bundled inside `Contents/Helpers` (universal binaries built by `Scripts/helpers.sh`); debug overrides stay available via `BANAL_OLIVER_BIN` / `BANAL_BORIS_BIN`.
 
 ## Vault
 

@@ -35,16 +35,16 @@
 - Folders are real directories: create, rename, trash, nested tree, empty folders stay; Finder mkdir/rename rescans incrementally (issue #186) — directory-level FSEvents diff disk against memory and touch only the notes whose paths changed, so large vaults do not blank and repopulate on a Finder rename
 - New note lands in the selected folder (or Inbox / root, per Settings); New Note Here always uses that folder
 - Drag a note onto a folder (or All Notes) to move the file
-- Settings (`⌘,`): General, Editor, Publish. Publish can Choose… / Reveal Boris and Oliver; empty is fine. BANAL → About BANAL.
+- Settings (`⌘,`): General, Editor, Publish (site + Cloudflare). BANAL → About BANAL. Boris and Oliver are bundled — no binary pickers.
 - Help: Help → BANAL Help (⌘?) opens a bundled Apple Help Book in the system Help Viewer. It keeps one concise landing page covering writing, folders, finding, reading, publishing, and the file-first model, with indexed section anchors; the editor and Publish settings include contextual links to those anchors.
-- Publish pane stores site + Cloudflare IDs and optional Boris/Oliver paths in `.banal/config.json`; API token in Keychain
+- Publish pane stores site + Cloudflare IDs in `.banal/config.json`; API token in Keychain. Boris/Oliver ship inside the app (`Contents/Helpers`, universal); legacy binary paths in config still round-trip.
 - Publish fields validate inline (http/s base URL, Cloudflare-safe project name; account ID warns)
 - Editor: SF Pro, measure cap, line height, spell check / smart quotes
 - Menus: ⌘N note, ⇧⌘N folder, ⌘⌫ trash, ⇧⌘P publish, ⌘F find notes, ⇧⌘F find in note
 - Oliver: one-shot render after idle typing (`--from` from the file extension). Missing binary is silent. No preview.
 - Languages: `.md`, `.textile`, and `.cook` are notes. File → New Textile / New Recipe. Recipes keep Cooklang `>>` metadata, not a YAML fence. Opening any of them is source.
 - Recipe Read: `.cook` notes have Edit | Read. Read shows ingredients, cookware, steps, and notes from Oliver’s typed Recipe. ½ 1× 2× 3× scales the view only. Missing or older Oliver (no `serialize --json`) is one sentence; Edit still works.
-- Publish Site (⇧⌘P): only `published` notes leave the vault. Markdown uses Boris when present, else builtin HTML+RSS. Textile and Cooklang join the same `.publish/` folder via Oliver. Recipes stay Cooklang on disk. Deploy to Cloudflare is optional and enabled when a Keychain token and project name exist.
+- Publish Site (⇧⌘P): only `published` notes leave the vault. Markdown uses the bundled Boris, else builtin HTML+RSS. Textile and Cooklang join the same `.publish/` folder via the bundled Oliver. Recipes stay Cooklang on disk. Deploy to Cloudflare is optional and enabled when a Keychain token and project name exist.
 - File associations (F-8, issue #44, pulled forward from M10): BANAL declares itself Editor for `.md` / `.textile` / `.cook` (Open With, Dock drag, double-click). A file inside the vault opens in place; one outside is copied into the vault root (unique name, source untouched) and selected. Opens arrive via SwiftUI `.onOpenURL` (first URL of a multi-file open) plus the `application(_:open:)` / `openURLs:` delegate hook (the remaining URLs — without it, multi-select → Open With dropped all but the first file), deduped so one action never imports twice. Card: [`F-8-file-associations.md`](cards/F-8-file-associations.md).
 - Column focus & keyboard navigation (E-1, issue #20): standard macOS shortcuts ⌘1 (Focus Sidebar), ⌘2 (Focus Note List), ⌘3 (Focus Editor) under View menu. Full keyboard flow with arrow navigation, folder expand/collapse in sidebar, Return to jump to editor caret, Escape in editor to return to note list, and Tab / ⇧Tab column cycling without breaking code fence indentation. Card: [`E-1-focus.md`](cards/E-1-focus.md).
 - Smart paste and links (E-2, issue #21): Pasting a URL over selected text creates `[selectedText](url)` with caret right after `)`. Pasting rich text or HTML converts cleanly to Markdown while stripping spans, styles, divs, and classes via `HTMLToMarkdown` in `BANALCore`. Full `⌘Z` undo support. Card: [`E-2-paste.md`](cards/E-2-paste.md).
@@ -65,7 +65,7 @@ The product table stays as written. Two surfaces exist outside it as *verificati
 | Gap | Card | Notes |
 | --- | --- | --- |
 | Whole-window sit | [C-1](cards/C-1-sit.md) | Script: [`TESTING-WINDOW.md`](TESTING-WINDOW.md). Code-backed sit landed (nested publish nav, status grammar, caret id on move). Sit prep is done and CI-green: every brief row was audited against the code, this machine’s Oliver/Boris were probed (Read is the one-sentence path; publish uses builtin), and `make smoke` boots the signed app against a scratch vault on GitHub Actions. **GUI not sat in this environment** — 30s type / ⌘Z, light+dark 720/1100/1400, and VoiceOver stay open until a human runs the window. Outranks every D card. |
-| Oliver / Boris paths, About, first-run copy | [C-2](cards/C-2-honesty.md) | Landed. Settings → Publish Choose… / Reveal. About BANAL. |
+| Oliver / Boris paths, About, first-run copy | [C-2](cards/C-2-honesty.md) | Landed, then simplified (#209): engines bundled in `Contents/Helpers`; Settings → Publish keeps site + Cloudflare only. About BANAL. |
 | Signed `.app` / sandbox | [C-3](cards/C-3-hand-it.md) | Landed — ad-hoc signed `dist/BANAL.app` via `make app` (also works `SIGN_IDENTITY="Apple Development: tbuddy@gmail.com (ZQT4XUHVT5)"` on this free team — not Developer ID), sandbox on, app icon, bookmarks start/stop. Not notarized (no paid `Developer ID Application`). GUI sit of the ad-hoc app still wants a human (friend deferred). |
 
 ## Next (Fluency)

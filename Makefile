@@ -32,12 +32,23 @@ run:
 
 # Signed .app for dragging to /Applications. Ad-hoc (`-`) unless
 # SIGN_IDENTITY is a Developer ID Application identity.
+# Oliver/Boris are built from their sibling Zig checkouts and bundled
+# into Contents/Helpers (Scripts/helpers.sh); missing checkouts are a
+# warning, not an error — the app degrades to builtin/one-sentence paths.
 app:
 	$(SWIFT) build -c release --product banal-cli
 	rm -rf "$(APP)"
+	@$(BASH) Scripts/helpers.sh "$(DIST)"
 	mkdir -p "$(APP)/Contents/MacOS" "$(APP)/Contents/Resources"
 	cp .build/release/banal-cli "$(APP)/Contents/MacOS/BANAL"
 	chmod +x "$(APP)/Contents/MacOS/BANAL"
+	@if compgen -G "$(DIST)/helpers/*" >/dev/null; then \
+		mkdir -p "$(APP)/Contents/Helpers"; \
+		for helper in "$(DIST)/helpers/"*; do \
+			cp "$$helper" "$(APP)/Contents/Helpers/"; \
+			codesign --force --sign "$(SIGN_IDENTITY)" $(CODESIGN_FLAGS) "$(APP)/Contents/Helpers/`basename "$$helper"`" || exit 1; \
+		done; \
+	fi
 	cp Resources/AppIcon.icns "$(APP)/Contents/Resources/AppIcon.icns"
 	cp Resources/BANAL.sdef "$(APP)/Contents/Resources/BANAL.sdef"
 	cp -R "$(HELP_BOOK)" "$(APP)/Contents/Resources/"

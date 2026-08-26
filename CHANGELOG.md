@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Boris and Oliver ship inside the app (issue #209): `make app` builds universal binaries from their Zig checkouts into `Contents/Helpers`, the locators prefer them, and Settings → Publish loses its binary pickers — recipe Read and Publish Site now work in the sandboxed app on a machine with nothing installed. Debug overrides stay available via `BANAL_OLIVER_BIN` / `BANAL_BORIS_BIN`; legacy paths in `.banal/config.json` still round-trip. AppleScript errors now surface their message instead of returning silently.
 - AppleScript support: BANAL now has a scripting dictionary. Scripts can list and read notes, create notes (plain names, real folders, `.md`/`.textile`/`.cook`), edit bodies, flip Published, and run the publish pipeline — all through the same store the app uses, so every change lands as an ordinary file on disk.
 - Agent CLI (issue #204): `banal vault|notes|show|publish|doctor` — a thin read-mostly command over the same vault resolution, note store, and publish pipeline as the app, with plain text or `--json` output and honest exit codes. For scripts, tests, and agents that were burning tokens UI-scripting the window. It never creates or changes notes; the editor stays the app.
 - Publish survives plain names (issue #202): a note titled with spaces (`Published Note.md`) no longer fails the real Boris compile with `InvalidPath`. Entity ids handed to Boris are made Boris-shaped at the publish boundary — whitespace runs become `-`, `#?%` are rewritten — while files in your vault keep their plain names untouched.

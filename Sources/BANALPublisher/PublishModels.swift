@@ -142,20 +142,32 @@ public enum PublishError: Error, Equatable, Sendable {
 }
 
 public enum BorisLocator {
-    public static func resolve(configured: String?, fileManager: FileManager = .default) -> URL? {
+    /// Order: configured path, the app-bundled helper,
+    /// `BANAL_BORIS_BIN`, `PATH`, then a sibling checkout. The bundle
+    /// lookup and environment are injectable so tests can prove the
+    /// order without a real bundle or machine state.
+    public static func resolve(
+        configured: String?,
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        fileManager: FileManager = .default,
+        auxiliaryExecutables: (String) -> [URL] = BundledHelper.executables
+    ) -> URL? {
         if let configured, !configured.isEmpty {
             let url = URL(fileURLWithPath: configured)
             if fileManager.isExecutableFile(atPath: url.path) {
                 return url
             }
         }
-        if let env = ProcessInfo.processInfo.environment["BANAL_BORIS_BIN"], !env.isEmpty {
+        for url in auxiliaryExecutables("boris") where fileManager.isExecutableFile(atPath: url.path) {
+            return url
+        }
+        if let env = environment["BANAL_BORIS_BIN"], !env.isEmpty {
             let url = URL(fileURLWithPath: env)
             if fileManager.isExecutableFile(atPath: url.path) {
                 return url
             }
         }
-        if let found = which("boris", fileManager: fileManager) {
+        if let found = which("boris", path: environment["PATH"] ?? "", fileManager: fileManager) {
             return found
         }
         let cwd = URL(fileURLWithPath: fileManager.currentDirectoryPath)
@@ -175,8 +187,7 @@ public enum BorisLocator {
         return nil
     }
 
-    private static func which(_ name: String, fileManager: FileManager) -> URL? {
-        let path = ProcessInfo.processInfo.environment["PATH"] ?? ""
+    private static func which(_ name: String, path: String, fileManager: FileManager) -> URL? {
         for directory in path.split(separator: ":") {
             let candidate = URL(fileURLWithPath: String(directory)).appendingPathComponent(name)
             if fileManager.isExecutableFile(atPath: candidate.path) {

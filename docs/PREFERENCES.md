@@ -59,8 +59,10 @@ Local notes do not read these keys. They matter only when the user chooses File 
 | Key | Type | Default | Notes |
 | --- | --- | --- | --- |
 | Prefer Boris when available | bool | true | Else builtin HTML + RSS |
-| Boris binary | optional path | `BANAL_BORIS_BIN`, then `PATH`, then sibling checkout | Settings → Publish: Choose… / Reveal. Empty is fine. Stored in `.banal/config.json` |
-| Oliver binary | optional path | `BANAL_OLIVER_BIN`, then `PATH`, then sibling checkout | Settings → Publish: Choose… / Reveal. Empty is fine. Stored in `.banal/config.json` |
+| Boris binary | optional path | bundled helper, then `BANAL_BORIS_BIN`, then `PATH`, then sibling checkout | No Settings UI. Legacy paths in `.banal/config.json` still round-trip. Debug override via `BANAL_BORIS_BIN` |
+| Oliver binary | optional path | bundled helper, then `BANAL_OLIVER_BIN`, then `PATH`, then sibling checkout | No Settings UI. Legacy paths in `.banal/config.json` still round-trip. Debug override via `BANAL_OLIVER_BIN` |
+
+`make app` builds universal Oliver and Boris from their Zig checkouts (`Scripts/helpers.sh`) into `Contents/Helpers/`. Missing checkouts are a warning — the app degrades to the builtin compiler and one-sentence Read, never an error dialog.
 
 ### Cloudflare
 
