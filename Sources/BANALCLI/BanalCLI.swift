@@ -290,11 +290,15 @@ public enum BanalCLI {
         resolve: (String?) -> URL?,
         fallback: String
     ) -> DoctorCheck {
-        if let url = resolve(configured) {
-            return DoctorCheck(name: name, status: "ok", detail: url.path)
-        }
         if let configured, !configured.isEmpty {
+            let url = URL(fileURLWithPath: configured)
+            if FileManager.default.isExecutableFile(atPath: url.path) {
+                return DoctorCheck(name: name, status: "ok", detail: url.path)
+            }
             return DoctorCheck(name: name, status: "fail", detail: "configured at \"\(configured)\" but not executable")
+        }
+        if let url = resolve(nil) {
+            return DoctorCheck(name: name, status: "ok", detail: url.path)
         }
         return DoctorCheck(name: name, status: "warn", detail: "not found — \(fallback)")
     }

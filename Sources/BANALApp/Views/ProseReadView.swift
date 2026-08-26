@@ -121,7 +121,8 @@ struct ProseReadView: NSViewRepresentable {
                 page.addAttribute(.font, value: remapped, range: range)
             }
         }
-        page.enumerateAttribute(.link, in: full) { _, range, _ in
+        page.enumerateAttribute(.link, in: full) { value, range, _ in
+            guard value != nil else { return }
             page.addAttribute(.foregroundColor, value: NSColor.linkColor, range: range)
             page.addAttribute(.underlineStyle, value: NSUnderlineStyle.single.rawValue, range: range)
         }
