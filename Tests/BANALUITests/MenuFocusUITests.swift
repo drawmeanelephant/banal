@@ -54,6 +54,41 @@ final class MenuFocusUITests: XCTestCase {
         XCTAssertTrue(fileMenuItem("New Note").isEnabled, "#191 regression: New Note disabled after last main window closed")
     }
 
+    /// #215 — Publish pane in Settings window must fit all controls
+    /// and action buttons without clipping the Deploy section.
+    func testPublishSettingsPaneFitsAllControlsWithoutClipping() throws {
+        app = XCUIApplication()
+        app.launchEnvironment["BANAL_UI_TEST_VAULT"] = "fixture"
+        app.launchArguments += ["-NSDisablePersistence", "YES"]
+        app.launch()
+        defer { shutdownApp() }
+
+        assertReady()
+        openSettings()
+
+        let publishTab = app.toolbars.buttons["Publish"]
+        if publishTab.waitForExistence(timeout: 5) {
+            publishTab.tap()
+        } else {
+            let altTab = app.buttons["Publish"]
+            if altTab.waitForExistence(timeout: 5) {
+                altTab.tap()
+            }
+        }
+
+        let copyWranglerButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'wrangler' OR title CONTAINS[c] 'wrangler'")).firstMatch
+        XCTAssertTrue(copyWranglerButton.waitForExistence(timeout: 5), "Copy wrangler.toml button not found in Settings Publish pane")
+        XCTAssertTrue(copyWranglerButton.isHittable, "Copy wrangler.toml button is clipped in Settings window")
+
+        let copyCmdButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'command' OR title CONTAINS[c] 'command'")).firstMatch
+        XCTAssertTrue(copyCmdButton.waitForExistence(timeout: 5), "Copy command button not found in Settings Publish pane")
+        XCTAssertTrue(copyCmdButton.isHittable, "Copy command button is clipped in Settings window")
+
+        let deployButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Deploy' OR title CONTAINS[c] 'Deploy'")).firstMatch
+        XCTAssertTrue(deployButton.waitForExistence(timeout: 5), "Deploy to Cloudflare button not found in Settings Publish pane")
+        XCTAssertTrue(deployButton.isHittable, "Deploy to Cloudflare button is clipped in Settings window")
+    }
+
     // MARK: - Helpers
 
     private func fileMenuItem(_ title: String) -> XCUIElement {

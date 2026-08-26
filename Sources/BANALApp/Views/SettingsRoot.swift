@@ -18,7 +18,7 @@ struct SettingsRoot: View {
                 .tabItem { Label("Publish", systemImage: "globe") }
                 .accessibilityLabel("Publish")
         }
-        .frame(width: 520, height: 720)
+        .frame(width: 520, height: 860)
         .accessibilityLabel("Settings")
         .accessibilityIdentifier("settings-root")
     }
