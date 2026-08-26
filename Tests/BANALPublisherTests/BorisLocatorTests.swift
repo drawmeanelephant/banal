@@ -34,9 +34,12 @@ final class BorisLocatorTests: XCTestCase {
     }
 
     func testLocatorReturnsNilWhenIsolated() {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
         XCTAssertNil(BorisLocator.resolve(
             configured: nil,
             environment: ["PATH": ""],
+            currentDirectory: root,
             auxiliaryExecutables: { _ in [] }
         ))
     }
@@ -49,6 +52,7 @@ final class BorisLocatorTests: XCTestCase {
         let found = BorisLocator.resolve(
             configured: nil,
             environment: ["BANAL_BORIS_BIN": stub.path, "PATH": ""],
+            currentDirectory: root,
             auxiliaryExecutables: { _ in [] }
         )
         XCTAssertEqual(found?.standardizedFileURL, stub.standardizedFileURL)
@@ -67,6 +71,19 @@ final class BorisLocatorTests: XCTestCase {
         XCTAssertTrue(bundled.allSatisfy { !probes.map(\.standardizedFileURL).contains($0.standardizedFileURL) })
     }
 
+    func testLocatorFindsBuiltDistHelper() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let distHelper = root.appendingPathComponent("dist/helpers/boris")
+        try makeStub(at: distHelper)
+        let found = BorisLocator.resolve(
+            configured: nil,
+            environment: ["PATH": ""],
+            currentDirectory: root,
+            auxiliaryExecutables: { _ in [] }
+        )
+        XCTAssertEqual(found?.standardizedFileURL, distHelper.standardizedFileURL)
+    }
 }
 
 private func isolatedRoot() -> URL {

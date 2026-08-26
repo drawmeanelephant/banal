@@ -18,7 +18,7 @@ struct SettingsRoot: View {
                 .tabItem { Label("Publish", systemImage: "globe") }
                 .accessibilityLabel("Publish")
         }
-        .frame(width: 520, height: 720)
+        .frame(width: 520, height: 640)
         .accessibilityLabel("Settings")
         .accessibilityIdentifier("settings-root")
     }
@@ -208,41 +208,34 @@ private struct PublishSettingsPane: View {
                 Text("Names and IDs travel with the notes folder. The token stays in Keychain.")
             }
             Section {
-                Text(wranglerTOMLPreview)
-                    .font(.system(.caption, design: .monospaced))
-                    .textSelection(.enabled)
-                    .accessibilityLabel("Wrangler configuration: \(wranglerTOMLPreview)")
-                HStack {
+                LabeledContent("wrangler.toml") {
                     Button("Copy wrangler.toml") {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(wranglerTOMLPreview, forType: .string)
                     }
                     .accessibilityLabel("Copy wrangler.toml configuration")
+                    .accessibilityIdentifier("copy-wrangler-toml-button")
+                    .help(wranglerTOMLPreview)
                 }
-            } header: {
-                Text("wrangler.toml")
-            } footer: {
-                Text("Written to the artifact folder on publish. Copy this to customize before deploy.")
-            }
-            Section {
-                Text(wranglerCommandPreview)
-                    .font(.system(.caption, design: .monospaced))
-                    .textSelection(.enabled)
-                    .accessibilityLabel("Wrangler command: \(wranglerCommandPreview)")
-                HStack {
-                    Button("Copy command") {
-                        NSPasteboard.general.clearContents()
-                        NSPasteboard.general.setString(wranglerCommandPreview, forType: .string)
+                LabeledContent("Command") {
+                    HStack {
+                        Button("Copy command") {
+                            NSPasteboard.general.clearContents()
+                            NSPasteboard.general.setString(wranglerCommandPreview, forType: .string)
+                        }
+                        .accessibilityLabel("Copy wrangler deployment command")
+                        .accessibilityIdentifier("copy-wrangler-command-button")
+                        .help(wranglerCommandPreview)
+                        Button("Deploy to Cloudflare") {
+                            model.deployToCloudflare()
+                        }
+                        .accessibilityLabel("Deploy to Cloudflare Pages")
+                        .accessibilityIdentifier("deploy-to-cloudflare-button")
+                        .disabled(!model.canDeploy)
+                        .help(model.canDeploy
+                              ? "Deploy the last site to Cloudflare Pages."
+                              : "Save an API token (Keychain) to enable deploy.")
                     }
-                    .accessibilityLabel("Copy wrangler deployment command")
-                    Button("Deploy to Cloudflare") {
-                        model.deployToCloudflare()
-                    }
-                    .accessibilityLabel("Deploy to Cloudflare Pages")
-                    .disabled(!model.canDeploy)
-                    .help(model.canDeploy
-                          ? "Deploy the last site to Cloudflare Pages."
-                          : "Save an API token (Keychain) to enable deploy.")
                 }
             } header: {
                 Text("Deploy")

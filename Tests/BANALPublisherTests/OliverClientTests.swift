@@ -160,6 +160,20 @@ final class OliverClientTests: XCTestCase {
         )
     }
 
+    func testLocatorFindsBuiltDistHelper() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let distHelper = root.appendingPathComponent("dist/helpers/oliver")
+        try makeStub(at: distHelper)
+        let found = OliverLocator.resolve(
+            configured: nil,
+            environment: ["PATH": ""],
+            currentDirectory: root,
+            auxiliaryExecutables: { _ in [] }
+        )
+        XCTAssertEqual(found?.standardizedFileURL, distHelper.standardizedFileURL)
+    }
+
     func testDebounceIsSilentWhenUnavailable() {
         let ask = OliverDebounce(client: nil, delay: 0)
         let exp = expectation(description: "no fire")

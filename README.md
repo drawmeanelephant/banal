@@ -40,7 +40,7 @@ make app SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)"
 
 Still not notarized unless you run `notarytool` yourself.
 
-`swift run banal-cli` is **not** sandboxed. Use `make app` when you want the real bookmark / picker sit. Oliver and Boris are bundled inside `Contents/Helpers` (universal binaries built by `Scripts/helpers.sh`); debug overrides stay available via `BANAL_OLIVER_BIN` / `BANAL_BORIS_BIN`.
+`swift run banal-cli` is **not** sandboxed. Use `make app` when you want the real bookmark / picker sit. Oliver and Boris are bundled inside `Contents/Helpers` (universal binaries built from source / GitHub main by `Scripts/helpers.sh`); debug overrides stay available via `BANAL_OLIVER_BIN` / `BANAL_BORIS_BIN`.
 
 ## Vault
 
