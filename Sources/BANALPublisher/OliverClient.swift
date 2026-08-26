@@ -98,6 +98,9 @@ public enum OliverLocator {
         }
         let cwd = currentDirectory ?? URL(fileURLWithPath: fileManager.currentDirectoryPath)
         let relatives = [
+            "dist/helpers/oliver",
+            ".build/helpers/oliver",
+            ".build/helpers-src/oliver/zig-out/bin/oliver",
             "zig-out/bin/oliver",
             "../oliver/zig-out/bin/oliver",
             "../../oliver/zig-out/bin/oliver",

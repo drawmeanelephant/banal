@@ -19,7 +19,7 @@ else
 CODESIGN_FLAGS = --options runtime --timestamp
 endif
 
-.PHONY: test build run app sign-developer-id notarize dmg release-dmg release smoke project ui-test clean board board-check
+.PHONY: test build run helpers app sign-developer-id notarize dmg release-dmg release smoke project ui-test clean board board-check
 
 test:
 	$(SWIFT) test
@@ -30,15 +30,18 @@ build:
 run:
 	$(SWIFT) run BANAL
 
+# Build Boris and Oliver helper engines into $(DIST)/helpers/
+helpers:
+	@$(BASH) Scripts/helpers.sh "$(DIST)"
+
 # Signed .app for dragging to /Applications. Ad-hoc (`-`) unless
 # SIGN_IDENTITY is a Developer ID Application identity.
-# Oliver/Boris are built from their sibling Zig checkouts and bundled
+# Oliver/Boris are built from source (local or GitHub main) and bundled
 # into Contents/Helpers (Scripts/helpers.sh); missing checkouts are a
 # warning, not an error — the app degrades to builtin/one-sentence paths.
-app:
+app: helpers
 	$(SWIFT) build -c release --product banal-cli
 	rm -rf "$(APP)"
-	@$(BASH) Scripts/helpers.sh "$(DIST)"
 	mkdir -p "$(APP)/Contents/MacOS" "$(APP)/Contents/Resources"
 	cp .build/release/banal-cli "$(APP)/Contents/MacOS/BANAL"
 	chmod +x "$(APP)/Contents/MacOS/BANAL"

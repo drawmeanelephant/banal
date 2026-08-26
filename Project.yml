@@ -82,6 +82,27 @@ targets:
           /usr/libexec/PlistBuddy -c "Add :NSAppleScriptEnabled bool true" "$INFOPLIST_PATH_FULL" 2>/dev/null || true
           /usr/libexec/PlistBuddy -c "Add :OSAScriptingDefinition string BANAL.sdef" "$INFOPLIST_PATH_FULL" 2>/dev/null || true
           /usr/libexec/PlistBuddy -c "Print :OSAScriptingDefinition" "$INFOPLIST_PATH_FULL" >/dev/null
+      - name: Build and embed helper engines (Boris & Oliver)
+        basedOnDependencyAnalysis: false
+        script: |
+          set -euo pipefail
+          HELPERS_DEST="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}/../Helpers"
+          mkdir -p "${HELPERS_DEST}"
+          "${SRCROOT}/Scripts/helpers.sh" "${SRCROOT}/dist"
+          if [ -d "${SRCROOT}/dist/helpers" ]; then
+            for helper in "${SRCROOT}/dist/helpers/"*; do
+              if [ -f "$helper" ] && [ -x "$helper" ]; then
+                target_file="${HELPERS_DEST}/$(basename "$helper")"
+                cp "$helper" "$target_file"
+                chmod +x "$target_file"
+                if [ "${CODE_SIGNING_ALLOWED:-YES}" = "YES" ]; then
+                  sign_id="${EXPANDED_CODE_SIGN_IDENTITY:--}"
+                  [ -z "$sign_id" ] && sign_id="-"
+                  codesign --force --sign "$sign_id" --timestamp=none "$target_file" || true
+                fi
+              fi
+            done
+          fi
   BANALCoreTests:
     type: bundle.unit-test
     platform: macOS
