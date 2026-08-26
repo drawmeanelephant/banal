@@ -7,13 +7,19 @@ struct ContentView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var contrast
 
+    @State private var columnVisibility: NavigationSplitViewVisibility = .all
+    @State private var autoCollapsedSidebar = false
+
+    private static let sidebarCollapseWidth: CGFloat = 880
+    private static let sidebarExpandWidth: CGFloat = 920
+
     var body: some View {
         Group {
             if model.needsVault {
                 VaultPicker(model: model)
             } else {
                 VStack(spacing: 0) {
-                    NavigationSplitView {
+                    NavigationSplitView(columnVisibility: $columnVisibility) {
                         SidebarView(model: model)
                             .accessibilityElement(children: .contain)
                             .accessibilityLabel("Folders")
@@ -30,6 +36,15 @@ struct ContentView: View {
 
                     StatusStripView(model: model)
                 }
+                .background(
+                    GeometryReader { geo in
+                        Color.clear
+                            .onAppear { updateSidebarCollapse(width: geo.size.width) }
+                            .onChange(of: geo.size.width) { _, newWidth in
+                                updateSidebarCollapse(width: newWidth)
+                            }
+                    }
+                )
             }
         }
         .frame(minWidth: 720, minHeight: 520)
@@ -43,6 +58,18 @@ struct ContentView: View {
             }
         }
         .onDisappear { model.flushEditor() }
+    }
+
+    private func updateSidebarCollapse(width: CGFloat) {
+        if width < Self.sidebarCollapseWidth {
+            guard !autoCollapsedSidebar, columnVisibility == .all else { return }
+            columnVisibility = .doubleColumn
+            autoCollapsedSidebar = true
+        } else if width >= Self.sidebarExpandWidth {
+            guard autoCollapsedSidebar else { return }
+            columnVisibility = .all
+            autoCollapsedSidebar = false
+        }
     }
 }
 
