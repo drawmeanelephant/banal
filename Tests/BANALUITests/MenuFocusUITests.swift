@@ -76,15 +76,18 @@ final class MenuFocusUITests: XCTestCase {
             }
         }
 
-        let copyWranglerButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'wrangler' OR title CONTAINS[c] 'wrangler'")).firstMatch
+        let settings = app.descendants(matching: .any).matching(identifier: "settings-root").firstMatch
+        XCTAssertTrue(settings.waitForExistence(timeout: 8), "Settings window did not open")
+
+        let copyWranglerButton = settings.buttons["copy-wrangler-toml-button"]
         XCTAssertTrue(copyWranglerButton.waitForExistence(timeout: 5), "Copy wrangler.toml button not found in Settings Publish pane")
         XCTAssertTrue(copyWranglerButton.isHittable, "Copy wrangler.toml button is clipped in Settings window")
 
-        let copyCmdButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'command' OR title CONTAINS[c] 'command'")).firstMatch
+        let copyCmdButton = settings.buttons["copy-wrangler-command-button"]
         XCTAssertTrue(copyCmdButton.waitForExistence(timeout: 5), "Copy command button not found in Settings Publish pane")
         XCTAssertTrue(copyCmdButton.isHittable, "Copy command button is clipped in Settings window")
 
-        let deployButton = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] 'Deploy' OR title CONTAINS[c] 'Deploy'")).firstMatch
+        let deployButton = settings.buttons["deploy-to-cloudflare-button"]
         XCTAssertTrue(deployButton.waitForExistence(timeout: 5), "Deploy to Cloudflare button not found in Settings Publish pane")
         XCTAssertTrue(deployButton.isHittable, "Deploy to Cloudflare button is clipped in Settings window")
     }

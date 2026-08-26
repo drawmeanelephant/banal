@@ -18,7 +18,7 @@ struct SettingsRoot: View {
                 .tabItem { Label("Publish", systemImage: "globe") }
                 .accessibilityLabel("Publish")
         }
-        .frame(width: 520, height: 680)
+        .frame(width: 520, height: 720)
         .accessibilityLabel("Settings")
         .accessibilityIdentifier("settings-root")
     }
@@ -208,43 +208,46 @@ private struct PublishSettingsPane: View {
                 Text("Names and IDs travel with the notes folder. The token stays in Keychain.")
             }
             Section {
-                LabeledContent("wrangler.toml") {
-                    HStack(spacing: 8) {
-                        Text(wranglerTOMLPreview)
-                            .font(.system(.caption, design: .monospaced))
-                            .textSelection(.enabled)
-                            .accessibilityLabel("Wrangler configuration: \(wranglerTOMLPreview)")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        Button("Copy") {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(wranglerTOMLPreview, forType: .string)
-                        }
-                        .accessibilityLabel("Copy wrangler.toml configuration")
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("wrangler.toml")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text(wranglerTOMLPreview)
+                        .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
+                        .accessibilityLabel("Wrangler configuration: \(wranglerTOMLPreview)")
+                    Button("Copy wrangler.toml") {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(wranglerTOMLPreview, forType: .string)
                     }
+                    .accessibilityLabel("Copy wrangler.toml configuration")
+                    .accessibilityIdentifier("copy-wrangler-toml-button")
                 }
-                LabeledContent("Command") {
-                    HStack(spacing: 8) {
-                        Text(wranglerCommandPreview)
-                            .font(.system(.caption, design: .monospaced))
-                            .textSelection(.enabled)
-                            .accessibilityLabel("Wrangler command: \(wranglerCommandPreview)")
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        Button("Copy") {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Command")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text(wranglerCommandPreview)
+                        .font(.system(.caption, design: .monospaced))
+                        .textSelection(.enabled)
+                        .accessibilityLabel("Wrangler command: \(wranglerCommandPreview)")
+                    HStack {
+                        Button("Copy command") {
                             NSPasteboard.general.clearContents()
                             NSPasteboard.general.setString(wranglerCommandPreview, forType: .string)
                         }
                         .accessibilityLabel("Copy wrangler deployment command")
+                        .accessibilityIdentifier("copy-wrangler-command-button")
+                        Button("Deploy to Cloudflare") {
+                            model.deployToCloudflare()
+                        }
+                        .accessibilityLabel("Deploy to Cloudflare Pages")
+                        .accessibilityIdentifier("deploy-to-cloudflare-button")
+                        .disabled(!model.canDeploy)
+                        .help(model.canDeploy
+                              ? "Deploy the last site to Cloudflare Pages."
+                              : "Save an API token (Keychain) to enable deploy.")
                     }
-                }
-                LabeledContent("Deploy") {
-                    Button("Deploy to Cloudflare") {
-                        model.deployToCloudflare()
-                    }
-                    .accessibilityLabel("Deploy to Cloudflare Pages")
-                    .disabled(!model.canDeploy)
-                    .help(model.canDeploy
-                          ? "Deploy the last site to Cloudflare Pages."
-                          : "Save an API token (Keychain) to enable deploy.")
                 }
             } header: {
                 Text("Deploy")
