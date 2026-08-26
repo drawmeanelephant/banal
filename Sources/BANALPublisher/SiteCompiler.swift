@@ -36,8 +36,13 @@ public struct BuiltinSiteCompiler: SiteCompiling {
         }
         try fileManager.createDirectory(at: artifactDirectory, withIntermediateDirectories: true)
 
-        for page in pages where page.language == .markdown {
-            let rendered = SiteHTML.document(page: page, pages: pages, configuration: configuration)
+        for page in pages {
+            let rendered = SiteHTML.document(
+                page: page,
+                pages: pages,
+                configuration: configuration,
+                bodyHTML: page.prebuiltBodyHTML
+            )
             let destination = artifactDirectory.appendingPathComponent("\(page.entityID).html")
             try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
             try Data(rendered.utf8).write(to: destination, options: .atomic)
