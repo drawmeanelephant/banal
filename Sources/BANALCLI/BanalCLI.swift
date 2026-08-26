@@ -255,8 +255,11 @@ public enum BanalCLI {
 
             // A configured-but-broken engine is a config error; an engine that
             // was never configured is a healthy choice of the builtin path.
-            checks.append(binaryCheck(name: "boris", configured: configuration.borisBinaryPath, resolve: { BorisLocator.resolve(configured: $0) }, fallback: "builtin HTML will be used"))
-            checks.append(binaryCheck(name: "oliver", configured: configuration.oliverBinaryPath, resolve: { OliverLocator.resolve(configured: $0) }, fallback: "recipes stay source when published"))
+            // The CLI speaks for the machine, not one bundle: after the locator
+            // (configured → this-bundle → env → PATH → sibling), an installed
+            // BANAL.app's bundled engines are the last word before "warn".
+            checks.append(binaryCheck(name: "boris", configured: configuration.borisBinaryPath, resolve: { Self.resolveEngine(BorisLocator.resolve(configured: $0), helper: "boris") }, fallback: "builtin HTML will be used"))
+            checks.append(binaryCheck(name: "oliver", configured: configuration.oliverBinaryPath, resolve: { Self.resolveEngine(OliverLocator.resolve(configured: $0), helper: "oliver") }, fallback: "recipes stay source when published"))
 
             if let offender = snapshot.entities.first(where: { !BorisIdentity.isValid($1) }) {
                 checks.append(DoctorCheck(name: "contract", status: "fail", detail: "note \(offender.key) maps to invalid entity id \"\(offender.value)\""))
@@ -301,6 +304,16 @@ public enum BanalCLI {
             return DoctorCheck(name: name, status: "ok", detail: url.path)
         }
         return DoctorCheck(name: name, status: "warn", detail: "not found — \(fallback)")
+    }
+
+    /// Locator result, else the first executable engine inside an installed
+    /// BANAL.app (`~/Applications`, then `/Applications`). Machine-global by
+    /// nature, so only the CLI — which has no bundle of its own — consults it.
+    private static func resolveEngine(_ located: URL?, helper: String) -> URL? {
+        if let located { return located }
+        return BundledHelper.installedAppHelperURLs(named: helper).first {
+            FileManager.default.isExecutableFile(atPath: $0.path)
+        }
     }
 
     private static func resolveVault(_ explicit: String?) throws -> VaultConfiguration {
