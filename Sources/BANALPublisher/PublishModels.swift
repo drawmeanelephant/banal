@@ -113,6 +113,12 @@ public struct BorisPage: Equatable, Sendable {
     public var tags: [String]
     public var updated: Date
     public var language: NoteLanguage
+    /// Finished HTML for a non-Markdown page (Cooklang/Textile rendered by
+    /// Oliver). The page is staged as Markdown whose body is this HTML, so a
+    /// compiling engine emits it as one of its own outputs; the builtin
+    /// compiler pastes it into the theme layout without re-rendering.
+    /// CommonMark passes raw HTML blocks through byte-for-byte.
+    public var prebuiltBodyHTML: String?
 
     public init(
         entityID: String,
@@ -121,7 +127,8 @@ public struct BorisPage: Equatable, Sendable {
         title: String,
         tags: [String],
         updated: Date,
-        language: NoteLanguage = .markdown
+        language: NoteLanguage = .markdown,
+        prebuiltBodyHTML: String? = nil
     ) {
         self.entityID = entityID
         self.relativePath = relativePath
@@ -130,6 +137,7 @@ public struct BorisPage: Equatable, Sendable {
         self.tags = tags
         self.updated = updated
         self.language = language
+        self.prebuiltBodyHTML = prebuiltBodyHTML
     }
 }
 

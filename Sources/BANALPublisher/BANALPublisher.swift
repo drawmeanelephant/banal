@@ -35,7 +35,7 @@ public struct BANALPublisher: Sendable {
 
         var compiled: [Note] = []
         var skipped: [PublishSkip] = []
-        var extras: [(page: BorisPage, html: String)] = []
+        var markupHTML: [String: String] = [:]
 
         for note in published {
             if note.language == .markdown {
@@ -43,7 +43,7 @@ public struct BANALPublisher: Sendable {
                 continue
             }
             if let html = renderMarkup(note) {
-                extras.append((BorisAdapter.page(from: note, among: published), html))
+                markupHTML[note.id] = html
                 compiled.append(note)
             } else {
                 skipped.append(PublishSkip(noteID: note.id, language: note.language))
@@ -58,6 +58,7 @@ public struct BANALPublisher: Sendable {
             notes: compiled,
             configuration: configuration,
             assetsSource: vault.assetsURL,
+            markupHTML: markupHTML,
             fileManager: fileManager
         )
         let compile = try compiler.compile(
@@ -66,16 +67,6 @@ public struct BANALPublisher: Sendable {
             pages: staged.pages,
             configuration: configuration
         )
-
-        for extra in extras {
-            let html = SiteHTML.document(
-                page: extra.page,
-                pages: staged.pages,
-                configuration: configuration,
-                bodyHTML: extra.html
-            )
-            try SiteHTML.write(html, entityID: extra.page.entityID, artifactDirectory: configuration.artifactDirectory, fileManager: fileManager)
-        }
 
         let rss = RSSFeed.xml(
             siteTitle: configuration.siteTitle,

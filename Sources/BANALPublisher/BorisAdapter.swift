@@ -72,8 +72,8 @@ public enum BorisAdapter {
         )
     }
 
-    public static func serializeBorisSource(note: Note, entityID: String) -> String {
-        if note.language == .cooklang {
+    public static func serializeBorisSource(note: Note, entityID: String, bodyOverride: String? = nil) -> String {
+        if bodyOverride == nil, note.language == .cooklang {
             var fm = Frontmatter()
             fm.title = note.displayTitle
             fm.tags = note.tags
@@ -89,7 +89,7 @@ public enum BorisAdapter {
             lines.append("tags: [\(items)]")
         }
         lines.append("---")
-        var body = note.body
+        var body = bodyOverride ?? note.body
         if !body.hasPrefix("\n") {
             body = "\n" + body
         }
@@ -131,6 +131,7 @@ public enum BorisAdapter {
         notes: [Note],
         configuration: PublishConfiguration,
         assetsSource: URL?,
+        markupHTML: [String: String] = [:],
         fileManager: FileManager = .default
     ) throws -> (contentRoot: URL, pages: [BorisPage]) {
         let published = publishedNotes(from: notes)
@@ -150,14 +151,25 @@ public enum BorisAdapter {
             options: .atomic
         )
 
-        var pages = published.map { page(from: $0, among: published) }
+        // Markdown notes stage verbatim. Textile and Cooklang notes carry
+        // Oliver's finished HTML: staged as Markdown sources whose body is
+        // that HTML so the compiling engine emits them as its own pages and
+        // its link audit can resolve every route to them. They must never land
+        // in `content/` under their native extension — a markdown-only Boris
+        // tree rejects the folder.
+        var pages = published.map { note -> BorisPage in
+            var page = page(from: note, among: published)
+            if let html = markupHTML[note.id] {
+                page.relativePath = "\(page.entityID).md"
+                page.source = serializeBorisSource(note: note, entityID: page.entityID, bodyOverride: html)
+                page.prebuiltBodyHTML = html
+            }
+            return page
+        }
         let index = indexPage(siteTitle: configuration.siteTitle, pages: pages)
         pages.insert(index, at: 0)
 
-        // Boris (and the builtin compiler) only eat Markdown. Textile and
-        // Cooklang stay on the page list for Oliver; they must not land in
-        // `content/` or a markdown-only Boris tree will reject the folder.
-        for page in pages where page.language == .markdown {
+        for page in pages where page.language == .markdown || page.prebuiltBodyHTML != nil {
             let destination = content.appendingPathComponent(page.relativePath)
             try fileManager.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
             try Data(page.source.utf8).write(to: destination, options: .atomic)

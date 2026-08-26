@@ -365,6 +365,130 @@ final class PublisherTests: XCTestCase {
         XCTAssertEqual(try String(contentsOf: recipe.fileURL, encoding: .utf8), original)
     }
 
+    func testStageWritesRenderedMarkupAsMarkdownBody() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("banal-stage-markup-\(UUID().uuidString)", isDirectory: true)
+        let vault = VaultConfiguration(rootURL: root)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let now = Date()
+        let recipe = Note(
+            id: "Recipes/risotto.cook",
+            fileURL: URL(fileURLWithPath: "/tmp/Recipes/risotto.cook"),
+            title: "Risotto",
+            body: "Add @arborio rice{300%g}.\n",
+            created: now,
+            updated: now,
+            published: true,
+            modifiedAt: now
+        )
+        let essay = Note(
+            id: "alpha.md",
+            fileURL: URL(fileURLWithPath: "/tmp/alpha.md"),
+            title: "Alpha",
+            body: "\nHello.\n",
+            created: now,
+            updated: now,
+            published: true,
+            modifiedAt: now
+        )
+        let configuration = PublishConfiguration(
+            siteTitle: "Field Notes",
+            artifactDirectory: root.appendingPathComponent(".publish"),
+            stagingDirectory: root.appendingPathComponent(".banal/stage"),
+            preferBoris: false
+        )
+        let html = "<section class=\"recipe\"><p>Add rice.</p></section>"
+        let staged = try BorisAdapter.stage(
+            notes: [essay, recipe],
+            configuration: configuration,
+            assetsSource: nil,
+            markupHTML: [recipe.id: html]
+        )
+        guard let risotto = staged.pages.first(where: { $0.entityID == "Recipes/risotto" }) else {
+            return XCTFail("missing risotto page")
+        }
+        XCTAssertEqual(risotto.relativePath, "Recipes/risotto.md")
+        XCTAssertEqual(risotto.prebuiltBodyHTML, html)
+
+        let stagedSource = try String(
+            contentsOf: configuration.stagingDirectory.appendingPathComponent("content/Recipes/risotto.md"),
+            encoding: .utf8
+        )
+        XCTAssertTrue(stagedSource.contains("status: published"))
+        XCTAssertTrue(stagedSource.contains(html))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: configuration.stagingDirectory.appendingPathComponent("content/Recipes/risotto.cook").path))
+
+        // The builtin compiler emits the prebuilt HTML verbatim inside the theme.
+        let result = try BuiltinSiteCompiler().compile(
+            stagingDirectory: configuration.stagingDirectory,
+            artifactDirectory: configuration.artifactDirectory,
+            pages: staged.pages,
+            configuration: configuration
+        )
+        XCTAssertFalse(result.usedBorisBinary)
+        let emitted = try String(contentsOf: configuration.artifactDirectory.appendingPathComponent("Recipes/risotto.html"), encoding: .utf8)
+        XCTAssertTrue(emitted.contains("<section class=\"recipe\">"), emitted)
+    }
+
+    /// Regression for #210: a mixed vault (Markdown + `.cook`) through the real
+    /// Boris CLI used to fail with EROUTEMISSING because Oliver-rendered recipe
+    /// pages were written only after Boris's link audit. The rendered HTML is
+    /// now staged as Markdown so Boris emits it as its own output.
+    func testMixedVaultPublishesThroughBorisBinary() throws {
+        let boris = BorisLocator.resolve(configured: nil)
+        try XCTSkipUnless(boris != nil, "Boris binary not on PATH or in a sibling checkout")
+        let oliver = OliverLocator.resolve()
+        try XCTSkipUnless(oliver != nil, "Oliver binary not on PATH or in a sibling checkout")
+        let client = OliverClient(binaryURL: oliver!)
+
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("banal-boris-mixed-\(UUID().uuidString)", isDirectory: true)
+        let vault = VaultConfiguration(rootURL: root, siteTitle: "Field Notes", borisBinaryPath: boris?.path)
+        try VaultBootstrap.prepare(vault)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let now = Date()
+        let essay = Note(
+            id: "alpha.md",
+            fileURL: root.appendingPathComponent("alpha.md"),
+            title: "Alpha",
+            body: "\n# Alpha\n\nLink to a recipe.\n",
+            created: now,
+            updated: now,
+            published: true,
+            modifiedAt: now
+        )
+        let recipeURL = root.appendingPathComponent("Recipes/risotto.cook")
+        try FileManager.default.createDirectory(at: recipeURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let original = ">> title: Risotto\n\nAdd @arborio rice{300%g} to the pan.\n"
+        try Data(original.utf8).write(to: recipeURL)
+        var recipe = try NoteIO.load(url: recipeURL, vaultURL: root)
+        recipe.published = true
+
+        let configuration = PublishConfiguration(
+            siteTitle: "Field Notes",
+            artifactDirectory: root.appendingPathComponent(".publish"),
+            stagingDirectory: root.appendingPathComponent(".banal/stage"),
+            borisBinaryURL: boris,
+            oliverBinaryURL: oliver,
+            preferBoris: true
+        )
+        var publisher = BANALPublisher.make(configuration: configuration)
+        publisher.oliver = client
+        let result = try publisher.publish(notes: [essay, recipe], vault: vault, configuration: configuration, now: now)
+
+        XCTAssertTrue(result.usedBorisBinary)
+        XCTAssertEqual(result.compilerName, "boris")
+        XCTAssertEqual(Set(result.compiledNoteIDs), ["alpha.md", "Recipes/risotto.cook"])
+        XCTAssertTrue(result.skipped.isEmpty)
+        let risotto = try String(contentsOf: result.artifactDirectory.appendingPathComponent("Recipes/risotto.html"), encoding: .utf8)
+        XCTAssertTrue(risotto.contains("arborio") || risotto.contains("ingredient"), risotto)
+        let index = try String(contentsOf: result.indexURL, encoding: .utf8)
+        XCTAssertTrue(index.contains("Recipes/risotto.html"))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: result.rssURL.path))
+        XCTAssertEqual(try String(contentsOf: recipeURL, encoding: .utf8), original)
+    }
+
     func testStatusCopyAgreesWithCounts() {
         let artifact = URL(fileURLWithPath: "/tmp/out")
         let index = artifact.appendingPathComponent("index.html")
