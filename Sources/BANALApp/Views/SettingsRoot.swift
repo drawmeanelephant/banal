@@ -18,7 +18,7 @@ struct SettingsRoot: View {
                 .tabItem { Label("Publish", systemImage: "globe") }
                 .accessibilityLabel("Publish")
         }
-        .frame(width: 520, height: 720)
+        .frame(width: 520, height: 640)
         .accessibilityLabel("Settings")
         .accessibilityIdentifier("settings-root")
     }
@@ -208,29 +208,16 @@ private struct PublishSettingsPane: View {
                 Text("Names and IDs travel with the notes folder. The token stays in Keychain.")
             }
             Section {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("wrangler.toml")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Text(wranglerTOMLPreview)
-                        .font(.system(.caption, design: .monospaced))
-                        .textSelection(.enabled)
-                        .accessibilityLabel("Wrangler configuration: \(wranglerTOMLPreview)")
+                LabeledContent("wrangler.toml") {
                     Button("Copy wrangler.toml") {
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(wranglerTOMLPreview, forType: .string)
                     }
                     .accessibilityLabel("Copy wrangler.toml configuration")
                     .accessibilityIdentifier("copy-wrangler-toml-button")
+                    .help(wranglerTOMLPreview)
                 }
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Command")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                    Text(wranglerCommandPreview)
-                        .font(.system(.caption, design: .monospaced))
-                        .textSelection(.enabled)
-                        .accessibilityLabel("Wrangler command: \(wranglerCommandPreview)")
+                LabeledContent("Command") {
                     HStack {
                         Button("Copy command") {
                             NSPasteboard.general.clearContents()
@@ -238,6 +225,7 @@ private struct PublishSettingsPane: View {
                         }
                         .accessibilityLabel("Copy wrangler deployment command")
                         .accessibilityIdentifier("copy-wrangler-command-button")
+                        .help(wranglerCommandPreview)
                         Button("Deploy to Cloudflare") {
                             model.deployToCloudflare()
                         }
