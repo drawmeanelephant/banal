@@ -14,8 +14,12 @@ import SwiftUI
 public final class AppModel: ObservableObject {
     @Published public var store: NoteStore
     @Published public var selectedID: String?
-    @Published public var filter: SidebarFilter = .all
-    @Published public var searchQuery: String = ""
+    @Published public var filter: SidebarFilter = .all {
+        didSet { reconcileSelectionToVisible() }
+    }
+    @Published public var searchQuery: String = "" {
+        didSet { reconcileSelectionToVisible() }
+    }
     @Published public var searchFocusToken: Int = 0
     @Published public var findInNoteToken: Int = 0
     @Published public var statusMessage: String?
@@ -951,6 +955,18 @@ public final class AppModel: ObservableObject {
         if case .folder(let path) = filter, !store.folders.contains(path) {
             filter = .all
         }
+    }
+
+    /// #213: switching folder, filter, search, or tag must not leave the
+    /// editor pinned to a note the list no longer shows. If the selected
+    /// note is not visible anymore, fall to the first visible note — or
+    /// to no selection at all, so the editor shows its empty state.
+    private func reconcileSelectionToVisible() {
+        guard !needsVault, !store.rootMissing else { return }
+        select(SelectionReconciler.target(
+            selectedID: selectedID,
+            visibleIDs: visibleNotes.map(\.id)
+        ))
     }
 }
 
