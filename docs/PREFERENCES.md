@@ -62,7 +62,7 @@ Local notes do not read these keys. They matter only when the user chooses File 
 | Boris binary | optional path | bundled helper, then `BANAL_BORIS_BIN`, then `PATH`, then sibling checkout | No Settings UI. Legacy paths in `.banal/config.json` still round-trip. Debug override via `BANAL_BORIS_BIN` |
 | Oliver binary | optional path | bundled helper, then `BANAL_OLIVER_BIN`, then `PATH`, then sibling checkout | No Settings UI. Legacy paths in `.banal/config.json` still round-trip. Debug override via `BANAL_OLIVER_BIN` |
 
-`make app` builds universal Oliver and Boris from their Zig checkouts (`Scripts/helpers.sh`) into `Contents/Helpers/`. Missing checkouts are a warning — the app degrades to the builtin compiler and one-sentence Read, never an error dialog.
+`make app` and Xcode builds compile universal Oliver and Boris binaries from local checkouts or GitHub `main` branches (`Scripts/helpers.sh`) into `Contents/Helpers/`. If the compiler or network is unavailable, the app degrades gracefully to the builtin compiler and one-sentence Read without error dialogs.
 
 ### Cloudflare
 

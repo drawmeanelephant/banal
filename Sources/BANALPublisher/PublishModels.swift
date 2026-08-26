@@ -149,6 +149,7 @@ public enum BorisLocator {
     public static func resolve(
         configured: String?,
         environment: [String: String] = ProcessInfo.processInfo.environment,
+        currentDirectory: URL? = nil,
         fileManager: FileManager = .default,
         auxiliaryExecutables: (String) -> [URL] = BundledHelper.executables
     ) -> URL? {
@@ -170,9 +171,16 @@ public enum BorisLocator {
         if let found = which("boris", path: environment["PATH"] ?? "", fileManager: fileManager) {
             return found
         }
-        let cwd = URL(fileURLWithPath: fileManager.currentDirectoryPath)
+        let cwd = currentDirectory ?? URL(fileURLWithPath: fileManager.currentDirectoryPath)
         let relatives = [
+            "dist/helpers/boris",
+            ".build/helpers/boris",
+            ".build/helpers-src/boris/zig-out/bin/boris",
             "zig-out/bin/boris",
+            "../boris/zig-out/bin/boris",
+            "../../boris/zig-out/bin/boris",
+            "../../../boris/zig-out/bin/boris",
+            "../../../../boris/zig-out/bin/boris",
             "../boris/main/zig-out/bin/boris",
             "../../boris/main/zig-out/bin/boris",
             "../../../boris/main/zig-out/bin/boris",
