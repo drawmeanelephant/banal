@@ -8,8 +8,15 @@
 # or cloned from https://github.com/drawmeanelephant/<name>.git (branch: main)
 # into .build/helpers-src/<name>.
 # Missing checkout/compiler = skip with a note, never fatal — BANAL degrades
-# gracefully without a bundled engine.
-# Cross-compilation failure falls back to a host-arch binary.
+# gracefully without a bundled engine. Cross-compilation failure falls back to
+# a host-arch binary.
+#
+# Set HELPERS_STRICT=1 to invert that: a missing, unbuildable, non-executable,
+# or non-universal helper is a hard failure with a loud annotation and a
+# nonzero exit. CI uses strict mode so a bundle shipping without working
+# engines can never look green. Local development keeps the lenient default,
+# because a laptop with no Zig and no network must still be able to build and
+# use local notes.
 #
 # Usage: Scripts/helpers.sh [dist-dir]
 
@@ -19,6 +26,67 @@ DIST="${1:-dist}"
 HELPERS="$DIST/helpers"
 ZIG="${ZIG:-zig}"
 CACHE_DIR="${HELPERS_CACHE_DIR:-.build/helpers-src}"
+STRICT="${HELPERS_STRICT:-0}"
+
+# Engines that did not make it in. Populated in both modes; only fatal in strict.
+FAILURES=()
+
+warn() {
+	echo "warning: $*" >&2
+}
+
+# Loud, unmissable failure. GitHub Actions renders ::error:: as a red
+# annotation; elsewhere the same text goes to stderr.
+fail() {
+	# Always recorded; only shouted about under strict mode. In lenient mode
+	# the specific warning() lines already said what went wrong, and a local
+	# build with no Zig should not look like a build failure.
+	if is_strict; then
+		echo "" >&2
+		echo "════════════════════════════════════════════════════════════" >&2
+		echo "  HELPER BUILD FAILURE: $*" >&2
+		echo "════════════════════════════════════════════════════════════" >&2
+		if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
+			echo "::error title=Helper build failed::$*" >&2
+		fi
+	fi
+	FAILURES+=("$*")
+}
+
+is_strict() {
+	case "$(printf '%s' "$STRICT" | tr '[:upper:]' '[:lower:]')" in
+	1 | true | yes | on) return 0 ;;
+	*) return 1 ;;
+	esac
+}
+
+# Confirm what we actually shipped: present, executable, and universal. The
+# host-arch fallback path produces a thin binary, so this is also what catches
+# a silent cross-compile regression.
+verify_helper() {
+	local name="$1"
+	local bin="$HELPERS/$name"
+	[ -f "$bin" ] || {
+		warn "$name: no binary at $bin"
+		return 1
+	}
+	[ -x "$bin" ] || {
+		warn "$name: $bin is not executable"
+		return 1
+	}
+	local archs
+	archs="$(lipo -archs "$bin" 2>/dev/null || true)"
+	case "$archs" in
+	*x86_64*arm64* | *arm64*x86_64*)
+		echo "helpers: verified $name (universal: $archs)"
+		return 0
+		;;
+	*)
+		warn "$name: not universal (architectures: ${archs:-unknown})"
+		return 1
+		;;
+	esac
+}
 
 mkdir -p "$HELPERS"
 
@@ -109,11 +177,30 @@ for tool in oliver boris; do
 	oliver) src_override="${OLIVER_DIR:-}" ;;
 	boris) src_override="${BORIS_DIR:-}" ;;
 	esac
+
 	if src="$(find_or_fetch_source "$tool" "$src_override")"; then
 		build_helper "$tool" "$src"
+		if ! verify_helper "$tool"; then
+			fail "$tool did not produce a verified universal binary in $HELPERS"
+		fi
 	else
-		echo "warning: no $tool source found — bundling without it" >&2
+		warn "no $tool source found — bundling without it"
+		fail "$tool source not found (looked in \$OLIVER_DIR/\$BORIS_DIR, sibling checkouts, $CACHE_DIR, and github.com/drawmeanelephant/$tool)"
 	fi
 done
+
+# Lenient by default: a laptop with no Zig and no network still gets a local
+# build, because local notes must work with no engines present. Strict mode
+# turns the collected failures into a build failure.
+if [ "${#FAILURES[@]}" -gt 0 ]; then
+	if is_strict; then
+		echo "" >&2
+		echo "HELPERS_STRICT=1: ${#FAILURES[@]} engine(s) unusable. Failing the build." >&2
+		echo "Set HELPERS_STRICT=0 to build without bundled engines (local, offline)." >&2
+		exit 1
+	fi
+	warn "${#FAILURES[@]} engine(s) unavailable; continuing because HELPERS_STRICT=${STRICT}."
+	warn "The app will fall back to the builtin compiler / PATH engines. Run with HELPERS_STRICT=1 to make this fatal."
+fi
 
 exit 0
