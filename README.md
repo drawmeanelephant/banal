@@ -78,6 +78,15 @@ swift run banal doctor                # vault, Boris/Oliver presence, identity c
 
 `banal` is a read-mostly window for scripts and agents over the same code paths as the app (`--vault DIR` to point at any folder). It never creates or edits notes — the editor is the app. `banal-cli` remains the GUI launcher.
 
+Two products, two different binaries — this trips people up:
+
+| Product | Target | Built by | What it is |
+| --- | --- | --- | --- |
+| `banal` | `BANALCLI` | `make app`, or `swift build --product banal` | the CLI below |
+| `banal-cli` | `BANALApp` | `make app` | the GUI app |
+
+`make app` builds **both**, so `.build/release/banal` exists after a bundle build. But `dist/BANAL.app/Contents/MacOS/BANAL` is the **GUI binary** (product `banal-cli` renamed by the bundle layout), *not* the CLI — running `.../MacOS/BANAL doctor` launches the app and blocks instead of printing a report. Use `.build/release/banal`.
+
 ## Scripting
 
 BANAL has an AppleScript dictionary (`Resources/BANAL.sdef`). Writes go through the same store the app uses and land as ordinary files on disk:

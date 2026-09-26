@@ -41,6 +41,7 @@ helpers:
 # warning, not an error — the app degrades to builtin/one-sentence paths.
 app: helpers
 	$(SWIFT) build -c release --product banal-cli
+	$(SWIFT) build -c release --product banal
 	rm -rf "$(APP)"
 	mkdir -p "$(APP)/Contents/MacOS" "$(APP)/Contents/Resources"
 	cp .build/release/banal-cli "$(APP)/Contents/MacOS/BANAL"
@@ -66,6 +67,9 @@ app: helpers
 	fi
 	codesign --force --sign "$(SIGN_IDENTITY)" --entitlements "$(ENTITLEMENTS)" $(CODESIGN_FLAGS) "$(APP)"
 	@echo "Built $(APP) (version $(VERSION))."
+	@echo "Built the CLI at .build/release/banal — that is the doctor/publish"
+	@echo "binary. '$(APP)/Contents/MacOS/BANAL' is the GUI app, not the CLI:"
+	@echo "passing 'doctor' or 'publish' to it launches the app and blocks."
 	@echo "Signed with identity '$(SIGN_IDENTITY)'."
 	@if [ "$(SIGN_IDENTITY)" = "-" ]; then \
 		echo "Ad-hoc unless SIGN_IDENTITY is a Developer ID. Not notarized."; \
