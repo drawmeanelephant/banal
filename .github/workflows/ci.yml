@@ -27,6 +27,57 @@ jobs:
       - name: Boot the signed app, open an external note, import it
         run: make smoke
 
+  # The smoke job above builds the bundle with the default lenient helper mode,
+  # so it can pass with no engines at all. This job is the gate: it forces
+  # HELPERS_STRICT=1, so a missing, unbuildable, or non-universal Boris/Oliver
+  # fails the build instead of silently shipping a bundle that quietly falls
+  # back to the builtin compiler. Publishing through the real Boris is proved
+  # here too, which is the thing the bundled engines exist for.
+  engines:
+    name: engines (bundled Boris + Oliver)
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install zig
+        run: brew install zig
+      - name: Build helpers, strict (a bad engine fails here)
+        env:
+          HELPERS_STRICT: "1"
+        run: make helpers
+      - name: Build the app with the engines in place
+        env:
+          HELPERS_STRICT: "1"
+        run: make app
+      - name: Assert both engines are bundled and universal
+        run: |
+          set -euo pipefail
+          for tool in oliver boris; do
+            bin="dist/BANAL.app/Contents/Helpers/$tool"
+            test -x "$bin" || { echo "missing or non-executable: $bin"; exit 1; }
+            archs="$(lipo -archs "$bin")"
+            echo "$tool: $archs"
+            case "$archs" in
+              *x86_64*arm64*) ;;
+              *) echo "::error::$tool is not universal ($archs)"; exit 1 ;;
+            esac
+          done
+      - name: Prove publish runs through the bundled Boris
+        run: |
+          set -euo pipefail
+          swift build -c release --product banal
+          vault="$(mktemp -d)"
+          cp -R Examples/sample-vault/. "$vault/"
+          out="$(BANAL_BORIS_BIN="$PWD/dist/BANAL.app/Contents/Helpers/boris" \
+                 BANAL_OLIVER_BIN="$PWD/dist/BANAL.app/Contents/Helpers/oliver" \
+                 .build/release/banal publish --vault "$vault" --json)"
+          echo "$out"
+          grep -q '"usedBorisBinary" : true' <<<"$out" \
+            || { echo "::error::publish did not use the bundled Boris"; exit 1; }
+          test -f "$vault/.publish/index.html" || { echo "::error::no index.html"; exit 1; }
+          test -f "$vault/.publish/feed.xml"     || { echo "::error::no feed.xml"; exit 1; }
+          test -f "$vault/.publish/wrangler.toml" || { echo "::error::no wrangler.toml"; exit 1; }
+
   ui-test:
     name: ui-test (accessibility audit)
     runs-on: macos-15

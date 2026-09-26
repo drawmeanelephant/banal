@@ -149,6 +149,46 @@ public enum PublishError: Error, Equatable, Sendable {
     case io(String)
 }
 
+/// Which rung of the engine locator chain answered.
+///
+/// The chain is ordered by preference (configured → bundled → env → PATH →
+/// working dir), and the CLI has one extra rung the app does not: an engine
+/// bundled inside an installed BANAL.app. This names which one won, because a
+/// bare CLI has no bundle of its own and will happily report an engine from
+/// `PATH` while the app it ships beside is using a *different* binary from
+/// `Contents/Helpers`. A green report should never quietly conflate the two.
+public enum EngineSource: String, Equatable, Sendable, CaseIterable {
+    case configured
+    case bundled
+    case environment
+    case path
+    case workingDirectory
+    case installedApp
+
+    /// Short human label for `doctor` output.
+    public var label: String {
+        switch self {
+        case .configured: return "configured"
+        case .bundled: return "bundled"
+        case .environment: return "env"
+        case .path: return "PATH"
+        case .workingDirectory: return "working dir"
+        case .installedApp: return "installed app"
+        }
+    }
+}
+
+/// A located engine plus where it came from.
+public struct ResolvedEngine: Equatable, Sendable {
+    public let url: URL
+    public let source: EngineSource
+
+    public init(url: URL, source: EngineSource) {
+        self.url = url
+        self.source = source
+    }
+}
+
 public enum BorisLocator {
     /// Order: configured path, the app-bundled helper,
     /// `BANAL_BORIS_BIN`, `PATH`, then a sibling checkout. The bundle
@@ -161,23 +201,41 @@ public enum BorisLocator {
         fileManager: FileManager = .default,
         auxiliaryExecutables: (String) -> [URL] = BundledHelper.executables
     ) -> URL? {
+        resolveDetailed(
+            configured: configured,
+            environment: environment,
+            currentDirectory: currentDirectory,
+            fileManager: fileManager,
+            auxiliaryExecutables: auxiliaryExecutables
+        )?.url
+    }
+
+    /// Same order as `resolve`, but names the rung that answered, so a report
+    /// can distinguish "the engine in this bundle" from "whatever is on PATH".
+    public static func resolveDetailed(
+        configured: String?,
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        currentDirectory: URL? = nil,
+        fileManager: FileManager = .default,
+        auxiliaryExecutables: (String) -> [URL] = BundledHelper.executables
+    ) -> ResolvedEngine? {
         if let configured, !configured.isEmpty {
             let url = URL(fileURLWithPath: configured)
             if fileManager.isExecutableFile(atPath: url.path) {
-                return url
+                return ResolvedEngine(url: url, source: .configured)
             }
         }
         for url in auxiliaryExecutables("boris") where fileManager.isExecutableFile(atPath: url.path) {
-            return url
+            return ResolvedEngine(url: url, source: .bundled)
         }
         if let env = environment["BANAL_BORIS_BIN"], !env.isEmpty {
             let url = URL(fileURLWithPath: env)
             if fileManager.isExecutableFile(atPath: url.path) {
-                return url
+                return ResolvedEngine(url: url, source: .environment)
             }
         }
         if let found = which("boris", path: environment["PATH"] ?? "", fileManager: fileManager) {
-            return found
+            return ResolvedEngine(url: found, source: .path)
         }
         let cwd = currentDirectory ?? URL(fileURLWithPath: fileManager.currentDirectoryPath)
         let relatives = [
@@ -197,7 +255,7 @@ public enum BorisLocator {
         for relative in relatives {
             let candidate = cwd.appendingPathComponent(relative).standardizedFileURL
             if fileManager.isExecutableFile(atPath: candidate.path) {
-                return candidate
+                return ResolvedEngine(url: candidate, source: .workingDirectory)
             }
         }
         return nil

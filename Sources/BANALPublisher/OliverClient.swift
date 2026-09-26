@@ -19,6 +19,24 @@ public enum OliverLocator {
         fileManager: FileManager = .default,
         auxiliaryExecutables: (String) -> [URL] = BundledHelper.executables
     ) -> URL? {
+        resolveDetailed(
+            configured: configured,
+            environment: environment,
+            currentDirectory: currentDirectory,
+            fileManager: fileManager,
+            auxiliaryExecutables: auxiliaryExecutables
+        )?.url
+    }
+
+    /// Same order as `resolve`, but names the rung that answered, so a report
+    /// can distinguish "the engine in this bundle" from "whatever is on PATH".
+    public static func resolveDetailed(
+        configured: String? = nil,
+        environment: [String: String] = ProcessInfo.processInfo.environment,
+        currentDirectory: URL? = nil,
+        fileManager: FileManager = .default,
+        auxiliaryExecutables: (String) -> [URL] = BundledHelper.executables
+    ) -> ResolvedEngine? {
         candidates(
             configured: configured,
             environment: environment,
@@ -37,15 +55,15 @@ public enum OliverLocator {
         fileManager: FileManager = .default,
         auxiliaryExecutables: (String) -> [URL] = BundledHelper.executables
     ) -> URL? {
-        for url in candidates(
+        for engine in candidates(
             configured: configured,
             environment: environment,
             currentDirectory: currentDirectory,
             fileManager: fileManager,
             auxiliaryExecutables: auxiliaryExecutables
         ) {
-            if (try? OliverClient(binaryURL: url).recipe("Add @salt{}.\n")) != nil {
-                return url
+            if (try? OliverClient(binaryURL: engine.url).recipe("Add @salt{}.\n")            ) != nil {
+                return engine.url
             }
         }
         return nil
@@ -75,26 +93,26 @@ public enum OliverLocator {
         currentDirectory: URL?,
         fileManager: FileManager,
         auxiliaryExecutables: (String) -> [URL]
-    ) -> [URL] {
-        var urls: [URL] = []
+    ) -> [ResolvedEngine] {
+        var engines: [ResolvedEngine] = []
         var seen = Set<String>()
-        func add(_ url: URL) {
+        func add(_ url: URL, _ source: EngineSource) {
             let path = url.standardizedFileURL.path
             guard fileManager.isExecutableFile(atPath: path), !seen.contains(path) else { return }
             seen.insert(path)
-            urls.append(url.standardizedFileURL)
+            engines.append(ResolvedEngine(url: url.standardizedFileURL, source: source))
         }
         if let configured, !configured.isEmpty {
-            add(URL(fileURLWithPath: configured))
+            add(URL(fileURLWithPath: configured), .configured)
         }
         for url in auxiliaryExecutables("oliver") {
-            add(url)
+            add(url, .bundled)
         }
         if let env = environment["BANAL_OLIVER_BIN"], !env.isEmpty {
-            add(URL(fileURLWithPath: env))
+            add(URL(fileURLWithPath: env), .environment)
         }
         if let found = which("oliver", path: environment["PATH"] ?? "", fileManager: fileManager) {
-            add(found)
+            add(found, .path)
         }
         let cwd = currentDirectory ?? URL(fileURLWithPath: fileManager.currentDirectoryPath)
         let relatives = [
@@ -112,9 +130,9 @@ public enum OliverLocator {
             "../../../../oliver/main/zig-out/bin/oliver",
         ]
         for relative in relatives {
-            add(cwd.appendingPathComponent(relative))
+            add(cwd.appendingPathComponent(relative), .workingDirectory)
         }
-        return urls
+        return engines
     }
 
     private static func which(_ name: String, path: String, fileManager: FileManager) -> URL? {

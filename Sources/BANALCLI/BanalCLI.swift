@@ -258,8 +258,13 @@ public enum BanalCLI {
             // The CLI speaks for the machine, not one bundle: after the locator
             // (configured → this-bundle → env → PATH → sibling), an installed
             // BANAL.app's bundled engines are the last word before "warn".
-            checks.append(binaryCheck(name: "boris", configured: configuration.borisBinaryPath, resolve: { Self.resolveEngine(BorisLocator.resolve(configured: $0), helper: "boris") }, fallback: "builtin HTML will be used"))
-            checks.append(binaryCheck(name: "oliver", configured: configuration.oliverBinaryPath, resolve: { Self.resolveEngine(OliverLocator.resolve(configured: $0), helper: "oliver") }, fallback: "recipes stay source when published"))
+            //
+            // Each engine reports *which* rung answered. A bare CLI has no
+            // bundle of its own, so it often lands on PATH while the app
+            // beside it uses Contents/Helpers — saying so is the point, so a
+            // green line never blesses the wrong binary.
+            checks.append(binaryCheck(name: "boris", configured: configuration.borisBinaryPath, resolve: { Self.resolveEngine(BorisLocator.resolveDetailed(configured: $0), helper: "boris") }, fallback: "builtin HTML will be used"))
+            checks.append(binaryCheck(name: "oliver", configured: configuration.oliverBinaryPath, resolve: { Self.resolveEngine(OliverLocator.resolveDetailed(configured: $0), helper: "oliver") }, fallback: "recipes stay source when published"))
 
             if let offender = snapshot.entities.first(where: { !BorisIdentity.isValid($1) }) {
                 checks.append(DoctorCheck(name: "contract", status: "fail", detail: "note \(offender.key) maps to invalid entity id \"\(offender.value)\""))
@@ -290,18 +295,18 @@ public enum BanalCLI {
     private static func binaryCheck(
         name: String,
         configured: String?,
-        resolve: (String?) -> URL?,
+        resolve: (String?) -> ResolvedEngine?,
         fallback: String
     ) -> DoctorCheck {
         if let configured, !configured.isEmpty {
             let url = URL(fileURLWithPath: configured)
             if FileManager.default.isExecutableFile(atPath: url.path) {
-                return DoctorCheck(name: name, status: "ok", detail: url.path)
+                return DoctorCheck(name: name, status: "ok", detail: "\(url.path) (configured)")
             }
             return DoctorCheck(name: name, status: "fail", detail: "configured at \"\(configured)\" but not executable")
         }
-        if let url = resolve(nil) {
-            return DoctorCheck(name: name, status: "ok", detail: url.path)
+        if let engine = resolve(nil) {
+            return DoctorCheck(name: name, status: "ok", detail: "\(engine.url.path) (\(engine.source.label))")
         }
         return DoctorCheck(name: name, status: "warn", detail: "not found — \(fallback)")
     }
@@ -309,11 +314,11 @@ public enum BanalCLI {
     /// Locator result, else the first executable engine inside an installed
     /// BANAL.app (`~/Applications`, then `/Applications`). Machine-global by
     /// nature, so only the CLI — which has no bundle of its own — consults it.
-    private static func resolveEngine(_ located: URL?, helper: String) -> URL? {
+    private static func resolveEngine(_ located: ResolvedEngine?, helper: String) -> ResolvedEngine? {
         if let located { return located }
         return BundledHelper.installedAppHelperURLs(named: helper).first {
             FileManager.default.isExecutableFile(atPath: $0.path)
-        }
+        }.map { ResolvedEngine(url: $0, source: .installedApp) }
     }
 
     private static func resolveVault(_ explicit: String?) throws -> VaultConfiguration {

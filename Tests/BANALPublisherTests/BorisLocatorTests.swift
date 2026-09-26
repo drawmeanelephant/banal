@@ -84,6 +84,96 @@ final class BorisLocatorTests: XCTestCase {
         )
         XCTAssertEqual(found?.standardizedFileURL, distHelper.standardizedFileURL)
     }
+
+    // MARK: - Provenance (issue #223)
+    //
+    // `doctor` has to name the rung that answered, otherwise a green line
+    // beside a bare CLI can bless a PATH copy while the app next to it runs
+    // a different binary out of Contents/Helpers.
+
+    func testDetailedNamesTheBundledRungWhenBundleWins() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let bundled = root.appendingPathComponent("bundled-boris")
+        let binDir = root.appendingPathComponent("bin", isDirectory: true)
+        let onPath = binDir.appendingPathComponent("boris")
+        try makeStub(at: bundled)
+        try makeStub(at: onPath)
+        let found = BorisLocator.resolveDetailed(
+            configured: nil,
+            environment: ["PATH": binDir.path],
+            currentDirectory: root,
+            auxiliaryExecutables: { _ in [bundled] }
+        )
+        XCTAssertEqual(found?.url.standardizedFileURL, bundled.standardizedFileURL)
+        XCTAssertEqual(found?.source, .bundled)
+    }
+
+    func testDetailedNamesThePathRungWhenNothingElseAnswers() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        // The PATH rung looks for a binary literally named "boris", and the
+        // working-dir rung must not match, so isolate both.
+        let binDir = root.appendingPathComponent("bin", isDirectory: true)
+        let onPath = binDir.appendingPathComponent("boris")
+        try makeStub(at: onPath)
+        let found = BorisLocator.resolveDetailed(
+            configured: nil,
+            environment: ["PATH": binDir.path],
+            currentDirectory: root,
+            auxiliaryExecutables: { _ in [] }
+        )
+        XCTAssertEqual(found?.url.standardizedFileURL, onPath.standardizedFileURL)
+        XCTAssertEqual(found?.source, .path)
+    }
+
+    func testDetailedNamesTheEnvironmentRung() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let env = root.appendingPathComponent("env-boris")
+        try makeStub(at: env)
+        let found = BorisLocator.resolveDetailed(
+            configured: nil,
+            environment: ["BANAL_BORIS_BIN": env.path, "PATH": ""],
+            auxiliaryExecutables: { _ in [] }
+        )
+        XCTAssertEqual(found?.source, .environment)
+    }
+
+    func testDetailedNamesTheConfiguredRung() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let configured = root.appendingPathComponent("configured-boris")
+        try makeStub(at: configured)
+        let found = BorisLocator.resolveDetailed(
+            configured: configured.path,
+            environment: ["PATH": ""],
+            auxiliaryExecutables: { _ in [] }
+        )
+        XCTAssertEqual(found?.source, .configured)
+    }
+
+    func testDetailedAgreesWithResolve() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let bundled = root.appendingPathComponent("bundled-boris")
+        try makeStub(at: bundled)
+        let env: [String: String] = ["PATH": ""]
+        let detailed = BorisLocator.resolveDetailed(
+            configured: nil, environment: env, auxiliaryExecutables: { _ in [bundled] }
+        )
+        let plain = BorisLocator.resolve(
+            configured: nil, environment: env, auxiliaryExecutables: { _ in [bundled] }
+        )
+        XCTAssertEqual(detailed?.url, plain)
+    }
+
+    func testEveryEngineSourceHasALabel() {
+        for source in EngineSource.allCases {
+            XCTAssertFalse(source.label.isEmpty, "\(source) has no label")
+        }
+        XCTAssertEqual(EngineSource.installedApp.label, "installed app")
+    }
 }
 
 private func isolatedRoot() -> URL {

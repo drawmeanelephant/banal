@@ -30,7 +30,11 @@ build:
 run:
 	$(SWIFT) run BANAL
 
-# Build Boris and Oliver helper engines into $(DIST)/helpers/
+# Build Boris and Oliver helper engines into $(DIST)/helpers/.
+# Lenient by default: a missing engine warns and the app falls back to the
+# builtin compiler, so an offline laptop can still build and use local notes.
+# Run with HELPERS_STRICT=1 to make a missing/unbuildable/non-universal engine
+# a hard failure — that is what CI does.
 helpers:
 	@$(BASH) Scripts/helpers.sh "$(DIST)"
 
