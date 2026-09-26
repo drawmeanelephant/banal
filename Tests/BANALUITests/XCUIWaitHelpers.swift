@@ -23,6 +23,12 @@ enum XCUITimeout {
 
 /// Poll `condition` until it holds or the timeout expires, pumping the
 /// run loop so XCTest's own machinery keeps running.
+///
+/// `@MainActor` throughout: `XCUIElement.exists`, `.isHittable`, and `.tap()`
+/// are main-actor isolated, so these helpers must be too. The caller's test
+/// methods already are, but a free function is nonisolated by default and
+/// Swift 6 rejects the isolation crossing outright.
+@MainActor
 @discardableResult
 func xcuiWait(
     _ description: String,
@@ -40,6 +46,7 @@ func xcuiWait(
 }
 
 /// Wait for an element to exist (not merely to be queried).
+@MainActor
 func xcuiWaitExists(
     _ element: XCUIElement,
     _ description: String = "",
@@ -55,6 +62,7 @@ func xcuiWaitExists(
 
 /// Wait for an element to exist *and* be hittable, which is the real
 /// precondition for "the user can press this".
+@MainActor
 func xcuiWaitHittable(
     _ element: XCUIElement,
     _ description: String = "",
@@ -72,6 +80,7 @@ func xcuiWaitHittable(
 /// `.click()` when the element sits inside a scroll view, where hit-point
 /// resolution intermittently fails with
 /// "Unable to find hit point for ...".
+@MainActor
 func xcuiTap(
     _ element: XCUIElement,
     _ description: String = "",
@@ -91,6 +100,7 @@ extension XCUIApplication {
     /// state. A leftover instance from a previous test shows up as
     /// "Critical process BANAL crashed", which is really a stale-process
     /// artifact rather than a crash in the code under test.
+    @MainActor
     func relaunchForUITest(
         vault fixture: String = "fixture",
         file: StaticString = #filePath,
