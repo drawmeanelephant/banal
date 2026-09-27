@@ -14,6 +14,11 @@ final class MenuFocusUITests: XCTestCase {
         if let app, app.state == .runningForeground {
             app.terminate()
         }
+        // Wait for the process to actually exit; see the note in
+        // XCUIWaitHelpers about stale instances reading as crashes.
+        if let app {
+            xcuiWait("app exits", timeout: 8) { app.state == .notRunning }
+        }
     }
 
     /// #191 — File commands must act on the vault while the Settings
@@ -68,28 +73,43 @@ final class MenuFocusUITests: XCTestCase {
 
         let publishTab = app.toolbars.buttons["Publish"]
         if publishTab.waitForExistence(timeout: 5) {
-            publishTab.tap()
+            xcuiTap(publishTab, "Publish tab")
         } else {
             let altTab = app.buttons["Publish"]
             if altTab.waitForExistence(timeout: 5) {
-                altTab.tap()
+                xcuiTap(altTab, "Publish tab")
             }
         }
 
+        // Re-query after the tab tap: switching panes can rebuild the
+        // Settings hierarchy, which leaves the old handle pointing at a
+        // detached snapshot. That staleness, not a real failure, is what
+        // "Settings window did not open" was reporting.
         let settings = app.descendants(matching: .any).matching(identifier: "settings-root").firstMatch
-        XCTAssertTrue(settings.waitForExistence(timeout: 8), "Settings window did not open")
+        XCTAssertTrue(
+            xcuiWaitExists(settings, "Settings window", timeout: 8),
+            "Settings window did not open"
+        )
 
+        // `isHittable` right after `waitForExistence` races the window's
+        // open animation. Poll for the real precondition instead.
         let copyWranglerButton = settings.buttons["copy-wrangler-toml-button"]
-        XCTAssertTrue(copyWranglerButton.waitForExistence(timeout: 5), "Copy wrangler.toml button not found in Settings Publish pane")
-        XCTAssertTrue(copyWranglerButton.isHittable, "Copy wrangler.toml button is clipped in Settings window")
+        XCTAssertTrue(
+            xcuiWaitHittable(copyWranglerButton, "Copy wrangler.toml button", timeout: 8),
+            "Copy wrangler.toml button not found or clipped in Settings Publish pane"
+        )
 
         let copyCmdButton = settings.buttons["copy-wrangler-command-button"]
-        XCTAssertTrue(copyCmdButton.waitForExistence(timeout: 5), "Copy command button not found in Settings Publish pane")
-        XCTAssertTrue(copyCmdButton.isHittable, "Copy command button is clipped in Settings window")
+        XCTAssertTrue(
+            xcuiWaitHittable(copyCmdButton, "Copy command button", timeout: 8),
+            "Copy command button not found or clipped in Settings Publish pane"
+        )
 
         let deployButton = settings.buttons["deploy-to-cloudflare-button"]
-        XCTAssertTrue(deployButton.waitForExistence(timeout: 5), "Deploy to Cloudflare button not found in Settings Publish pane")
-        XCTAssertTrue(deployButton.isHittable, "Deploy to Cloudflare button is clipped in Settings window")
+        XCTAssertTrue(
+            xcuiWaitHittable(deployButton, "Deploy to Cloudflare button", timeout: 8),
+            "Deploy to Cloudflare button not found or clipped in Settings Publish pane"
+        )
     }
 
     // MARK: - Helpers
@@ -108,7 +128,10 @@ final class MenuFocusUITests: XCTestCase {
         let settings = app.descendants(matching: .any).matching(
             identifier: "settings-root"
         ).firstMatch
-        XCTAssertTrue(settings.waitForExistence(timeout: 8), "Settings window did not open")
+        XCTAssertTrue(
+            xcuiWaitExists(settings, "Settings window", timeout: 10),
+            "Settings window did not open"
+        )
     }
 
     private func assertReady() {

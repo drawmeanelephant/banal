@@ -92,6 +92,11 @@ final class AccessibilityAuditUITests: XCTestCase {
         if app.state == .runningForeground {
             app.terminate()
         }
+        // Wait for the process to actually exit. Relaunching over a
+        // still-running instance is what surfaces as "Critical process
+        // BANAL crashed" in the *next* test, which is a harness artifact
+        // rather than a crash in the code under test.
+        xcuiWait("app exits", timeout: 8) { app.state == .notRunning }
     }
 
     func testMainWindowPassesAccessibilityAudit() throws {
@@ -116,10 +121,18 @@ final class AccessibilityAuditUITests: XCTestCase {
         selectNote(titled: "Groceries")
 
         let search = searchField()
-        XCTAssertTrue(search.exists, "note list search field missing at minimum size")
-        XCTAssertTrue(search.isHittable, "note list search field not hittable at minimum size")
+        // Poll for exists-and-hittable together. Asserting `exists` and then
+        // `isHittable` back to back is a race against the window's open
+        // animation, which is what made this flake.
+        XCTAssertTrue(
+            xcuiWaitHittable(search, "note list search field", timeout: 10),
+            "note list search field missing or not hittable at minimum size"
+        )
 
-        XCTAssertTrue(app.textViews.firstMatch.exists, "editor body missing at minimum size")
+        XCTAssertTrue(
+            xcuiWaitExists(app.textViews.firstMatch, "editor body", timeout: 10),
+            "editor body missing at minimum size"
+        )
 
         try runAudit()
     }
@@ -154,7 +167,7 @@ final class AccessibilityAuditUITests: XCTestCase {
             "the fixture vault did not resolve; the vault picker appeared instead of the window"
         )
         let search = searchField()
-        guard search.waitForExistence(timeout: Config.readyTimeout) else {
+        guard xcuiWaitExists(search, "search field", timeout: Config.readyTimeout) else {
             print("AX HIERARCHY DUMP (window never became ready):\n\(app.debugDescription)")
             XCTFail("main window never became ready")
             return
@@ -186,7 +199,10 @@ final class AccessibilityAuditUITests: XCTestCase {
                     NSPredicate(format: "label CONTAINS[c] %@ OR value CONTAINS[c] %@", title, title)
                 ).firstMatch
                 if match.exists {
-                    match.tap()
+                    // `tap()` intermittently fails to resolve a hit point
+                    // for rows inside a scroll view; `xcuiTap` falls back to
+                    // a coordinate tap in that case.
+                    xcuiTap(match, "note row \"\(title)\"")
                     return true
                 }
             }
@@ -194,7 +210,7 @@ final class AccessibilityAuditUITests: XCTestCase {
                 NSPredicate(format: "value CONTAINS[c] %@ OR label CONTAINS[c] %@", title, title)
             ).firstMatch
             if text.exists {
-                text.tap()
+                xcuiTap(text, "note text \"\(title)\"")
                 return true
             }
             usleep(300_000)
