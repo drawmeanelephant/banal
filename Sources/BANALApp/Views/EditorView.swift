@@ -86,6 +86,9 @@ struct EditorView: View {
                             onAssetError: { message in
                                 model.statusMessage = message
                                 model.dismissStatusLater()
+                            },
+                            onMoveToTrash: {
+                                model.trashSelected()
                             }
                         )
                         .onChange(of: model.editorText) { _, _ in
