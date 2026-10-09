@@ -60,6 +60,7 @@ struct MarkdownTextView: NSViewRepresentable {
     var onInsertContact: (() -> Void)?
     var onInsertFile: (() -> Void)?
     var onAssetError: ((String) -> Void)?
+    var onMoveToTrash: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(text: $text)
@@ -103,6 +104,7 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.onInsertContact = onInsertContact
         textView.onInsertFile = onInsertFile
         textView.onAssetError = onAssetError
+        textView.onMoveToTrash = onMoveToTrash
         onAttachInsertHandler?({ [weak editorTextView = textView] text in
             guard let editorTextView else { return false }
             editorTextView.insertTextAtCaret(text)
@@ -143,6 +145,7 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.onInsertContact = onInsertContact
         textView.onInsertFile = onInsertFile
         textView.onAssetError = onAssetError
+        textView.onMoveToTrash = onMoveToTrash
         onAttachInsertHandler?({ [weak editorTextView = textView] text in
             guard let editorTextView else { return false }
             editorTextView.insertTextAtCaret(text)
@@ -423,6 +426,7 @@ final class EditorTextView: NSTextView {
     var onInsertContact: (() -> Void)?
     var onInsertFile: (() -> Void)?
     var onAssetError: ((String) -> Void)?
+    var onMoveToTrash: (() -> Void)?
     var style: EditorStyle?
 
     func insertTextAtCaret(_ text: String) {
@@ -545,6 +549,20 @@ final class EditorTextView: NSTextView {
         }
 
         super.mouseDown(with: event)
+    }
+
+    // ⌘⌫ is bound to `deleteToBeginningOfLine:` in AppKit's standard key
+    // bindings, so the text system consumes it before the menu's Move to
+    // Trash key equivalent ever fires. Claim it here so the shortcut does
+    // what Help/README promise while the editor has focus.
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if event.keyCode == 51,
+           event.modifierFlags.intersection([.command, .option, .control, .shift]) == .command,
+           let onMoveToTrash {
+            onMoveToTrash()
+            return true
+        }
+        return super.performKeyEquivalent(with: event)
     }
 
     override func cancelOperation(_ sender: Any?) {
