@@ -39,8 +39,13 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v5
+      # brew's zig floats and lags — it installed 0.16 while the engines
+      # require 0.17. Pin the same toolchain the engine repos use.
       - name: Install zig
-        run: brew install zig
+        uses: drawmeanelephant/zig-zouave@2d8510d62b517fa786279562cf8b1bdcf0c47b9f
+        with:
+          version: 0.17.0
+          use-cache: false
       - name: Build helpers, strict (a bad engine fails here)
         env:
           HELPERS_STRICT: "1"
