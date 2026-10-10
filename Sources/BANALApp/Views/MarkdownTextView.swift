@@ -53,6 +53,7 @@ struct MarkdownTextView: NSViewRepresentable {
     var onEscape: (() -> Void)?
     var onTab: (() -> Void)?
     var onBacktab: (() -> Void)?
+    var onTrashNote: (() -> Void)?
     var onWritingToolsActiveChange: ((Bool) -> Void)?
     var onSelectionChange: ((String, NSRange) -> Void)?
     var onTranslate: ((String, NSRange) -> Void)?
@@ -99,6 +100,7 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.onEscape = onEscape
         textView.onTab = onTab
         textView.onBacktab = onBacktab
+        textView.onTrashNote = onTrashNote
         textView.onTranslate = onTranslate
         textView.onInsertContact = onInsertContact
         textView.onInsertFile = onInsertFile
@@ -139,6 +141,7 @@ struct MarkdownTextView: NSViewRepresentable {
         textView.onEscape = onEscape
         textView.onTab = onTab
         textView.onBacktab = onBacktab
+        textView.onTrashNote = onTrashNote
         textView.onTranslate = onTranslate
         textView.onInsertContact = onInsertContact
         textView.onInsertFile = onInsertFile
@@ -419,6 +422,7 @@ final class EditorTextView: NSTextView {
     var onEscape: (() -> Void)?
     var onTab: (() -> Void)?
     var onBacktab: (() -> Void)?
+    var onTrashNote: (() -> Void)?
     var onTranslate: ((String, NSRange) -> Void)?
     var onInsertContact: (() -> Void)?
     var onInsertFile: (() -> Void)?
@@ -545,6 +549,22 @@ final class EditorTextView: NSTextView {
         }
 
         super.mouseDown(with: event)
+    }
+
+    /// #225 — AppKit offers key equivalents to the key window's view tree
+    /// before the menu bar, and `NSTextView` claims bare ⌘⌫ for the standard
+    /// `deleteToBeginningOfParagraph:` editing binding. Without this the
+    /// File → Move to Trash shortcut never fires while the editor is first
+    /// responder, so route it to the same action the menu performs.
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if event.keyCode == 51, // Backspace
+           event.modifierFlags.contains(.command),
+           event.modifierFlags.intersection([.shift, .option, .control]).isEmpty,
+           let onTrashNote {
+            onTrashNote()
+            return true
+        }
+        return super.performKeyEquivalent(with: event)
     }
 
     override func cancelOperation(_ sender: Any?) {

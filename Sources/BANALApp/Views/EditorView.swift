@@ -62,6 +62,7 @@ struct EditorView: View {
                             onEscape: { model.focusNoteList() },
                             onTab: { model.focusSidebar() },
                             onBacktab: { model.focusNoteList() },
+                            onTrashNote: { model.trashSelected() },
                             onWritingToolsActiveChange: { active in
                                 model.isWritingToolsActive = active
                             },

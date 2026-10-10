@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- ⌘⌫ trashes the note from the editor (issue #225): with the editor focused, AppKit offered the key equivalent to the text view before the menu bar and `NSTextView` claimed ⌘⌫ for `deleteToBeginningOfParagraph:`, so Move to Trash silently no-op'd. The editor now routes bare ⌘⌫ to the same trash action the menu performs; the shortcut works identically from the list.
 - Prose Read link styling: fixed an attribute traversal issue in `ProseReadView` where non-link text was styled as blue underlined links.
 - CLI doctor check: fixed configured binary check to verify the specified engine path directly rather than falling back to system binaries in PATH.
 - Boris and Oliver ship inside the app (issue #209): `make app` builds universal binaries from their Zig checkouts into `Contents/Helpers`, the locators prefer them, and Settings → Publish loses its binary pickers — recipe Read and Publish Site now work in the sandboxed app on a machine with nothing installed. Debug overrides stay available via `BANAL_OLIVER_BIN` / `BANAL_BORIS_BIN`; legacy paths in `.banal/config.json` still round-trip. AppleScript errors now surface their message instead of returning silently.
