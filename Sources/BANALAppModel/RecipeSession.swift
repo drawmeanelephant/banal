@@ -61,10 +61,15 @@ public final class RecipeSession: ObservableObject {
             // render keeps the plain fallback — older binaries still render.
             let recipeURL = OliverLocator.resolveRecipeJSON(configured: configured)
             let renderURL = recipeURL ?? OliverLocator.resolve(configured: configured)
+            let renderClient = renderURL.map { OliverClient(binaryURL: $0) }
+            // Probe once, here on the background queue: engines that
+            // predate the extension flags render plain Markdown instead
+            // of failing every Read with a usage error.
+            let obsidian = renderClient?.supportsObsidianExtensions() ?? false
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 self.oliverClient = recipeURL.map { OliverClient(binaryURL: $0) }
-                self.oliver = renderURL.map { OliverDebounce(client: OliverClient(binaryURL: $0)) }
+                self.oliver = renderClient.map { OliverDebounce(client: $0, obsidian: obsidian) }
                     ?? OliverDebounce(client: nil)
                 if let context = self.context, context.viewMode == .read, context.selectedNote?.language == .cooklang {
                     self.askOliverForRecipe()

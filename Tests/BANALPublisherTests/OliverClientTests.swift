@@ -268,6 +268,42 @@ final class OliverClientTests: XCTestCase {
         XCTAssertFalse(html.contains("Local Title"), "Oliver must not render BANAL frontmatter: \(html)")
         XCTAssertFalse(html.lowercased().contains("<hr"), "fences must not become a thematic break: \(html)")
     }
+
+    func testObsidianProbeRejectsBinaryWithoutExtensions() throws {
+        let root = isolatedRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let stub = root.appendingPathComponent("oliver")
+        try makeStub(at: stub)
+        XCTAssertFalse(OliverClient(binaryURL: stub).supportsObsidianExtensions())
+    }
+
+    func testRenderWithoutObsidianLeavesExtensionSyntaxLiteral() throws {
+        let binary = OliverLocator.resolve()
+        try XCTSkipUnless(binary != nil, "Oliver binary not on PATH or in a sibling checkout")
+        let html = try OliverClient(binaryURL: binary!).render("A ==highlight== and [[link]].\n").html
+        XCTAssertTrue(html.contains("==highlight=="), "plain render must not highlight: \(html)")
+        XCTAssertTrue(html.contains("[[link]]"), "plain render must not wikilink: \(html)")
+    }
+
+    func testRenderWithObsidianRendersHighlightWhenSupported() throws {
+        let binary = OliverLocator.resolve()
+        try XCTSkipUnless(binary != nil, "Oliver binary not on PATH or in a sibling checkout")
+        let client = OliverClient(binaryURL: binary!)
+        try XCTSkipUnless(client.supportsObsidianExtensions(), "resolved Oliver predates the extension flags")
+        let html = try client.render("A ==highlight==.\n", obsidian: true).html
+        XCTAssertTrue(html.contains("<mark>"), "expected obsidian highlight markup, got: \(html)")
+        XCTAssertTrue(html.contains("highlight"), "expected highlighted text, got: \(html)")
+    }
+
+    /// `--obsidian` is scoped to the Markdown frontend — passing it along
+    /// on a Textile render would be a usage error, so the flag must not
+    /// reach the argv for other frontends.
+    func testObsidianFlagStaysOffTextile() throws {
+        let binary = OliverLocator.resolve()
+        try XCTSkipUnless(binary != nil, "Oliver binary not on PATH or in a sibling checkout")
+        let html = try OliverClient(binaryURL: binary!).render("h1. Hi\n", frontend: .textile, obsidian: true).html
+        XCTAssertTrue(html.contains("<h1>"), "expected a textile heading, got: \(html)")
+    }
 }
 
 private func isolatedRoot() -> URL {
