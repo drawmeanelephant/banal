@@ -194,10 +194,32 @@ public struct OliverClient: Sendable {
         self.binaryURL = binaryURL
     }
 
-    public func render(_ source: String, frontend: OliverFrontend = .markdown) throws -> OliverRender {
+    /// `obsidian` asks for Oliver's Obsidian-flavored Markdown surface
+    /// (highlights, comments, math, embeds, wikilinks, callouts, task
+    /// lists, footnotes, strikethrough). It is scoped to the Markdown
+    /// frontend — Oliver rejects the extension flags on Textile and
+    /// Cooklang — and should only be passed after
+    /// `supportsObsidianExtensions()` says this binary accepts it.
+    public func render(_ source: String, frontend: OliverFrontend = .markdown, obsidian: Bool = false) throws -> OliverRender {
         let body = Self.bodyForOliver(source, frontend: frontend)
-        let html = try run(body: body, arguments: ["render", "--from", frontend.rawValue])
+        var arguments = ["render", "--from", frontend.rawValue]
+        if obsidian, frontend == .markdown {
+            arguments.append("--obsidian")
+        }
+        let html = try run(body: body, arguments: arguments)
         return OliverRender(html: html, frontend: frontend)
+    }
+
+    /// True when this binary accepts `--obsidian` (Oliver 1.2+). One
+    /// probe render of `==x==` must come back as `<mark>`; binaries that
+    /// predate the extension flags exit nonzero on the unknown flag, so
+    /// callers degrade to a plain render instead of failing every Read.
+    public func supportsObsidianExtensions() -> Bool {
+        guard let html = try? run(
+            body: "==x==\n",
+            arguments: ["render", "--from", "markdown", "--obsidian"]
+        ) else { return false }
+        return html.contains("<mark>")
     }
 
     /// Typed Recipe for the reading view. Scale is Oliver's, in memory.
@@ -333,9 +355,9 @@ public final class OliverDebounce: @unchecked Sendable {
 
     public var isAvailable: Bool { render != nil }
 
-    public init(client: OliverClient?, delay: TimeInterval = OliverDebounce.delay) {
+    public init(client: OliverClient?, delay: TimeInterval = OliverDebounce.delay, obsidian: Bool = false) {
         if let client {
-            self.render = { source, frontend in try? client.render(source, frontend: frontend) }
+            self.render = { source, frontend in try? client.render(source, frontend: frontend, obsidian: obsidian) }
         } else {
             self.render = nil
         }
@@ -345,7 +367,8 @@ public final class OliverDebounce: @unchecked Sendable {
 
     public convenience init(configured: String? = nil, delay: TimeInterval = OliverDebounce.delay) {
         if let url = OliverLocator.resolve(configured: configured) {
-            self.init(client: OliverClient(binaryURL: url), delay: delay)
+            let client = OliverClient(binaryURL: url)
+            self.init(client: client, delay: delay, obsidian: client.supportsObsidianExtensions())
         } else {
             self.init(client: nil, delay: delay)
         }

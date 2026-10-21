@@ -41,7 +41,7 @@
 - Publish fields validate inline (http/s base URL, Cloudflare-safe project name; account ID warns)
 - Editor: SF Pro, measure cap, line height, spell check / smart quotes
 - Menus: ⌘N note, ⇧⌘N folder, ⌘⌫ trash, ⇧⌘P publish, ⌘F find notes, ⇧⌘F find in note
-- Oliver: one-shot render after idle typing (`--from` from the file extension). Missing binary is silent. No preview.
+- Oliver: one-shot render after idle typing (`--from` from the file extension; `--obsidian` on Markdown when the engine probed supports it). Missing binary is silent. No preview.
 - Languages: `.md`, `.textile`, and `.cook` are notes. File → New Textile / New Recipe. Recipes keep Cooklang `>>` metadata, not a YAML fence. Opening any of them is source.
 - Recipe Read: `.cook` notes have Edit | Read. Read shows ingredients, cookware, steps, and notes from Oliver’s typed Recipe. ½ 1× 2× 3× scales the view only. Missing or older Oliver (no `serialize --json`) is one sentence; Edit still works.
 - Publish Site (⇧⌘P): only `published` notes leave the vault. Markdown uses the bundled Boris, else builtin HTML+RSS. Textile and Cooklang join the same `.publish/` folder via the bundled Oliver — their rendered HTML is staged as Markdown so a mixed vault publishes through the real Boris engine without failing its link audit (#210). Recipes stay Cooklang on disk. Deploy to Cloudflare is optional and enabled when a Keychain token and project name exist.
